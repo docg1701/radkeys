@@ -314,10 +314,11 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		u.a.SetIcon(iconRes)
 		u.win.SetIcon(iconRes)
 
-		u.a.Settings().SetTheme(resolveFullTheme(cfg))
+		newTheme := resolveFullTheme(cfg)
+		u.a.Settings().SetTheme(newTheme)
 		if u.previewBg != nil {
-			u.previewBg.FillColor = u.a.Settings().Theme().Color(fyneTheme.ColorNameBackground, 0)
-			u.previewBg.Refresh()
+			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, 0)
+			canvas.Refresh(u.previewBg)
 		}
 
 		tabs := u.win.Content().(*container.AppTabs)
