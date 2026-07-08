@@ -7,7 +7,7 @@
 ```
 1. Desenvolver
 2. gofmt -w . && go vet ./... && go test ./...
-3. Bump version in radkeys.config.toml ([app] version)
+3. Bump version in radkeys.config.toml ([app] version) — ONLY HERE. Never hardcode version anywhere else.
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
 5. Push to main
 6. Build all release binaries LOCALLY to dist/:
@@ -62,6 +62,7 @@ go mod tidy
 - Keyboard HID (F13-F24) input — rejected by product.
 - `RequestAlwaysOnTop()` without verifying Fyne version (only available in ≥v2.8.0, not released yet).
 - Hardcoded UI strings — use `i18n.T()`.
+- Hardcoded version numbers in Go source, templates, or test fixtures: the **only** source of truth is `[app] version` in `radkeys.config.toml`. Test fixtures use `"0.0.0-test"`.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
 - Cross-compile in CI — agent does it locally.
 - End the turn before CI release is published and all binaries are uploaded.
