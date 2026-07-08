@@ -255,7 +255,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}, u.win).Show()
 	})
 	chooseBtn.Importance = widget.MediumImportance
-	configRow := container.NewBorder(nil, nil, nil, chooseBtn, configLbl)
 
 	vidEnt := widget.NewEntry()
 	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
@@ -266,7 +265,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
-	// --- Icon selector (like config file: current path + Browse button) ---
+	// --- Icon selector ---
 
 	customIconPath := cfg.App.Theme.Icon
 	iconPreview := canvas.NewImageFromResource(fyne.NewStaticResource("icon.png", appIconData(cfg)))
@@ -291,7 +290,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		fd.Show()
 	})
 	iconBrowseBtn.Importance = widget.MediumImportance
-	iconRow := container.NewBorder(nil, nil, iconPreview, iconBrowseBtn, widget.NewLabel(""))
 
 	// --- Save action ---
 
@@ -369,26 +367,47 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 
 	// --- Cards ---
 
-	cards := []fyne.CanvasObject{
-		makeCard(i18n.T("settings.group_config"), "",
-			configRow,
+	sections := container.NewVBox(
+		section(i18n.T("settings.group_config"),
+			container.NewGridWithColumns(3,
+				container.NewBorder(nil, nil, widget.NewLabel(i18n.T("settings.config_file")), nil, configLbl),
+				chooseBtn,
+				widget.NewLabel(""),
+			),
 		),
-		makeCard(i18n.T("settings.group_appearance"), "",
-			labeled(i18n.T("settings.radiologist"), radEnt),
-			container.NewGridWithColumns(2,
+		section(i18n.T("settings.group_appearance"),
+			container.NewGridWithColumns(3,
+				labeled(i18n.T("settings.radiologist"), radEnt),
 				labeled(i18n.T("settings.language"), langSel),
 				labeled(i18n.T("settings.theme"), themeSel),
 			),
-			iconRow,
+			container.NewGridWithColumns(3,
+				iconPreview,
+				iconBrowseBtn,
+				widget.NewLabel(""),
+			),
 		),
-		makeCard(i18n.T("settings.group_device"), "",
-			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
-			makeUSBRow(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt, i18n.T("settings.protocol"), protoSel),
+		section(i18n.T("settings.group_device"),
+			container.NewGridWithColumns(3,
+				labeled(i18n.T("settings.columns"), colsEnt),
+				labeled(i18n.T("settings.rows"), rowsEnt),
+				widget.NewLabel(""),
+			),
+			container.NewGridWithColumns(3,
+				labeled(i18n.T("settings.vid"), vidEnt),
+				labeled(i18n.T("settings.pid"), pidEnt),
+				labeled(i18n.T("settings.protocol"), protoSel),
+			),
 		),
-	}
+	)
 
-	content := container.NewVBox(cards...)
-	content.Add(container.NewCenter(saveBtn))
+	footer := container.NewGridWithColumns(3,
+		container.NewCenter(saveBtn),
+		widget.NewLabel(""),
+		widget.NewLabel(""),
+	)
+
+	content := container.NewVBox(sections, footer)
 
 	return container.NewVScroll(container.NewPadded(content))
 }
@@ -440,28 +459,16 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // Layout helpers for the settings tab
 // ---------------------------------------------------------------------------
 
+// section returns a titled group: bold header label followed by content rows.
+func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
+	header := widget.NewLabel(title)
+	header.TextStyle = fyne.TextStyle{Bold: true}
+	items := []fyne.CanvasObject{header}
+	items = append(items, rows...)
+	return container.NewVBox(items...)
+}
+
 // labeled returns label above input so the input gets full width.
 func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(widget.NewLabel(label), input)
-}
-
-func makeCard(title string, subtitle string, items ...fyne.CanvasObject) fyne.CanvasObject {
-	body := container.NewVBox(items...)
-	return widget.NewCard(title, subtitle, body)
-}
-
-func makeDualField(l1 string, i1 fyne.CanvasObject, l2 string, i2 fyne.CanvasObject) fyne.CanvasObject {
-	return container.NewGridWithColumns(2,
-		labeled(l1, i1),
-		labeled(l2, i2),
-	)
-}
-
-func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pidInput fyne.CanvasObject, protoLabel string, protoInput fyne.CanvasObject) fyne.CanvasObject {
-	vidCell := container.NewVBox(widget.NewLabel(vidLabel), vidInput)
-	pidCell := container.NewVBox(widget.NewLabel(pidLabel), pidInput)
-	topRow := container.NewGridWithColumns(2, vidCell, pidCell)
-
-	protoCell := container.NewVBox(widget.NewLabel(protoLabel), protoInput)
-	return container.NewVBox(topRow, protoCell)
 }

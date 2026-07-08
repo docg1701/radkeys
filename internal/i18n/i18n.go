@@ -83,6 +83,10 @@ var messages = map[string]map[string]string{
 		"en": "Protocol", "pt-BR": "Protocolo", "pt-PT": "Protocolo",
 		"es": "Protocolo", "fr": "Protocole", "de": "Protokoll", "it": "Protocollo",
 	},
+	"settings.config_file": {
+		"en": "Path", "pt-BR": "Caminho", "pt-PT": "Caminho",
+		"es": "Ruta", "fr": "Chemin", "de": "Pfad", "it": "Percorso",
+	},
 	"settings.browse": {
 		"en": "Browse…", "pt-BR": "Procurar…", "pt-PT": "Procurar…",
 		"es": "Examinar…", "fr": "Parcourir…", "de": "Durchsuchen…", "it": "Sfoglia…",
