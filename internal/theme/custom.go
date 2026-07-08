@@ -89,7 +89,7 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) colo
 
 	// ── decoration ────────────────────────────────────────────
 	case theme.ColorNamePrimary:
-		return t.fix
+		return t.primary()
 	case theme.ColorNameScrollBar:
 		return blend(t.bg, t.fg, 0.14)
 	case theme.ColorNameScrollBarBackground:
@@ -167,6 +167,15 @@ func (t *RadKeysTheme) hover() color.NRGBA {
 		return blend(t.btn, t.fg, 0.10)
 	}
 	return lighten(t.btn, 0.08)
+}
+
+// primary returns the accent colour boosted for contrast — used both for
+// the tab indicator underline and for selected tab text.
+func (t *RadKeysTheme) primary() color.NRGBA {
+	if isLightNRGBA(t.bg) {
+		return darken(t.fix, 0.18)
+	}
+	return lighten(t.fix, 0.30)
 }
 
 // fgOnAccent returns white or black depending on the fix (accent) luminance,
