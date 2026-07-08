@@ -10,8 +10,9 @@ type Preset struct {
 	Fixed      string
 }
 
-// Presets is the list of all selectable themes (12). Index 0 is the default.
+// Presets is the list of all selectable themes (13). Index 0 is the default.
 var Presets = []Preset{
+	{"Padrão do sistema", "", "", ""},
 	{"Dracula", "#282a36", "#44475a", "#6272a4"},
 	{"Solarized Dark", "#002b36", "#073642", "#586e75"},
 	{"Monokai", "#272822", "#3e3d32", "#49483e"},

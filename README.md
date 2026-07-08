@@ -3,18 +3,22 @@
 Portable shortcut deck for radiology reports — copy pre-written phrases to
 the clipboard without stealing focus from the RIS/PACS.
 
+![RadKeys Screenshot](screenshot.png)
+
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## What it is
 
-A single-binary desktop app for **Linux and Windows**. (macOS: build from source — cross-compile is impossible with CGO.) A USB HID custom
-device (Stream Deck or DIY 24-key pad) sends button presses directly to the
-app via hidapi — no keyboard keys, no focus stealing, no modifier interference.
+A single-binary desktop app for **Linux and Windows**. (macOS: build from
+source — cross-compile is impossible with CGO.) A USB HID custom device
+(Stream Deck or DIY 24-key pad) sends button presses directly to the app via
+hidapi — no keyboard keys, no focus stealing, no modifier interference.
 The app shows a preview on top and a virtual keypad on the bottom; press a
 button → phrase loads → copy → paste into the RIS.
 
 Release = **1 executable + 1 config file**. Icon, translations (7 languages),
-and color themes (12 presets) are all embedded in the binary.
+and color themes (13 presets, including system default) are all embedded in
+the binary.
 
 ## Download
 
@@ -53,7 +57,7 @@ The radiologist never touches the keyboard except to paste.
 
 | Dependency | Linux | Windows | macOS |
 |------------|-------|---------|-------|
-| **Go** 1.22+ | `sudo apt install golang-go` | [go.dev/dl](https://go.dev/dl/) | [go.dev/dl](https://go.dev/dl/) |
+| **Go** 1.24+ | `sudo apt install golang-go` | [go.dev/dl](https://go.dev/dl/) | [go.dev/dl](https://go.dev/dl/) |
 | **GCC** (CGO) | `sudo apt install gcc` | [MinGW-w64](https://www.mingw-w64.org/) | `xcode-select --install` |
 | **Fyne** | `sudo apt install libgl1-mesa-dev xorg-dev libxxf86vm-dev` | — | — |
 | **HIDAPI** | `sudo apt install libudev-dev` | — | IOKit (system) |
@@ -102,7 +106,7 @@ Firmware: [`firmware/arduino/`](firmware/arduino/) · [`firmware/rp2040/`](firmw
 All settings live in `radkeys.config.toml` (TOML, plaintext, shareable).
 The file is heavily commented so a human or LLM can understand and edit
 everything:
-- Radiologist name, language (7 options), color theme (12 presets)
+- Radiologist name, language (7 options), color theme (13 presets)
 - Device VID/PID and protocol (Elgato or DIY)
 - Keypad layout (columns × rows)
 - Screens and buttons (phrases organized in a hierarchy)

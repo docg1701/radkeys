@@ -1,5 +1,5 @@
 // Package ui renders RadKeys: preview on top half, virtual keypad on bottom.
-// Two tabs: "Atalhos" (preview + keypad) and "Ajustes" (settings).
+// Three tabs: "Atalhos" (preview + keypad), "Ajustes" (settings), "Sobre" (about).
 package ui
 
 import (
@@ -14,7 +14,6 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/BurntSushi/toml"
@@ -29,7 +28,11 @@ import (
 
 func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
-	a.Settings().SetTheme(theme.DarkTheme())
+
+	// Apply the preset theme to the entire UI.
+	customTheme := resolveFullTheme(cfg)
+	a.Settings().SetTheme(customTheme)
+
 	iconRes := fyne.NewStaticResource("icon.png", assets.IconPNG)
 	a.SetIcon(iconRes)
 
@@ -52,7 +55,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		rows = 5
 	}
 
-	thm := resolveTheme(cfg)
+	thm := resolveKeypadColors(cfg)
 
 	u := &appUI{
 		cfg:        cfg,
@@ -75,11 +78,11 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	previewArea := u.previewBox()
 	keypadArea := container.NewPadded(u.keypad)
 	split := container.NewVSplit(previewArea, keypadArea)
-	// No SetOffset — usuário redimensiona livremente.
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem(i18n.T("tab.shortcuts"), split),
 		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
+		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
 	)
 	w.SetContent(tabs)
 	u.renderScreen()
@@ -104,17 +107,26 @@ type appUI struct {
 	preview    *widget.Label
 	cols       int
 	rows       int
-	thm        themeColors
+	thm        keypadColors
 	keypad     *fyne.Container
 }
 
-type themeColors struct {
+type keypadColors struct {
 	bg     color.NRGBA
 	button color.NRGBA
 	fixed  color.NRGBA
 }
 
-func resolveTheme(cfg *config.Config) themeColors {
+func resolveFullTheme(cfg *config.Config) fyne.Theme {
+	if cfg.App.Theme.Preset != "" {
+		if p, ok := themes.FindPreset(cfg.App.Theme.Preset); ok {
+			return themes.NewCustomTheme(p)
+		}
+	}
+	return themes.NewCustomTheme(themes.Presets[0])
+}
+
+func resolveKeypadColors(cfg *config.Config) keypadColors {
 	bg := cfg.App.Theme.Background
 	btn := cfg.App.Theme.Button
 	fix := cfg.App.Theme.Fixed
@@ -123,7 +135,7 @@ func resolveTheme(cfg *config.Config) themeColors {
 			bg, btn, fix = p.Background, p.Button, p.Fixed
 		}
 	}
-	return themeColors{
+	return keypadColors{
 		bg:     parseHex(bg, 0x1a, 0x1a, 0x1a),
 		button: parseHex(btn, 0x2a, 0x2a, 0x2a),
 		fixed:  parseHex(fix, 0x3a, 0x3a, 0x3a),
@@ -194,8 +206,14 @@ func (u *appUI) pollHID() {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Settings tab — modern card-based layout with visual groups
+// ---------------------------------------------------------------------------
+
 func (u *appUI) buildSettings() fyne.CanvasObject {
 	cfg := u.cfg
+
+	// --- Widgets ---
 
 	radEnt := widget.NewEntry()
 	radEnt.SetText(cfg.App.Radiologist)
@@ -214,7 +232,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 
 	configLbl := widget.NewLabel(cfg.App.ConfigPath)
 	configLbl.Wrapping = fyne.TextTruncate
-	chooseBtn := widget.NewButton("Procurar...", func() {
+	chooseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
 		dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 			if err != nil || rc == nil {
 				return
@@ -223,6 +241,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			configLbl.SetText(u.configPath)
 		}, u.win).Show()
 	})
+	chooseBtn.Importance = widget.MediumImportance
 
 	vidEnt := widget.NewEntry()
 	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
@@ -230,6 +249,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
+
+	// --- Save action ---
 
 	save := func() {
 		cfg.App.Radiologist = radEnt.Text
@@ -248,7 +269,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			cfg.App.Device.ProductID = uint16(v)
 		}
 		cfg.App.Device.Protocol = protoSel.Selected
-
 		cfg.App.ConfigPath = u.configPath
 
 		f, err := os.Create(u.configPath)
@@ -264,13 +284,16 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 
 		i18n.SetLanguage(cfg.App.Language)
 		u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
-		u.thm = resolveTheme(cfg)
 
-		// Reconstruir tabs com novo idioma.
+		u.a.Settings().SetTheme(resolveFullTheme(cfg))
+		u.thm = resolveKeypadColors(cfg)
+
 		tabs := u.win.Content().(*container.AppTabs)
 		tabs.Items[0].Text = i18n.T("tab.shortcuts")
 		tabs.Items[1].Text = i18n.T("tab.settings")
+		tabs.Items[2].Text = i18n.T("tab.about")
 		tabs.Items[1].Content = u.buildSettings()
+		tabs.Items[2].Content = u.buildAbout()
 
 		if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
 			u.cols = cfg.App.Layout.Columns
@@ -279,8 +302,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			previewArea := u.previewBox()
 			keypadArea := container.NewPadded(u.keypad)
 			split := container.NewVSplit(previewArea, keypadArea)
-			useTab := container.NewBorder(nil, nil, nil, nil, split)
-			tabs.Items[0] = container.NewTabItem(i18n.T("tab.shortcuts"), useTab)
+			tabs.Items[0] = container.NewTabItem(i18n.T("tab.shortcuts"), split)
 		}
 		tabs.Refresh()
 
@@ -288,17 +310,93 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		dialog.ShowInformation(i18n.T("settings.saved_title"), i18n.T("settings.saved_msg"), u.win)
 	}
 
-	form := widget.NewForm(
-		widget.NewFormItem("Radiologista", radEnt),
-		widget.NewFormItem("Idioma", langSel),
-		widget.NewFormItem("Tema", themeSel),
-		widget.NewFormItem("Colunas", colsEnt),
-		widget.NewFormItem("Linhas", rowsEnt),
-		widget.NewFormItem("Arquivo de config", container.NewHBox(configLbl, chooseBtn)),
-		widget.NewFormItem("Dispositivo USB", container.NewHBox(widget.NewLabel("VID"), vidEnt, widget.NewLabel("PID"), pidEnt, protoSel)),
-	)
-	form.SubmitText = i18n.T("settings.save")
-	form.OnSubmit = save
+	saveBtn := widget.NewButton(i18n.T("settings.save"), save)
+	saveBtn.Importance = widget.HighImportance
 
-	return container.NewVScroll(form)
+	// --- Cards ---
+
+	cards := []fyne.CanvasObject{
+		makeCard(i18n.T("settings.group_general"), "",
+			makeFieldRow(i18n.T("settings.radiologist"), radEnt),
+		),
+		makeCard(i18n.T("settings.group_locale"), "",
+			makeFieldRow(i18n.T("settings.language"), langSel),
+			makeFieldRow(i18n.T("settings.theme"), themeSel),
+		),
+		makeCard(i18n.T("settings.group_layout"), "",
+			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
+		),
+		makeCard(i18n.T("settings.group_config"), "",
+			configLbl,
+			chooseBtn,
+		),
+		makeCard(i18n.T("settings.group_device"), "",
+			makeDualField(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt),
+			makeFieldRow(i18n.T("settings.protocol"), protoSel),
+		),
+	}
+
+	content := container.NewVBox(cards...)
+	content.Add(container.NewCenter(saveBtn))
+
+	return container.NewVScroll(container.NewPadded(content))
+}
+
+// ---------------------------------------------------------------------------
+// About tab
+// ---------------------------------------------------------------------------
+
+func (u *appUI) buildAbout() fyne.CanvasObject {
+	ver := u.cfg.App.Version
+	if ver == "" {
+		ver = "dev"
+	}
+
+	// All text via RichTextFromMarkdown — it respects the theme, no hardcoded colors.
+	md := fmt.Sprintf(
+		"# RadKeys\n\n"+
+			"**%s**\n\n"+
+			"%s\n\n"+
+			"[GitHub](https://github.com/docg1701/radkeys) • [MIT License](https://github.com/docg1701/radkeys/blob/main/LICENSE)\n\n"+
+			"---\n\n"+
+			"%s\n\n"+
+			"---\n\n"+
+			"%s\n\n"+
+			"---\n\n"+
+			"%s",
+		fmt.Sprintf(i18n.T("about.version"), ver),
+		i18n.T("about.description"),
+		i18n.T("about.credits"),
+		i18n.T("about.stack"),
+		i18n.T("about.i18n"),
+	)
+
+	content := widget.NewRichTextFromMarkdown(md)
+	content.Wrapping = fyne.TextWrapWord
+
+	return container.NewVScroll(container.NewPadded(content))
+}
+
+// ---------------------------------------------------------------------------
+// Layout helpers for the settings tab
+// ---------------------------------------------------------------------------
+
+func makeCard(title string, subtitle string, items ...fyne.CanvasObject) fyne.CanvasObject {
+	body := container.NewVBox(items...)
+	return widget.NewCard(title, subtitle, body)
+}
+
+func makeFieldRow(label string, input fyne.CanvasObject) fyne.CanvasObject {
+	lbl := widget.NewLabel(label)
+	return container.NewBorder(nil, nil, lbl, nil, input)
+}
+
+func makeDualField(l1 string, i1 fyne.CanvasObject, l2 string, i2 fyne.CanvasObject) fyne.CanvasObject {
+	lbl1 := widget.NewLabel(l1)
+	lbl2 := widget.NewLabel(l2)
+	return container.NewHBox(
+		container.NewBorder(nil, nil, lbl1, nil, i1),
+		widget.NewSeparator(),
+		container.NewBorder(nil, nil, lbl2, nil, i2),
+	)
 }

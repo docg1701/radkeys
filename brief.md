@@ -1,9 +1,8 @@
-# RadKeys — Brief Técnico Completo
+# RadKeys — Brief Técnico
 
-> **Versão:** 2.2  
 > **Data:** 2026-07-08  
 > **Repo:** https://github.com/docg1701/radkeys  
-> **Release atual:** v0.2.0 (Linux + Windows + config)
+> **Release atual:** v0.2.0
 
 ---
 
@@ -155,3 +154,62 @@ Requisitos:
   color-scheme` ou `XDG_CURRENT_DESKTOP`). No Windows, `AppsUseLightTheme`.
   No macOS, `AppleInterfaceStyle`. O Fyne já expõe `theme.DefaultTheme()`
   que segue o SO — usar como base para este preset.
+
+## 8. Bugs — implementação do tema quebrada
+
+O agente Nonatinho tentou implementar um `fyne.Theme` customizado mas a
+implementação é incompleta, cheia de gambiarras e não funciona. É preciso
+**refazer tudo do zero** a partir de exemplos prontos para o tech-stack
+atual (Fyne v2.7.4), copiados da internet via `find-docs`.
+
+### 8.1 Cores escuras hardcoded quebram todos os temas
+
+Há cores escuras fixas no código que tornam impossível ter temas
+intercambiáveis. Cores hardcoded e temas intercambiáveis são
+mutuamente excludentes por definição. Exemplo: o tema Gruvbox Light
+(amarelado) mostra campos de formulário com fundo azul escuro — um
+absurdo visual que prova que a engine de temas está corrompida.
+
+### 8.2 Popup "Salvo" ao clicar em Salvar
+
+O popup/dialog `ShowInformation` que aparece após salvar em Ajustes é
+inútil e irritante. O salvamento deve ser silencioso ou usar uma
+indicação menos intrusiva (ex.: snackbar, toast, ou transient label).
+
+### 8.3 Layout da seção Dispositivo USB
+
+Os campos de texto para VID e PID são pequenos demais e ficam esmagados
+quando colocados lado a lado com labels. O conteúdo some ou fica
+ilegível. É preciso garantir tamanhos mínimos adequados.
+
+### 8.4 Layout com valor ≤ 0
+
+Colunas e linhas com valor 0 ou negativo não podem ser permitidos.
+O sistema deve automaticamente corrigir para 1 (mínimo usável) ao
+salvar, tanto na UI quanto na validação do config.
+
+### 8.5 Tema Gruvbox Light quebrado
+
+Prova definitiva de que a engine de temas está corrompida: o tema
+Gruvbox Light (Background: `#fbf1c7` amarelado, Button: `#ebdbb2`,
+Fixed: `#d5c4a1`) mostra os campos de formulário com fundo azul
+escuro. Isso não faz o menor sentido — o preset não tem azul, o tema
+é claro, mas aparece azul escuro nos inputs. A derivação de cores a
+partir de 3 valores hex arbitrários usando `lighten()` e `blend()`
+não funciona e precisa ser substituída por um mapeamento explícito
+de cada `ThemeColorName` do Fyne para uma cor calculada corretamente
+a partir do preset ou delegada ao `DefaultTheme`.
+
+## 9. Requisitos para a reconstrução do tema
+
+1. **Estudar exemplos prontos**: usar `find-docs` para localizar temas
+   Fyne completos e funcionais (Catppuccin, fynelabs/notes, etc.).
+2. **Mapear TODOS os `ThemeColorName`**: não deixar nenhum sem
+   tratamento explícito. Se não souber derivar do preset, delegar ao
+   `DefaultTheme`.
+3. **Nenhuma cor hardcoded**: todas as cores devem vir do preset ou
+   do `DefaultTheme`. Zero exceções.
+4. **Testar com tema claro**: validar visualmente com Solarized Light,
+   Gruvbox Light e Light Gray antes de considerar pronto.
+5. **Testar com tema escuro**: validar visualmente com Dracula, Nord,
+   Dark Gray antes de considerar pronto.

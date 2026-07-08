@@ -7,17 +7,17 @@
   [app.device]
     vendor_id = 4057
     product_id = 99
-    protocol = "elgato"
+    protocol = "radkeys-diy"
   [app.fixed_buttons]
     copy = 0
     level_up = 1
     go_home = 2
   [app.layout]
     columns = 4
-    rows = 5
+    rows = 4
     preview = ""
   [app.theme]
-    preset = "Solarized Light"
+    preset = "Gruvbox Light"
     background = "#1a1a1a"
     button = "#2a2a2a"
     fixed = "#3a3a3a"
