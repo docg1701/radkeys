@@ -1,6 +1,10 @@
-// Package theme — custom Fyne theme that applies preset colors to the entire UI.
-// Follows the Catppuccin theme pattern: every Fyne color name is resolved from
-// the preset's Background, Button, and Fixed colors. No hardcoded values.
+// Package theme — custom Fyne theme that derives every ThemeColorName from
+// the preset's three colors (Background, Button, Fixed). Light/dark variant is
+// auto-detected from background luminance.
+//
+// ZERO delegation to theme.DefaultTheme() — every color is explicit so theme
+// switches leave no residue from the previous theme.
+//
 // "Padrão do sistema" delegates entirely to theme.DefaultTheme().
 package theme
 
@@ -15,68 +19,108 @@ import (
 
 var _ fyne.Theme = (*RadKeysTheme)(nil)
 
-// RadKeysTheme applies preset colors to all Fyne theme color names.
+// RadKeysTheme derives every Fyne color from a preset.
 type RadKeysTheme struct {
-	bg      color.NRGBA // preset Background
-	btn     color.NRGBA // preset Button
-	fix     color.NRGBA // preset Fixed (accent)
-	variant fyne.ThemeVariant
+	bg  color.NRGBA
+	btn color.NRGBA
+	fix color.NRGBA
+	fg  color.NRGBA // cached foreground
 }
 
-// NewCustomTheme creates a fyne.Theme from a RadKeys preset.
+// NewCustomTheme returns a fyne.Theme for preset p.
 func NewCustomTheme(p Preset) fyne.Theme {
 	if p.Name == "Padrão do sistema" {
 		return theme.DefaultTheme()
 	}
-	v := theme.VariantDark
-	if isLight(p) {
-		v = theme.VariantLight
+	bg := parseHex(p.Background)
+	btn := parseHex(p.Button)
+	fix := parseHex(p.Fixed)
+	fg := color.NRGBA{R: 0xe8, G: 0xe8, B: 0xe8, A: 0xff} // dark fg
+	if isLightNRGBA(bg) {
+		fg = color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xff} // light fg
 	}
-	return &RadKeysTheme{
-		bg:      parseHex(p.Background, 0x00, 0x00, 0x00),
-		btn:     parseHex(p.Button, 0x00, 0x00, 0x00),
-		fix:     parseHex(p.Fixed, 0x00, 0x00, 0x00),
-		variant: v,
-	}
+	return &RadKeysTheme{bg: bg, btn: btn, fix: fix, fg: fg}
 }
 
+// Color returns an explicit derivation for every ThemeColorName.
+// No fallback to DefaultTheme.
 func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 	switch name {
+
+	// ── structural (page / surfaces) ──────────────────────────
 	case theme.ColorNameBackground:
 		return t.bg
 	case theme.ColorNameButton:
 		return t.btn
-	case theme.ColorNameDisabledButton:
-		return darken(t.btn, 0.25)
-	case theme.ColorNameDisabled:
-		return blend(t.bg, t.fg(), 0.35)
-	case theme.ColorNameFocus:
-		return setAlpha(t.fix, 0x50)
-	case theme.ColorNameForeground:
-		return t.fg()
-	case theme.ColorNameHover:
-		return lighten(t.btn, 0.10)
+	case theme.ColorNameHeaderBackground:
+		return blend(t.bg, t.btn, 0.30)
+	case theme.ColorNameMenuBackground:
+		return t.btn
+	case theme.ColorNameOverlayBackground:
+		return setAlpha(t.fg, 0x28)
+
+	// ── input fields ──────────────────────────────────────────
 	case theme.ColorNameInputBackground:
-		return lighten(t.bg, 0.06)
+		return t.inputBg()
 	case theme.ColorNameInputBorder:
-		return blend(t.bg, t.fg(), 0.15)
+		return blend(t.bg, t.fg, 0.20)
+
+	// ── text ──────────────────────────────────────────────────
+	case theme.ColorNameForeground:
+		return t.fg
+	case theme.ColorNameDisabled:
+		return blend(t.bg, t.fg, 0.38)
 	case theme.ColorNamePlaceHolder:
-		return blend(t.bg, t.fg(), 0.40)
+		return blend(t.bg, t.fg, 0.42)
+	case theme.ColorNameHyperlink:
+		return t.fix
+
+	// ── interactive states ────────────────────────────────────
+	case theme.ColorNameHover:
+		return t.hover()
 	case theme.ColorNamePressed:
 		return darken(t.btn, 0.12)
+	case theme.ColorNameFocus:
+		return setAlpha(t.fix, 0x5c)
+	case theme.ColorNameSelection:
+		return setAlpha(t.fix, 0x40)
+	case theme.ColorNameDisabledButton:
+		return blend(t.btn, t.bg, 0.45)
+
+	// ── decoration ────────────────────────────────────────────
 	case theme.ColorNamePrimary:
 		return t.fix
 	case theme.ColorNameScrollBar:
-		return blend(t.bg, t.fg(), 0.12)
-	case theme.ColorNameSelection:
-		return setAlpha(t.fix, 0x40)
+		return blend(t.bg, t.fg, 0.14)
+	case theme.ColorNameScrollBarBackground:
+		return blend(t.bg, t.fg, 0.05)
 	case theme.ColorNameSeparator:
-		return blend(t.bg, t.fg(), 0.10)
+		return blend(t.bg, t.fg, 0.12)
 	case theme.ColorNameShadow:
-		return setAlpha(t.fg(), 0x12)
-	default:
-		return theme.DefaultTheme().Color(name, t.variant)
+		return setAlpha(t.fg, 0x10)
+
+	// ── foreground-on-X (readability guaranteed) ──────────────
+	case theme.ColorNameForegroundOnPrimary:
+		return t.fgOnAccent()
+	case theme.ColorNameForegroundOnError:
+		return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+	case theme.ColorNameForegroundOnSuccess:
+		return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+	case theme.ColorNameForegroundOnWarning:
+		return color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xff}
+
+	// ── semantic (standard colors, NOT derived from preset) ───
+	case theme.ColorNameError:
+		return color.NRGBA{R: 0xd3, G: 0x2f, B: 0x2f, A: 0xff}
+	case theme.ColorNameSuccess:
+		return color.NRGBA{R: 0x38, G: 0x8e, B: 0x3c, A: 0xff}
+	case theme.ColorNameWarning:
+		return color.NRGBA{R: 0xf5, G: 0x7c, B: 0x00, A: 0xff}
 	}
+
+	// Safety net — should never be reached since all ThemeColorName are handled.
+	// Return bg so any future Fyne additions render visibly rather than panic.
+	return t.bg
 }
 
 func (t *RadKeysTheme) Font(style fyne.TextStyle) fyne.Resource {
@@ -91,46 +135,60 @@ func (t *RadKeysTheme) Size(name fyne.ThemeSizeName) float32 {
 	return theme.DefaultTheme().Size(name)
 }
 
-// fg returns white or near-black based on the background luminance, not on preset name.
-func (t *RadKeysTheme) fg() color.NRGBA {
-	if t.variant == theme.VariantLight {
-		return color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xFF}
+// ---------------------------------------------------------------------------
+// adaptive helpers
+// ---------------------------------------------------------------------------
+
+// inputBg returns a colour slightly distinct from bg so Entry/Select fields
+// are visually separated from the page background.
+func (t *RadKeysTheme) inputBg() color.NRGBA {
+	if isLightNRGBA(t.bg) {
+		// Light theme: inputs slightly lighter than bg.
+		return lighten(t.bg, 0.03)
 	}
-	return color.NRGBA{R: 0xe8, G: 0xe8, B: 0xe8, A: 0xFF}
+	// Dark theme: inputs slightly brighter than bg.
+	return lighten(t.bg, 0.06)
 }
 
-func isLight(p Preset) bool {
-	bg := parseHex(p.Background, 0, 0, 0)
-	return 0.2126*float64(bg.R)/255.0+
-		0.7152*float64(bg.G)/255.0+
-		0.0722*float64(bg.B)/255.0 > 0.45
+// hover moves btn toward the foreground direction so the hovered element
+// gains contrast against its neighbours.
+func (t *RadKeysTheme) hover() color.NRGBA {
+	if isLightNRGBA(t.bg) {
+		return blend(t.btn, t.fg, 0.10)
+	}
+	return lighten(t.btn, 0.08)
 }
+
+// fgOnAccent returns white or black depending on the fix (accent) luminance,
+// ensuring text on primary buttons is always readable.
+func (t *RadKeysTheme) fgOnAccent() color.NRGBA {
+	if isLightNRGBA(t.fix) {
+		return color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xff}
+	}
+	return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+}
+
+// ---------------------------------------------------------------------------
+// colour operations
+// ---------------------------------------------------------------------------
 
 func lighten(c color.NRGBA, factor float64) color.NRGBA {
+	d := uint8(255 * factor)
 	return color.NRGBA{
-		R: clamp(c.R + uint8(255*factor)),
-		G: clamp(c.G + uint8(255*factor)),
-		B: clamp(c.B + uint8(255*factor)),
-		A: c.A,
+		R: satAdd(c.R, d), G: satAdd(c.G, d), B: satAdd(c.B, d), A: c.A,
 	}
 }
 
 func darken(c color.NRGBA, factor float64) color.NRGBA {
 	d := uint8(255 * factor)
 	return color.NRGBA{
-		R: satSub(c.R, d),
-		G: satSub(c.G, d),
-		B: satSub(c.B, d),
-		A: c.A,
+		R: satSub(c.R, d), G: satSub(c.G, d), B: satSub(c.B, d), A: c.A,
 	}
 }
 
-func blend(bg, fg color.NRGBA, t float64) color.NRGBA {
+func blend(a, b color.NRGBA, t float64) color.NRGBA {
 	return color.NRGBA{
-		R: uint8(float64(bg.R)*(1-t) + float64(fg.R)*t),
-		G: uint8(float64(bg.G)*(1-t) + float64(fg.G)*t),
-		B: uint8(float64(bg.B)*(1-t) + float64(fg.B)*t),
-		A: bg.A,
+		R: lerp(a.R, b.R, t), G: lerp(a.G, b.G, t), B: lerp(a.B, b.B, t), A: a.A,
 	}
 }
 
@@ -139,22 +197,15 @@ func setAlpha(c color.NRGBA, a uint8) color.NRGBA {
 	return c
 }
 
-func parseHex(s string, dr, dg, db uint8) color.NRGBA {
-	s = strings.TrimPrefix(s, "#")
-	if len(s) != 6 {
-		return color.NRGBA{R: dr, G: dg, B: db, A: 0xFF}
-	}
-	r, _ := strconv.ParseUint(s[0:2], 16, 8)
-	g, _ := strconv.ParseUint(s[2:4], 16, 8)
-	b, _ := strconv.ParseUint(s[4:6], 16, 8)
-	return color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 0xFF}
+func lerp(a, b uint8, t float64) uint8 {
+	return uint8(float64(a)*(1-t) + float64(b)*t)
 }
 
-func clamp(v uint8) uint8 {
-	if v > 255 {
-		return 255
+func satAdd(a, b uint8) uint8 {
+	if s := uint16(a) + uint16(b); s <= 255 {
+		return uint8(s)
 	}
-	return v
+	return 255
 }
 
 func satSub(a, b uint8) uint8 {
@@ -162,4 +213,25 @@ func satSub(a, b uint8) uint8 {
 		return 0
 	}
 	return a - b
+}
+
+// ---------------------------------------------------------------------------
+// luminance helpers
+// ---------------------------------------------------------------------------
+
+func isLightNRGBA(c color.NRGBA) bool {
+	return 0.2126*float64(c.R)/255.0+
+		0.7152*float64(c.G)/255.0+
+		0.0722*float64(c.B)/255.0 > 0.45
+}
+
+func parseHex(s string) color.NRGBA {
+	s = strings.TrimPrefix(s, "#")
+	if len(s) != 6 {
+		return color.NRGBA{R: 0x80, G: 0x80, B: 0x80, A: 0xff}
+	}
+	r, _ := strconv.ParseUint(s[0:2], 16, 8)
+	g, _ := strconv.ParseUint(s[2:4], 16, 8)
+	b, _ := strconv.ParseUint(s[4:6], 16, 8)
+	return color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 0xff}
 }

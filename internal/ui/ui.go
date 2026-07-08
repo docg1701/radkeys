@@ -5,6 +5,7 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	customTheme := resolveFullTheme(cfg)
 	a.Settings().SetTheme(customTheme)
 
-	iconRes := fyne.NewStaticResource("icon.png", assets.IconPNG)
+	iconRes := fyne.NewStaticResource("icon.png", appIconData(cfg))
 	a.SetIcon(iconRes)
 
 	i18n.SetLanguage(cfg.App.Language)
@@ -190,6 +191,15 @@ func (u *appUI) renderScreen() {
 	u.keypad.Refresh()
 }
 
+func appIconData(cfg *config.Config) []byte {
+	if cfg.App.Theme.Icon != "" {
+		if data := assets.IconData(cfg.App.Theme.Icon); data != nil {
+			return data
+		}
+	}
+	return assets.IconPNG
+}
+
 func (u *appUI) previewBox() fyne.CanvasObject {
 	bg := canvas.NewRectangle(u.thm.bg)
 	scroll := container.NewVScroll(u.preview)
@@ -242,25 +252,39 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}, u.win).Show()
 	})
 	chooseBtn.Importance = widget.MediumImportance
+	configRow := container.NewBorder(nil, nil, nil, chooseBtn, configLbl)
 
 	vidEnt := widget.NewEntry()
 	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
+	vidEnt.SetMinRowsVisible(1)
 	pidEnt := widget.NewEntry()
 	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
+	pidEnt.SetMinRowsVisible(1)
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
+
+	iconOpts := append([]string{""}, assets.IconNames()...)
+	iconSel := widget.NewSelect(iconOpts, nil)
+	iconSel.SetSelected(cfg.App.Theme.Icon)
 
 	// --- Save action ---
 
 	save := func() {
 		cfg.App.Radiologist = radEnt.Text
 		cfg.App.Language = langSel.Selected
+		cfg.App.Theme.Icon = iconSel.Selected
 		cfg.App.Theme.Preset = themeSel.Selected
-		if v, err := strconv.Atoi(colsEnt.Text); err == nil {
+		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 {
 			cfg.App.Layout.Columns = v
+		} else {
+			cfg.App.Layout.Columns = 1
+			colsEnt.SetText("1")
 		}
-		if v, err := strconv.Atoi(rowsEnt.Text); err == nil {
+		if v, err := strconv.Atoi(rowsEnt.Text); err == nil && v > 0 {
 			cfg.App.Layout.Rows = v
+		} else {
+			cfg.App.Layout.Rows = 1
+			rowsEnt.SetText("1")
 		}
 		if v, err := strconv.ParseUint(strings.TrimPrefix(vidEnt.Text, "0x"), 16, 16); err == nil {
 			cfg.App.Device.VendorID = uint16(v)
@@ -285,6 +309,10 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		i18n.SetLanguage(cfg.App.Language)
 		u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
 
+		iconRes := fyne.NewStaticResource("icon.png", appIconData(cfg))
+		u.a.SetIcon(iconRes)
+		u.win.SetIcon(iconRes)
+
 		u.a.Settings().SetTheme(resolveFullTheme(cfg))
 		u.thm = resolveKeypadColors(cfg)
 
@@ -307,7 +335,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		tabs.Refresh()
 
 		u.renderScreen()
-		dialog.ShowInformation(i18n.T("settings.saved_title"), i18n.T("settings.saved_msg"), u.win)
+
 	}
 
 	saveBtn := widget.NewButton(i18n.T("settings.save"), save)
@@ -322,16 +350,16 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		makeCard(i18n.T("settings.group_locale"), "",
 			makeFieldRow(i18n.T("settings.language"), langSel),
 			makeFieldRow(i18n.T("settings.theme"), themeSel),
+			makeFieldRow(i18n.T("settings.icon"), iconSel),
 		),
 		makeCard(i18n.T("settings.group_layout"), "",
 			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
 		),
 		makeCard(i18n.T("settings.group_config"), "",
-			configLbl,
-			chooseBtn,
+			configRow,
 		),
 		makeCard(i18n.T("settings.group_device"), "",
-			makeDualField(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt),
+			makeUSBRow(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt),
 			makeFieldRow(i18n.T("settings.protocol"), protoSel),
 		),
 	}
@@ -352,29 +380,39 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 		ver = "dev"
 	}
 
-	// All text via RichTextFromMarkdown — it respects the theme, no hardcoded colors.
-	md := fmt.Sprintf(
-		"# RadKeys\n\n"+
-			"**%s**\n\n"+
-			"%s\n\n"+
-			"[GitHub](https://github.com/docg1701/radkeys) • [MIT License](https://github.com/docg1701/radkeys/blob/main/LICENSE)\n\n"+
-			"---\n\n"+
-			"%s\n\n"+
-			"---\n\n"+
-			"%s\n\n"+
-			"---\n\n"+
-			"%s",
-		fmt.Sprintf(i18n.T("about.version"), ver),
-		i18n.T("about.description"),
-		i18n.T("about.credits"),
-		i18n.T("about.stack"),
-		i18n.T("about.i18n"),
-	)
+	appName := widget.NewLabel("RadKeys")
+	appName.TextStyle = fyne.TextStyle{Bold: true}
 
-	content := widget.NewRichTextFromMarkdown(md)
-	content.Wrapping = fyne.TextWrapWord
+	version := widget.NewLabel(fmt.Sprintf(i18n.T("about.version"), ver))
 
-	return container.NewVScroll(container.NewPadded(content))
+	desc := widget.NewLabel(i18n.T("about.description"))
+	desc.Wrapping = fyne.TextWrapWord
+
+	author := widget.NewLabel(i18n.T("about.author"))
+	license := widget.NewLabel(i18n.T("about.license"))
+
+	repoURL, _ := url.Parse("https://github.com/docg1701/radkeys")
+	repo := widget.NewHyperlink("github.com/docg1701/radkeys", repoURL)
+
+	stack := widget.NewLabel(i18n.T("about.stack"))
+	stack.Wrapping = fyne.TextWrapWord
+
+	langs := widget.NewLabel(i18n.T("about.i18n"))
+	langs.Wrapping = fyne.TextWrapWord
+
+	items := []fyne.CanvasObject{
+		appName, version,
+		widget.NewSeparator(),
+		desc,
+		widget.NewSeparator(),
+		author, license, repo,
+		widget.NewSeparator(),
+		stack,
+		widget.NewSeparator(),
+		langs,
+	}
+
+	return container.NewVScroll(container.NewPadded(container.NewVBox(items...)))
 }
 
 // ---------------------------------------------------------------------------
@@ -398,5 +436,16 @@ func makeDualField(l1 string, i1 fyne.CanvasObject, l2 string, i2 fyne.CanvasObj
 		container.NewBorder(nil, nil, lbl1, nil, i1),
 		widget.NewSeparator(),
 		container.NewBorder(nil, nil, lbl2, nil, i2),
+	)
+}
+
+func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pidInput fyne.CanvasObject) fyne.CanvasObject {
+	lblV := widget.NewLabel(vidLabel)
+	lblP := widget.NewLabel(pidLabel)
+	vidBox := container.NewBorder(nil, nil, lblV, nil, vidInput)
+	pidBox := container.NewBorder(nil, nil, lblP, nil, pidInput)
+	return container.NewHBox(
+		container.NewPadded(vidBox),
+		container.NewPadded(pidBox),
 	)
 }

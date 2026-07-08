@@ -50,6 +50,7 @@ type Theme struct {
 	Background string `toml:"background"` // preview/background color
 	Button     string `toml:"button"`     // configurable button color
 	Fixed      string `toml:"fixed"`      // fixed button color
+	Icon       string `toml:"icon"`       // embedded icon name (empty = default)
 }
 
 // Device identifies the USB HID custom device to open.

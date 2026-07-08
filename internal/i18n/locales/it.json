@@ -19,6 +19,7 @@
   "settings.vid": {"other": "VID"},
   "settings.pid": {"other": "PID"},
   "settings.protocol": {"other": "Protocollo"},
+  "settings.icon": {"other": "Icon"},
   "settings.browse": {"other": "Sfoglia…"},
   "settings.save": {"other": "Salva"},
   "settings.group_general": {"other": "Generale"},
@@ -33,8 +34,9 @@
   "settings.saved_title": {"other": "Salvato"},
   "settings.saved_msg": {"other": "Impostazioni salvate."},
   "about.version": {"other": "Versione %s"},
-  "about.description": {"other": "**RadKeys** è un compagno multipiattaforma per deck di scorciatoie radiologiche.\nMostra pulsanti di frasi configurabili e copia il testo negli appunti\ncon un solo tasto tramite dispositivi USB HID o tastiera virtuale sullo schermo."},
-  "about.credits": {"other": "**Autore:** Nonatinho (Galvani)  \n**Icona:** [Obsidian icon theme](https://github.com/madmaxms/icon-pack-obsidian) (preferences-desktop-keyboard-shortcuts)  \n**Licenza:** MIT"},
-  "about.stack": {"other": "**Stack:** Go · [Fyne](https://fyne.io) · [go-hid](https://github.com/sstallion/go-hid) · [go-i18n](https://github.com/nicksnyder/go-i18n) · [BurntSushi/toml](https://github.com/BurntSushi/toml)"},
-  "about.i18n": {"other": "**Disponibile in 7 lingue:** English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
+  "about.description": {"other": "Compagno multipiattaforma per deck di scorciatoie radiologiche. Mostra pulsanti di frasi configurabili e copia il testo via USB HID o tastiera virtuale."},
+  "about.author": {"other": "Autore: docg1701"},
+  "about.license": {"other": "Licenza: MIT"},
+  "about.stack": {"other": "Go · Fyne · go-hid · go-i18n · BurntSushi/toml"},
+  "about.i18n": {"other": "Disponibile in 7 lingue: English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
 }
