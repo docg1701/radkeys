@@ -35,9 +35,9 @@
   "settings.saved_title": {"other": "Saved"},
   "settings.saved_msg": {"other": "Settings saved."},
   "about.version": {"other": "Version %s"},
-  "about.description": {"other": "Cross-platform companion for radiology shortcut decks. Displays configurable phrase buttons and copies text to the clipboard via USB HID devices or a virtual on-screen keypad."},
+  "about.description": {"other": "RadKeys is a cross-platform companion for radiology shortcut decks."},
   "about.author": {"other": "Author: docg1701"},
   "about.license": {"other": "License: MIT"},
-  "about.stack": {"other": "Go · Fyne · go-hid · go-i18n · BurntSushi/toml"},
-  "about.i18n": {"other": "Available in 7 languages: English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
+  "about.stack": {"other": "Built with Go, Fyne, go-hid, go-i18n, and BurntSushi/toml."},
+  "about.i18n": {"other": "Available in 7 languages."}
 }

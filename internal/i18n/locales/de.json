@@ -34,9 +34,9 @@
   "settings.saved_title": {"other": "Gespeichert"},
   "settings.saved_msg": {"other": "Einstellungen gespeichert."},
   "about.version": {"other": "Version %s"},
-  "about.description": {"other": "Plattformübergreifender Begleiter für Radiologie-Kurzbefehle. Zeigt konfigurierbare Textbausteine an und kopiert Text via USB HID oder virtuelles Tastenfeld."},
+  "about.description": {"other": "RadKeys ist ein plattformübergreifender Begleiter für Radiologie-Kurzbefehle."},
   "about.author": {"other": "Autor: docg1701"},
   "about.license": {"other": "Lizenz: MIT"},
-  "about.stack": {"other": "Go · Fyne · go-hid · go-i18n · BurntSushi/toml"},
-  "about.i18n": {"other": "Verfügbar in 7 Sprachen: English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
+  "about.stack": {"other": "Erstellt mit Go, Fyne, go-hid, go-i18n und BurntSushi/toml."},
+  "about.i18n": {"other": "Verfügbar in 7 Sprachen."}
 }

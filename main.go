@@ -58,7 +58,7 @@ func ensureConfig(path string) {
 	}
 	const tmpl = `[app]
 name = "RadKeys"
-version = "1.2"
+version = "0.2.1"
 
 [app.device]
 vendor_id  = 0x0fd9

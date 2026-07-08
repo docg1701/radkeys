@@ -394,7 +394,9 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 	repo := widget.NewHyperlink("github.com/docg1701/radkeys", repoURL)
 
 	author := widget.NewLabel(i18n.T("about.author"))
+	author.Wrapping = fyne.TextWrapWord
 	license := widget.NewLabel(i18n.T("about.license"))
+	license.Wrapping = fyne.TextWrapWord
 
 	stack := widget.NewLabel(i18n.T("about.stack"))
 	stack.Wrapping = fyne.TextWrapWord
