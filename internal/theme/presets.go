@@ -10,7 +10,7 @@ type Preset struct {
 	Fixed      string
 }
 
-// Presets is the list of all selectable themes. Index 0 is the default.
+// Presets is the list of all selectable themes (12). Index 0 is the default.
 var Presets = []Preset{
 	{"Dracula", "#282a36", "#44475a", "#6272a4"},
 	{"Solarized Dark", "#002b36", "#073642", "#586e75"},
@@ -24,7 +24,6 @@ var Presets = []Preset{
 	{"Gruvbox Light", "#fbf1c7", "#ebdbb2", "#d5c4a1"},
 	{"Light Gray", "#e0e0e0", "#c0c0c0", "#a0a0a0"},
 	{"Dark Gray", "#202020", "#303030", "#404040"},
-	{"Custom", "", "", ""},
 }
 
 // PresetNames returns just the names for a dropdown.

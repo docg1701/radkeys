@@ -17,7 +17,7 @@
     rows = 5
     preview = ""
   [app.theme]
-    preset = "Dracula"
+    preset = "Solarized Light"
     background = "#1a1a1a"
     button = "#2a2a2a"
     fixed = "#3a3a3a"

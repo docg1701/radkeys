@@ -119,7 +119,7 @@ func resolveTheme(cfg *config.Config) themeColors {
 	btn := cfg.App.Theme.Button
 	fix := cfg.App.Theme.Fixed
 	if cfg.App.Theme.Preset != "" {
-		if p, ok := themes.FindPreset(cfg.App.Theme.Preset); ok && p.Name != "Custom" {
+		if p, ok := themes.FindPreset(cfg.App.Theme.Preset); ok {
 			bg, btn, fix = p.Background, p.Button, p.Fixed
 		}
 	}
