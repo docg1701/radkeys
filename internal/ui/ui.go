@@ -450,9 +450,15 @@ func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(items...)
 }
 
-// variantFor detects whether the theme is light or dark by checking the
-// background colour luminance. Works for DefaultTheme and RadKeysTheme.
+// variantFor returns the correct ThemeVariant for the active theme.
+// For the system theme, uses Fyne's OS-detected variant.
+// For custom themes, detects from background luminance.
 func variantFor(th fyne.Theme) fyne.ThemeVariant {
+	// If it's the default (system) theme, trust Fyne's OS detection.
+	if th == fyneTheme.DefaultTheme() {
+		return fyne.CurrentApp().Settings().ThemeVariant()
+	}
+	// Custom theme: detect from the actual background colour.
 	bg := th.Color(fyneTheme.ColorNameBackground, fyneTheme.VariantDark)
 	r, g, b, _ := bg.RGBA()
 	if 0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b) > 0xffff*0.45 {
