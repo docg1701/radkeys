@@ -5,10 +5,13 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
@@ -21,22 +24,26 @@ import (
 // editor to save back to).
 func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
+	a.Settings().SetTheme(theme.DarkTheme())
 	w := a.NewWindow("RadKeys")
 	w.SetFixedSize(true)
-	w.Resize(fyne.NewSize(900, 600))
+	w.Resize(fyne.NewSize(960, 640))
 
-	preview := widget.NewLabel("Selecione uma frase para pré-visualizar.")
+	preview := widget.NewRichTextFromMarkdown("*Selecione uma frase para pré‑visualizar.*")
 	preview.Wrapping = fyne.TextWrapWord
 
-	title := widget.NewLabel("")
+	title := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 	grid := container.NewGridWithColumns(6)
 
 	u := &appUI{cfg: cfg, configPath: configPath, deck: deck.New(cfg), reader: reader, fapp: a, win: w, preview: preview, title: title, grid: grid}
 	u.renderScreen()
 
-	editBtn := widget.NewButton("Editar", u.openEditor)
-	top := container.NewHBox(title, editBtn)
-	w.SetContent(container.NewBorder(top, preview, nil, nil, grid))
+	editBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), u.openEditor)
+	editBtn.Importance = widget.LowImportance
+
+	top := container.NewBorder(nil, nil, title, editBtn)
+	content := container.NewBorder(top, u.previewBox(), nil, nil, grid)
+	w.SetContent(content)
 
 	// Always-on-top: NOT available in Fyne v2.7.4 (PR #6184 is on develop / v2.8.0,
 	// still rc1 as of 2026-07-07). Decision: MVP stays on v2.7.4 stable without
@@ -61,7 +68,7 @@ type appUI struct {
 	reader     hid.Reader
 	fapp       fyne.App
 	win        fyne.Window
-	preview    *widget.Label
+	preview    *widget.RichText
 	title      *widget.Label
 	grid       *fyne.Container
 }
@@ -74,7 +81,7 @@ func (u *appUI) press(index int) {
 	case deck.EffectNavigate:
 		u.renderScreen()
 	case deck.EffectPreview:
-		u.preview.SetText(eff.Text)
+		u.preview.ParseMarkdown(eff.Text)
 	}
 }
 
@@ -84,20 +91,30 @@ func (u *appUI) renderScreen() {
 
 	f := u.cfg.App.FixedButtons
 	objs := []fyne.CanvasObject{
-		u.fixedBtn("Copy", f.Copy),
-		u.fixedBtn("Up", f.LevelUp),
-		u.fixedBtn("Home", f.GoHome),
+		u.fixedBtn("📋 Copiar", f.Copy),
+		u.fixedBtn("⬆ Voltar", f.LevelUp),
+		u.fixedBtn("⌂ Início", f.GoHome),
 	}
 	for _, b := range s.Buttons {
 		b := b
-		objs = append(objs, widget.NewButton(b.Label, func() { u.press(b.Index) }))
+		btn := widget.NewButtonWithIcon(fmt.Sprintf("%d  %s", b.Index, b.Label), nil, func() { u.press(b.Index) })
+		btn.Importance = widget.MediumImportance
+		objs = append(objs, btn)
 	}
 	u.grid.Objects = objs
 	u.grid.Refresh()
 }
 
 func (u *appUI) fixedBtn(label string, index int) *widget.Button {
-	return widget.NewButton(label, func() { u.press(index) })
+	btn := widget.NewButtonWithIcon(label, nil, func() { u.press(index) })
+	btn.Importance = widget.HighImportance
+	return btn
+}
+
+func (u *appUI) previewBox() fyne.CanvasObject {
+	sep := canvas.NewRectangle(color.NRGBA{R: 0x40, G: 0x40, B: 0x40, A: 0xFF})
+	sep.SetMinSize(fyne.NewSize(1, 2))
+	return container.NewBorder(sep, nil, nil, nil, container.NewPadded(u.preview))
 }
 
 // pollHID forwards physical button presses to the UI thread via fyne.Do.
