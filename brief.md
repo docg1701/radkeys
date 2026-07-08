@@ -127,3 +127,19 @@ do projeto, como todo bom aplicativo open source:
 - Créditos: autor (Nonatinho/Galvani), ícone (Obsidian icon theme).
 - Stack: Go, Fyne, go-hid, go-i18n, BurntSushi/toml.
 - i18n disponível em 7 idiomas.
+
+### 7.3 Reformulação completa dos temas
+
+Os 12 temas atuais são aplicados apenas ao fundo do preview e aos botões,
+mas o tema global do Fyne (`DarkTheme`) sobrescreve o restante da interface.
+Resultado: mesmo os temas "Light" e "Solarized Light" ficam escuros.
+
+Requisitos:
+- Implementar um `fyne.Theme` customizado que aplique o preset a TODA a
+  interface (fundo da janela, texto, botões, tabs, scrollbars).
+- Temas claros devem usar o tema claro do Fyne como base; temas escuros
+  usam o tema escuro.
+- Respeitar o design original de cada tema (Solarized, Gruvbox, Nord,
+  Dracula, Monokai, One Dark, Tokyo Night, Catppuccin).
+- Incluir 1 tema claro padrão (ex.: Light Gray) e 1 tema escuro padrão
+  (ex.: Dark Gray) que funcionem corretamente.
