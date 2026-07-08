@@ -1,36 +1,83 @@
 # AGENTS.md — RadKeys
 
-> Instructions for AI coding agents. Follow exactly. Dev cycle ends ONLY when
-> the CI auto-release is complete and the GitHub release is published.
+> Instructions for AI coding agents. Follow exactly.
 
 ## Dev cycle (MANDATORY — follow every time)
 
 ```
-1. Desenvolver → go test ./... → go vet ./... → gofmt
-2. Bump version in radkeys.config.toml ([app] version)
-3. Commit: fix: version bump X.Y.Z → A.B.C (context)
-4. Push to main
-5. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
-6. git push origin vA.B.C
-7. MONITOR: gh run watch <run-id> --exit-status
-   Wait until CI passes → release auto-created by CI.
-   The agent MUST NOT stop until the release is published.
+1. Desenvolver
+2. gofmt -w . && go vet ./... && go test ./...
+3. Bump version in radkeys.config.toml ([app] version)
+4. Commit: fix: version bump X.Y.Z → A.B.C (context)
+5. Push to main
+6. Build all release binaries LOCALLY:
+   go build -o radkeys-linux-amd64 .
+   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+7. macOS: build on a Mac (cross-compile from Linux is impossible — needs Apple SDK).
+   On macOS: CGO_ENABLED=1 go build -o radkeys-macos-amd64 . && CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
+8. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
+9. git push origin vA.B.C
+10. MONITOR: gh run watch <run-id> --exit-status
+    Wait until CI passes → release auto-created by CI.
+11. Upload the locally-built binaries to the release:
+    gh release upload vA.B.C radkeys-linux-amd64 radkeys-windows-amd64.exe
+    (and macOS binaries if available)
+    The agent MUST NOT stop until all binaries are in the release.
 ```
 
 ## Commands
 
 ```bash
-go build -o radkeys .        # build
-./radkeys                     # run (mock without hardware)
-go test ./... -v              # tests
-gofmt -w . && go vet ./...    # format + vet
-go mod tidy                   # deps
+# Build native (Linux)
+go build -o radkeys-linux-amd64 .
 
-# Cross-compile tests (agent MUST run locally — NOT in CI)
-CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o /dev/null ./...
-CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 go build -o /dev/null ./...
-CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 go build -o /dev/null ./...
+# Cross-compile Windows from Linux
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+
+# macOS (on a Mac — cross-compile from Linux is impossible with CGO)
+CGO_ENABLED=1 go build -o radkeys-macos-amd64 .
+CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
+
+# Test
+go test ./... -v
+gofmt -w . && go vet ./...
+go mod tidy
 ```
+
+## Agent responsibilities
+
+### ✅ Always
+- `gofmt -w . && go vet ./... && go test ./...` before every commit.
+- Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`).
+- Build Windows binary locally (mingw) and upload to the release.
+- Build Linux binary and upload to the release.
+- Monitor CI after tag push until release is published.
+- Conventional commits for changelog.
+
+### ⚠️ When possible
+- Build macOS binaries on a Mac and upload to the release.
+- MacOS cross-compile from Linux is **impossible** with CGO (needs Apple's proprietary SDK). Build on a Mac or skip.
+
+### 🚫 Never
+- Keyboard HID (F13-F24) input — rejected by product.
+- `RequestAlwaysOnTop()` without verifying Fyne version (only available in ≥v2.8.0, not released yet).
+- Hardcoded UI strings — use `i18n.T()`.
+- Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
+- Cross-compile in CI — agent does it locally.
+- End the turn before CI release is published and all binaries are uploaded.
+- End the turn before the release has Linux + Windows binaries.
+
+## Release checklist (agent MUST complete)
+
+- [ ] `go test ./...` passes
+- [ ] `go vet ./...` clean
+- [ ] Version bumped in `radkeys.config.toml`
+- [ ] `radkeys-linux-amd64` built and uploaded
+- [ ] `radkeys-windows-amd64.exe` built (mingw) and uploaded
+- [ ] macOS binaries built and uploaded (if Mac available)
+- [ ] `git tag vX.Y.Z` (lightweight) pushed
+- [ ] CI passed → release published by CI
+- [ ] All binaries uploaded to the release
 
 ## Testing
 
@@ -42,16 +89,16 @@ CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 go build -o /dev/null ./...
 
 ```
 radkeys/
-├── main.go / go.mod
-├── radkeys.config.toml      # Config de exemplo (comentado p/ humano/LLM)
+├── main.go / go.mod / go.sum
+├── radkeys.config.toml      # Config example (commented for human/LLM)
 ├── internal/
-│   ├── config/              # TOML parser + types
+│   ├── config/              # TOML parser + validation + types
 │   ├── deck/                # Navigation state machine
-│   ├── hid/                 # HID reader (go-hid) + mock
+│   ├── hid/                 # HID reader (go-hid + mock with build tags)
 │   ├── ui/                  # Fyne UI (Atalhos + Ajustes)
 │   ├── i18n/                 # go-i18n + 7 JSON embed
 │   ├── theme/               # 12 preset themes
-│   └── assets/              # Icon (Obsidian) embed
+│   └── assets/              # Icon (Obsidian) embedded
 ├── firmware/arduino/        # Arduino Pro Micro firmware
 ├── firmware/rp2040/         # RP2040 firmware
 └── research/                # Technical investigation notes
@@ -81,29 +128,10 @@ func (d *Deck) levelUp() {
 
 ## Release
 
-The CI `.github/workflows/build.yml` does:
-1. Test + vet on ubuntu (Linux only — cross-compile is agent's job).
+The CI `.github/workflows/build.yml`:
+1. Test + vet on ubuntu (Linux only).
 2. On tag push → build Linux binary + create GitHub release with:
-   - `radkeys-linux-amd64` binary
-   - `radkeys.config.toml` config template
+   - `radkeys-linux-amd64`
+   - `radkeys.config.toml`
 
-Cross-compile for Windows/macOS is the agent's responsibility, tested locally:
-```bash
-GOOS=windows go build ./... && GOOS=darwin go build ./...
-```
-
-## Boundaries
-
-### ✅ Always
-- `gofmt -w . && go vet ./... && go test ./...` before commit.
-- Conventional commits.
-- Embed everything (icon, i18n, themes) → release = 1 binary + 1 config.
-- Monitor CI after tag push until release is created.
-
-### 🚫 Never
-- Keyboard HID (F13-F24) input — rejected by product.
-- `RequestAlwaysOnTop()` without verifying Fyne version.
-- Hardcoded UI strings — use `i18n.T()`.
-- Annotated tags (`git tag -a`, `git tag -m`).
-- Cross-compile in CI — agent does it locally.
-- End the turn before CI release is confirmed published.
+The agent then uploads the locally-built Windows (and macOS if available) binaries to the same release.
