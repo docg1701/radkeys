@@ -12,3 +12,4 @@ RadKeys.app/
 
 # Windows build artifact
 radkeys.exe
+dist/
