@@ -14,6 +14,14 @@ RadKeys é um aplicativo desktop portátil, open source, multiplataforma, para m
 
 A operação principal é feita por **teclado físico/dispositivo USB HID** enviando teclas F13-F24, sem roubar o foco do RIS. Cliques de mouse na janela do RadKeys mudam o foco normalmente — esse é o comportamento esperado.
 
+### Plataformas e mecanismos de input
+
+| Plataforma | Mecanismo de captura | Requisitos do usuário |
+|------------|---------------------|----------------------|
+| **Windows** | `golang.design/x/hotkey` (Win32 RegisterHotKey) | Nenhum. Só baixar e executar. |
+| **macOS** | `golang.design/x/hotkey` (CGEventTap) | Conceder permissão de Accessibility/Input Monitoring na primeira execução. |
+| **Linux** | Leitura direta do dispositivo USB HID via `evdev` (`/dev/input/event*`) | Usuário no grupo `input` (ou regra udev para o dispositivo). Funciona em X11, Wayland e console. |
+
 ---
 
 ## 2. Restrições e requisitos de negócio
@@ -23,7 +31,7 @@ A operação principal é feita por **teclado físico/dispositivo USB HID** envi
 | **Open source** | Sim, MIT, repositório público no GitHub. |
 | **Arquivos de configuração** | Abertos em plaintext (TOML). Compartilháveis livremente. |
 | **Receita** | Venda de arquivos premium (curadoria/conveniência) + hardware opcional/afiliado/DIY. |
-| **Plataformas** | Windows 10/11, macOS (Intel + Apple Silicon), Linux (X11 principalmente). |
+| **Plataformas** | Windows 10/11, macOS (Intel + Apple Silicon), Linux. |
 | **Distribuição** | Executável único, sem instalação, sem bundle, sem webview. |
 | **Configuração** | Um arquivo `radkeys.config.toml` no mesmo diretório do executável. |
 | **Hardware USB** | Upgrade opcional; dispositivo HID genérico enviando F13-F24. |
@@ -37,7 +45,8 @@ A operação principal é feita por **teclado físico/dispositivo USB HID** envi
 |--------|-----------|---------------|
 | Linguagem | **Go 1.22+** | Compilação nativa, binário único, cross-compile maduro. |
 | GUI | **Fyne v2 (≥2.7.4)** | Toolkit Go nativo, executável único, sem webview, API de clipboard, always-on-top via `RequestAlwaysOnTop()`. |
-| Hotkeys globais | **golang.design/x/hotkey** | Registra hotkeys no sistema operacional (Windows/macOS/Linux X11) sem exigir foco na janela. Integra com Fyne. |
+| Hotkeys globais Windows/macOS | **golang.design/x/hotkey** | Registra hotkeys no sistema operacional sem exigir foco na janela. Integra com Fyne. |
+| Captura de dispositivo USB Linux | **evdev** (`github.com/kenshaw/evdev` ou similar) | Lê eventos do dispositivo HID diretamente do kernel, independente de X11/Wayland/console. |
 | Parser config | **TOML** (`github.com/BurntSushi/toml` ou similar) | Fácil para humanos e LLMs. |
 | Build multiplataforma | `fyne-cross` (Docker) ou builds nativos por OS. | Gera binários para Windows, macOS e Linux a partir de uma codebase. |
 
@@ -71,13 +80,12 @@ A operação principal é feita por **teclado físico/dispositivo USB HID** envi
    └──────────────┘  └──────────────┘
            │
            ▼
-   ┌──────────────┐
-   │ Global     │
-   │ Hotkeys    │
-   │ (golang.   │
-   │ design/x/  │
-   │ hotkey)    │
-   └──────────────┘
+   ┌─────────────────────────────────┐
+   │ Captura de input                │
+   │ • Windows/macOS: hotkeys globais│
+   │ • Linux: evdev do dispositivo   │
+   │   USB HID                       │
+   └─────────────────────────────────┘
            ▲
            │
    ┌──────────────┐
@@ -91,12 +99,13 @@ A operação principal é feita por **teclado físico/dispositivo USB HID** envi
 
 1. App inicia e carrega `radkeys.config.toml` do mesmo diretório.
 2. Tela de uso é exibida always-on-top.
-3. Hotkeys globais F13-F24 são registradas.
-4. Usuário posiciona cursor no campo de laudo do RIS.
-5. Usuário aperta tecla do dispositivo USB → hotkey global dispara → navegação na hierarquia.
-6. Usuário seleciona frase → preview atualiza.
-7. Usuário confirma cópia → texto vai para clipboard.
-8. Usuário cola no RIS (Ctrl+V ou tecla física "colar").
+3. **Windows/macOS:** hotkeys globais F13-F24 são registradas via `golang.design/x/hotkey`.
+4. **Linux:** o dispositivo USB HID é aberto em `/dev/input/event*` via evdev.
+5. Usuário posiciona cursor no campo de laudo do RIS.
+6. Usuário aperta tecla do dispositivo USB → input é capturado → navegação na hierarquia.
+7. Usuário seleciona frase → preview atualiza.
+8. Usuário confirma cópia → texto vai para clipboard.
+9. Usuário cola no RIS (Ctrl+V ou tecla física "colar").
 
 ---
 
@@ -216,16 +225,19 @@ Layout em tela cheia/janela grande, always-on-top:
 
 ### 7.1 Promessa real
 
-- **Dispositivo USB/teclado:** não rouba o foco do RIS. O RadKeys é notificado via hotkeys globais do sistema operacional.
+- **Dispositivo USB/teclado:** não rouba o foco do RIS.
+  - **Windows/macOS:** captura via hotkeys globais (`golang.design/x/hotkey`).
+  - **Linux:** captura via leitura direta do dispositivo USB HID (`evdev`).
 - **Mouse:** clicar na janela do RadKeys muda o foco para o RadKeys. Isso é comportamento normal e documentado.
 
 ### 7.2 Implementação
 
 1. Não chamar `RequestFocus()`.
 2. Usar `desktop.Window.RequestAlwaysOnTop()` (Fyne ≥2.7.4).
-3. Capturar F13-F24 via `golang.design/x/hotkey` registradas globalmente.
-4. Quando hotkey dispara, executar ação correspondente (navegação, cópia, etc.).
-5. Copiar para clipboard via `fyne.App.Clipboard().SetContent()`.
+3. **Windows/macOS:** capturar F13-F24 via `golang.design/x/hotkey` registradas globalmente.
+4. **Linux:** abrir o dispositivo USB HID em `/dev/input/event*` via evdev e ler eventos de tecla F13-F24 diretamente.
+5. Quando input dispara, executar ação correspondente (navegação, cópia, etc.).
+6. Copiar para clipboard via `fyne.App.Clipboard().SetContent()`.
 
 ---
 
@@ -242,7 +254,15 @@ Layout em tela cheia/janela grande, always-on-top:
 - Dispositivo se comporta como teclado USB HID.
 - Cada tecla física envia F13-F24 (ou F13-F24 + modificadores).
 - Não requer driver específico do RadKeys.
-- O RadKeys apenas escuta as hotkeys globais correspondentes.
+- **Windows/macOS:** RadKeys escuta hotkeys globais correspondentes via `golang.design/x/hotkey`.
+- **Linux:** RadKeys abre o dispositivo em `/dev/input/event*` e lê eventos evdev diretamente.
+
+### 8.3 Permissões Linux
+
+- O usuário precisa ter acesso de leitura ao dispositivo HID.
+- Método padrão: adicionar usuário ao grupo `input`.
+- Alternativa mais segura: regra udev específica para o vendor/product ID do dispositivo USB.
+- Funciona em X11, Wayland e console — não depende do servidor gráfico.
 
 ---
 
@@ -297,10 +317,10 @@ Layout em tela cheia/janela grande, always-on-top:
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
 | Fyne `RequestAlwaysOnTop()` não funciona em algum Linux | Média | Médio | Testar em distros comuns; fallback posicionamento manual. |
-| `golang.design/x/hotkey` limitado em Wayland | Média | Médio | Documentar suporte X11; testar em distros desktop. |
+| Captura evdev no Linux exige grupo `input` ou regra udev | Alta | Baixo | Documentar claramente; grupo `input` é configuração básica de permissão de dispositivo Linux. |
 | Binário grande (15-30 MB+) | Alta | Baixo | Aceitável para "executável único". |
 | Cross-compile macOS exige macOS SDK | Alta | Médio | Usar fyne-cross; ou build em macOS real para release. |
-| Kimi/GLM alucinam em APIs obscuras | Média | Médio | Fornecer referências (`golang.design/x/hotkey`, exemplo Fyne). |
+| Kimi/GLM alucinam em APIs obscuras | Média | Médio | Fornecer referências (`golang.design/x/hotkey`, evdev, exemplo Fyne). |
 
 ---
 
@@ -308,12 +328,13 @@ Layout em tela cheia/janela grande, always-on-top:
 
 1. Implementar parser TOML.
 2. Implementar tela de uso com navegação hierárquica e preview.
-3. Integrar `golang.design/x/hotkey` para F13-F24.
-4. Implementar cópia para clipboard.
-5. Adicionar always-on-top.
-6. Implementar tela de edição.
-7. Build multiplataforma.
-8. Testar com dispositivo USB HID real.
+3. Integrar `golang.design/x/hotkey` para F13-F24 no Windows/macOS.
+4. Integrar leitura evdev do dispositivo USB HID no Linux.
+5. Implementar cópia para clipboard.
+6. Adicionar always-on-top.
+7. Implementar tela de edição.
+8. Build multiplataforma.
+9. Testar com dispositivo USB HID real.
 
 ---
 
@@ -323,5 +344,6 @@ Layout em tela cheia/janela grande, always-on-top:
 - Fyne PR #6184 (always-on-top): https://github.com/fyne-io/fyne/pull/6184
 - golang.design/x/hotkey: https://pkg.go.dev/golang.design/x/hotkey
 - Exemplo Fyne + hotkey: https://github.com/golang-design/hotkey/blob/main/examples/fyne/main.go
+- evdev Go package: https://pkg.go.dev/github.com/kenshaw/evdev
 - fyne-cross: https://github.com/fyne-io/fyne-cross
 - DIY Stream Deck HID F13-F24: https://github.com/Mercawa/DIYStreamDeck-HIDKeyboard
