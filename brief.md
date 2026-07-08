@@ -213,3 +213,21 @@ a partir do preset ou delegada ao `DefaultTheme`.
    Gruvbox Light e Light Gray antes de considerar pronto.
 5. **Testar com tema escuro**: validar visualmente com Dracula, Nord,
    Dark Gray antes de considerar pronto.
+
+## 10. Trocar ícone do app
+
+O ícone atual (Obsidian `preferences-desktop-keyboard-shortcuts`) é
+feio. O usuário (Galvani) quer escolher um novo ícone interativamente
+a partir de uma seleção de opções.
+
+Fluxo:
+1. Agente pesquisa e apresenta 5-10 opções de ícones (PNG 256×256)
+   relevantes para um app de atalhos de radiologia (teclado, atalho,
+   hospital, raio-X, etc.). Fontes sugeridas: Papirus, Breeze,
+   Material Design Icons, FontAwesome, Lucide.
+2. Galvani escolhe um via `ask_user` interativo com preview de cada
+   ícone (thumbnail ou representação visual).
+3. O ícone escolhido substitui `internal/assets/icon.png`.
+4. Se o ícone for SVG, converter para PNG 256×256 antes de embutir.
+5. Reconstruir o binário e verificar que o ícone aparece na janela
+   e na barra de tarefas.
