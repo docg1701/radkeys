@@ -101,7 +101,7 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) colo
 
 	// ── foreground-on-X (readability guaranteed) ──────────────
 	case theme.ColorNameForegroundOnPrimary:
-		return t.fgOnAccent()
+		return t.fgOnPrimary()
 	case theme.ColorNameForegroundOnError:
 		return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
 	case theme.ColorNameForegroundOnSuccess:
@@ -177,6 +177,15 @@ func (t *RadKeysTheme) primary() color.NRGBA {
 		return color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}
 	}
 	return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+}
+
+// fgOnPrimary returns the opposite of the primary colour so text on
+// primary buttons is always readable.
+func (t *RadKeysTheme) fgOnPrimary() color.NRGBA {
+	if isLightNRGBA(t.bg) {
+		return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+	}
+	return color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}
 }
 
 // fgOnAccent returns white or black depending on the fix (accent) luminance,
