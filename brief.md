@@ -18,7 +18,7 @@
 | UI — aba Ajustes (Settings) | ✅ 3 seções (Config, Appearance, USB Device), grid 3 colunas |
 | UI — aba About | ✅ Layout limpo, 1 link GitHub, autor docg1701 |
 | i18n (7 idiomas) | ✅ Mapa Go único (`internal/i18n/i18n.go`), sem JSON |
-| 13 temas de cores | ✅ `internal/theme/custom.go` — 28 ThemeColorName explícitos |
+| 13 temas de cores | ❌ `internal/theme/custom.go` — quebrados, cores inconsistentes (ver 2.3) |
 | Ícone do app | ✅ Seletor com preview + Browse (PNG customizado) |
 | Firmware Arduino | ✅ `firmware/arduino/diy24.ino` (matriz 6×4) |
 | Firmware RP2040 | ✅ `firmware/rp2040/diy24.ino` (24 GPIO) |
@@ -38,6 +38,43 @@
 Cross-compile impossível com CGO. Build nativo num Mac. Pendente.
 
 ### 2.2 Always-on-top
+
+Pendente Fyne v2.8.0 estável (função `RequestAlwaysOnTop`).
+
+### 2.3 🔴 GRAVÍSSIMO — Revisar e corrigir TODOS os temas
+
+**O sistema de temas está quebrado.** Cada um dos 13 temas precisa ser revisado
+**linha por linha**, abrindo o app com o tema selecionado e verificando
+visualmente:
+
+- Preview: fundo coerente com o tema, texto legível (contraste adequado).
+- Keypad: botões inativos com cor coerente, não pretos em tema claro.
+- Settings: campos de texto, selects, labels com cores corretas.
+- About: texto, link, fundo tudo coerente.
+- Tabs: barra de abas, fundo, texto.
+
+**NÃO usar testes automatizados.** Verificação visual, tema por tema:
+
+1. Dracula
+2. Solarized Dark
+3. Monokai
+4. Gruvbox Dark
+5. Nord
+6. One Dark
+7. Tokyo Night
+8. Catppuccin Mocha
+9. Solarized Light
+10. Gruvbox Light
+11. Light Gray
+12. Dark Gray
+13. Padrão do sistema
+
+Para cada tema:
+- Fundo geral corresponde ao nome do tema.
+- Texto legível (contraste com fundo).
+- Campos de input visíveis.
+- Nenhuma cor preta absoluta em tema claro, nenhuma cor branca em tema escuro.
+- Ao trocar de tema, zero resíduos do tema anterior.
 
 Pendente Fyne v2.8.0 estável (função `RequestAlwaysOnTop`).
 
