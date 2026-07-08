@@ -12,7 +12,7 @@ import (
 const sample = `
 [app]
 name = "RadKeys"
-version = "1.2"
+version = "0.0.0-test"
 
 [app.device]
 vendor_id  = 0x0fd9

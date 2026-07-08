@@ -2,11 +2,11 @@
 
 > **Data:** 2026-07-08  
 > **Repo:** https://github.com/docg1701/radkeys  
-> **Release atual:** v0.2.0
+> **Release atual:** v0.2.1
 
 ---
 
-## 1. Estado atual (v0.2.0)
+## 1. Estado atual (v0.2.1)
 
 | Componente | Status |
 |------------|--------|
@@ -35,7 +35,7 @@ Estes bugs foram documentados na v2.1 e **continuam pendentes**. O agente atual
 
 | # | Bug | Status |
 |---|-----|--------|
-| 1 | Radiologista não atualiza título da janela | ✅ Corrigido (v0.2.0) |
+| 1 | Radiologista não atualiza título da janela | ✅ Corrigido (v0.2.1) |
 | 2 | Campo "Nome do app" removido | ✅ Corrigido |
 | 3 | Salvar aplica mudanças (título, idioma, tema, keypad) | ✅ Corrigido |
 | 4 | Arquivo de config: agora tem seletor "Procurar..." | ✅ Adicionado, mas layout quebrado |
