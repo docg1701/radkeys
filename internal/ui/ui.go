@@ -222,7 +222,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			configLbl.SetText(u.configPath)
 		}, u.win)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".toml"}))
-		fd.Resize(fyne.NewSize(800, 600))
+		fd.Resize(fyne.NewSize(900, 650))
 		fd.Show()
 	})
 	chooseBtn.Importance = widget.MediumImportance
@@ -257,7 +257,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			iconPreview.Refresh()
 		}, u.win)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".png"}))
-		fd.Resize(fyne.NewSize(800, 600))
+		fd.Resize(fyne.NewSize(900, 650))
 		fd.Show()
 	})
 	iconBrowseBtn.Importance = widget.MediumImportance
