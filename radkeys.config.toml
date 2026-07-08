@@ -1,0 +1,73 @@
+# RadKeys — exemplo de configuração.
+# Coloque este arquivo no mesmo diretório do executável (ou defina RADKEYS_CONFIG).
+
+[app]
+name = "RadKeys"
+version = "1.2"
+
+[app.device]
+# Elgato Stream Deck original: 0x0fd9:0x0063.
+# DIY RadKeys: use os VID/PID definidos no firmware.
+vendor_id  = 0x0fd9
+product_id = 0x0063
+protocol   = "elgato"   # "elgato" ou "radkeys-diy"
+
+[app.fixed_buttons]
+# Índices (0-based) dos 3 botões fixos globais (função constante em qualquer tela).
+copy     = 0   # copia o preview para o clipboard
+level_up = 1   # sobe um nível na hierarquia
+go_home  = 2   # volta à tela raiz
+
+[[screens]]
+id = "root"
+title = "Início"
+buttons = [
+  { index = 3, label = "RX Tórax",  action = "navigate", target = "rx_torax" },
+  { index = 4, label = "RX Abdome", action = "navigate", target = "rx_abdome" },
+  { index = 5, label = "TC",        action = "navigate", target = "tc_menu" },
+  { index = 6, label = "RM",        action = "navigate", target = "mr_menu" },
+]
+
+[[screens]]
+id = "rx_torax"
+title = "RX Tórax"
+buttons = [
+  { index = 3, label = "Normal", action = "text", content = """
+Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.
+Arcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.
+Não há evidência de derrame pleural, pneumotórax ou consolidação.
+""" },
+  { index = 4, label = "Derrame direito", action = "text", content = """
+Radiografia de tórax demonstrando opacidade basal direita com obliteração do seio costofrênico,
+sugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.
+""" },
+  { index = 5, label = "Derrame esquerdo", action = "text", content = """
+Radiografia de tórax demonstrando opacidade basal esquerda com obliteração do seio costofrênico,
+sugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.
+""" },
+  { index = 6, label = "Pneumotórax", action = "text", content = """
+Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.
+Avaliação clínica conjunta recomendada.
+""" },
+]
+
+[[screens]]
+id = "rx_abdome"
+title = "RX Abdome"
+buttons = [
+  { index = 3, label = "Normal", action = "text", content = """
+Radiografia simples de abdome em decúbito e em pé.
+Distribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos
+nem calcificações patológicas. Posição e morfologia das alças preservadas.
+""" },
+]
+
+[[screens]]
+id = "tc_menu"
+title = "TC"
+buttons = []
+
+[[screens]]
+id = "mr_menu"
+title = "RM"
+buttons = []

@@ -1,38 +1,49 @@
+// Command radkeys loads radkeys.config.toml, opens the configured USB HID
+// custom device, and runs the RadKeys UI. Without a device it falls back to
+// the in-process mock (the UI is still drivable by mouse clicks).
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/docg1701/radkeys/internal/config"
+	"github.com/docg1701/radkeys/internal/hid"
+	"github.com/docg1701/radkeys/internal/ui"
 )
 
 const configFileName = "radkeys.config.toml"
 
 func main() {
-	a := app.New()
-	w := a.NewWindow("RadKeys")
-	w.SetFixedSize(true)
-	w.Resize(fyne.NewSize(800, 600))
-
-	execPath, err := os.Executable()
+	cfg, err := config.Load(configPath())
 	if err != nil {
-		fmt.Println("Could not determine executable path:", err)
-		os.Exit(1)
+		log.Fatalf("radkeys: %v", err)
 	}
-	configPath := filepath.Join(filepath.Dir(execPath), configFileName)
 
-	info := widget.NewLabel(fmt.Sprintf("RadKeys prototype\nConfig path: %s", configPath))
-	info.Wrapping = fyne.TextWrapWord
+	reader, err := hid.Open(cfg.App.Device)
+	if err != nil {
+		// No hardware: use the mock; the UI still works via mouse clicks.
+		log.Printf("radkeys: %v; usando mock (clique nos botões da UI)", err)
+		reader = hid.NewMock()
+	}
 
-	w.SetContent(container.NewVBox(
-		widget.NewLabel("RadKeys"),
-		info,
-	))
+	if err := ui.Run(cfg, reader); err != nil {
+		log.Fatalf("radkeys: %v", err)
+	}
+}
 
-	w.ShowAndRun()
+// configPath resolves the config file: $RADKEYS_CONFIG, then the executable
+// directory, then the current working directory.
+func configPath() string {
+	if p := os.Getenv("RADKEYS_CONFIG"); p != "" {
+		return p
+	}
+	if exec, err := os.Executable(); err == nil {
+		candidate := filepath.Join(filepath.Dir(exec), configFileName)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return configFileName
 }

@@ -6,3 +6,9 @@ radkeys
 RadKeys.app/
 /dist/
 /vendor/
+
+# pi-subagent artifacts (not part of the project)
+.pi-subagents/
+
+# Windows build artifact
+radkeys.exe
