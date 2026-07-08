@@ -214,16 +214,10 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	configLbl := widget.NewLabel(cfg.App.ConfigPath)
 	configLbl.Wrapping = fyne.TextTruncate
 	chooseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
-		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
-			if err != nil || rc == nil {
-				return
-			}
-			u.configPath = rc.URI().Path()
-			configLbl.SetText(u.configPath)
-		}, u.win)
-		fd.SetFilter(storage.NewExtensionFileFilter([]string{".toml"}))
-		fd.Resize(fyne.NewSize(900, 650))
-		fd.Show()
+		showFileDialog(u.win, []string{".toml"}, func(path string) {
+			u.configPath = path
+			configLbl.SetText(path)
+		})
 	})
 	chooseBtn.Importance = widget.MediumImportance
 
@@ -244,21 +238,15 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	iconPreview.FillMode = canvas.ImageFillContain
 
 	iconBrowseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
-		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
-			if err != nil || rc == nil {
-				return
-			}
-			customIconPath = rc.URI().Path()
-			data, err := os.ReadFile(customIconPath)
+		showFileDialog(u.win, []string{".png"}, func(path string) {
+			customIconPath = path
+			data, err := os.ReadFile(path)
 			if err != nil {
 				return
 			}
 			iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
 			iconPreview.Refresh()
-		}, u.win)
-		fd.SetFilter(storage.NewExtensionFileFilter([]string{".png"}))
-		fd.Resize(fyne.NewSize(900, 650))
-		fd.Show()
+		})
 	})
 	iconBrowseBtn.Importance = widget.MediumImportance
 
@@ -436,6 +424,19 @@ func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	items := []fyne.CanvasObject{header}
 	items = append(items, rows...)
 	return container.NewVBox(items...)
+}
+
+// showFileDialog opens a file picker filtered by extensions, resized to 900x650.
+func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string)) {
+	fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
+		if err != nil || rc == nil {
+			return
+		}
+		onSelect(rc.URI().Path())
+	}, parent)
+	fd.SetFilter(storage.NewExtensionFileFilter(exts))
+	fd.Resize(fyne.NewSize(900, 650))
+	fd.Show()
 }
 
 // labeled returns label above input so the input gets full width.
