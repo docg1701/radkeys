@@ -127,7 +127,7 @@ func (d *diyReader) Open() error {
 
 func (d *diyReader) loop() {
 	defer close(d.done)
-	buf := make([]byte, diyButtonCount)
+	buf := make([]byte, 1+diyButtonCount) // report ID + 24 states
 	for {
 		select {
 		case <-d.stop:
@@ -141,9 +141,31 @@ func (d *diyReader) loop() {
 			}
 			return
 		}
-		for i := 0; i < n && i < diyButtonCount; i++ {
-			d.emitRise(i, buf[i] == 0x01, d.prev[i])
-			d.prev[i] = buf[i]
+		states := parseDIYReport(buf[:n])
+		if states == nil {
+			continue
 		}
+		for i, st := range states {
+			if i >= len(d.prev) {
+				break
+			}
+			d.emitRise(i, st == 0x01, d.prev[i])
+			d.prev[i] = st
+		}
+	}
+}
+
+// parseDIYReport returns the 24 button-state bytes from a DIY input report,
+// tolerating both "report-ID(0x01) + 24 states" (25 bytes) and "24 states"
+// (24 bytes) layouts across hidapi backends. Returns nil for anything else.
+func parseDIYReport(b []byte) []byte {
+	const diyReportID = 0x01
+	switch {
+	case len(b) == 1+diyButtonCount && b[0] == diyReportID:
+		return b[1:]
+	case len(b) == diyButtonCount:
+		return b
+	default:
+		return nil
 	}
 }
