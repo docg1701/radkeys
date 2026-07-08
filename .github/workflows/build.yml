@@ -9,10 +9,7 @@ on:
 
 jobs:
   test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +18,6 @@ jobs:
           go-version: "1.22"
 
       - name: Linux deps
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
@@ -53,7 +49,13 @@ jobs:
       - name: Linux deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev gcc-mingw-w64
+          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
+
+      - name: Build release binary
+        run: |
+          mkdir -p /tmp/assets
+          CGO_ENABLED=1 go build -o /tmp/assets/radkeys-linux-amd64 .
+          cp radkeys.config.toml /tmp/assets/radkeys.config.toml
 
       - name: Build release notes
         env:
@@ -64,7 +66,7 @@ jobs:
 
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "${{ github.ref_name }}" | head -1 || true)
 
-          SUBTITLE=$(git tag -l --format='%(contents)' "${{ github.ref_name }}" 2>/dev/null | head -1 || true)
+          SUBTITLE=$(git tag -l --format='%(contents)' "${{ github.ref_name }}" | head -1 || true)
           if [ -z "$SUBTITLE" ]; then
             TITLE="${{ github.ref_name }}"
           else
@@ -101,23 +103,8 @@ jobs:
             echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> "$NOTES"
           fi
 
-          # Build binaries for 3 platforms
-          mkdir -p /tmp/assets
-
-          # Linux
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /tmp/assets/radkeys-linux .
-          # Windows (cross-compile with mingw)
-          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o /tmp/assets/radkeys.exe .
-          # macOS (amd64)
-          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o /tmp/assets/radkeys-macos-intel .
-
-          # Copy config template
-          cp radkeys.config.toml /tmp/assets/radkeys.config.toml
-
           gh release create ${{ github.ref_name }} \
             --title "$TITLE" \
             --notes-file "$NOTES" \
-            /tmp/assets/radkeys-linux \
-            /tmp/assets/radkeys.exe \
-            /tmp/assets/radkeys-macos-intel \
+            /tmp/assets/radkeys-linux-amd64 \
             /tmp/assets/radkeys.config.toml

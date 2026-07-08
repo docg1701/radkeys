@@ -1,157 +1,109 @@
 # AGENTS.md — RadKeys
 
-> Instructions for AI coding agents working on this project. Follow exactly.
+> Instructions for AI coding agents. Follow exactly. Dev cycle ends ONLY when
+> the CI auto-release is complete and the GitHub release is published.
+
+## Dev cycle (MANDATORY — follow every time)
+
+```
+1. Desenvolver → go test ./... → go vet ./... → gofmt
+2. Bump version in radkeys.config.toml ([app] version)
+3. Commit: fix: version bump X.Y.Z → A.B.C (context)
+4. Push to main
+5. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
+6. git push origin vA.B.C
+7. MONITOR: gh run watch <run-id> --exit-status
+   Wait until CI passes → release auto-created by CI.
+   The agent MUST NOT stop until the release is published.
+```
 
 ## Commands
 
 ```bash
-# Build (Linux, needs GCC + libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev)
-go build -o radkeys .
+go build -o radkeys .        # build
+./radkeys                     # run (mock without hardware)
+go test ./... -v              # tests
+gofmt -w . && go vet ./...    # format + vet
+go mod tidy                   # deps
 
-# Run (mock mode without hardware — UI works via mouse clicks)
-./radkeys
-
-# Tests
-go test ./... -v
-
-# Format + vet (ALWAYS run before commit)
-gofmt -w . && go vet ./...
-
-# Tidy deps
-go mod tidy
-
-# Cross-compile (needs Docker + fyne-cross)
-fyne-cross linux -arch amd64
-fyne-cross windows -arch amd64
-fyne-cross darwin -arch amd64
-fyne-cross darwin -arch arm64
+# Cross-compile tests (agent MUST run locally — NOT in CI)
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o /dev/null ./...
+CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 go build -o /dev/null ./...
+CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 go build -o /dev/null ./...
 ```
 
 ## Testing
 
 - Framework: Go standard `testing`.
-- Location: `*_test.go` alongside source (e.g. `internal/config/config_test.go`).
-- Run: `go test ./... -v`.
 - Every new function gets a test. Bug fixes get a regression test.
-- Mock external deps (HID hardware) with `hid.NewMock()`, never inline stubs.
+- Mock HID hardware with `hid.NewMock()`.
 
 ## Project Structure
 
 ```
 radkeys/
-├── main.go                  # Entrypoint: load config → open HID → run UI
-├── radkeys.config.toml      # Config de exemplo (comentado para humano/LLM)
+├── main.go / go.mod
+├── radkeys.config.toml      # Config de exemplo (comentado p/ humano/LLM)
 ├── internal/
-│   ├── config/              # Parser TOML + validação + tipos (Config, Layout, Theme)
-│   ├── deck/                # Estado de navegação (navigate/text/copy/level_up/go_home)
-│   ├── hid/                 # Interface Reader + Mock + go-hid (Elgato/DIY) com build tags
-│   ├── ui/                  # Fyne UI: aba Atalhos (preview+keypad) + aba Ajustes
-│   ├── i18n/                 # go-i18n + arquivos JSON embed (en, pt-BR, pt-PT, es, fr, de, it)
-│   ├── theme/               # 12 preset themes (10 terminal + 2 gray)
-│   └── assets/              # Ícone embarcado (Obsidian icon theme)
-├── firmware/
-│   ├── arduino/             # Arduino Pro Micro (matriz 6×4, HID vendor-defined)
-│   └── rp2040/              # RP2040 (24 GPIO diretos, Adafruit_TinyUSB)
-├── research/                # Notas de investigação técnica
-├── .github/workflows/       # CI: test + auto-release from tags
-├── brief.md                 # Brief técnico (v2.0)
-└── go.mod / go.sum
+│   ├── config/              # TOML parser + types
+│   ├── deck/                # Navigation state machine
+│   ├── hid/                 # HID reader (go-hid) + mock
+│   ├── ui/                  # Fyne UI (Atalhos + Ajustes)
+│   ├── i18n/                 # go-i18n + 7 JSON embed
+│   ├── theme/               # 12 preset themes
+│   └── assets/              # Icon (Obsidian) embed
+├── firmware/arduino/        # Arduino Pro Micro firmware
+├── firmware/rp2040/         # RP2040 firmware
+└── research/                # Technical investigation notes
 ```
 
 ## Code Style
 
-Go idiomático. Funções 4-20 linhas. Arquivos <500 linhas. Nomes específicos.
-Sem `any`, sem `Dict`, sem funções sem tipo. Early return, máx 2 níveis de indentação.
+Go idiomático. Funções 4–20 linhas. Nomes específicos. Early return, max 2 níveis indent.
 
 ```go
-// BOM: nome específico, tipo explícito, early return
+// BOM
 func (d *Deck) levelUp() {
     if len(d.stack) == 0 {
         d.current = d.cfg.Screens[0].ID
         return
     }
-    last := d.stack[len(d.stack)-1]
+    d.current = d.stack[len(d.stack)-1]
     d.stack = d.stack[:len(d.stack)-1]
-    d.current = last
-}
-
-// RUIM: nome vago, aninhamento, sem tipo
-func doStuff(x interface{}) interface{} {
-    if x != nil {
-        if v, ok := x.(int); ok {
-            return v
-        }
-    }
-    return nil
 }
 ```
 
 ## Git Workflow
 
-### Branches
+- `main` — stable. `feat/*` — features/fixes.
+- Commits: conventional (`feat:`, `fix:`, `chore:`, `docs:`).
+- Tags: **lightweight only** (`git tag vX.Y.Z <sha>`). NEVER `-a` or `-m`.
 
-- `main` — estável, sempre compila e passa testes.
-- `feat/*` — features e fixes. PR para `main` (ou fast-forward se solo).
+## Release
 
-### Commits (Conventional Commits)
+The CI `.github/workflows/build.yml` does:
+1. Test + vet on ubuntu (Linux only — cross-compile is agent's job).
+2. On tag push → build Linux binary + create GitHub release with:
+   - `radkeys-linux-amd64` binary
+   - `radkeys.config.toml` config template
 
+Cross-compile for Windows/macOS is the agent's responsibility, tested locally:
+```bash
+GOOS=windows go build ./... && GOOS=darwin go build ./...
 ```
-feat: <descrição>        # nova funcionalidade
-fix: <descrição>         # correção de bug
-chore: <descrição>       # manutenção, deps, CI
-docs: <descrição>        # documentação, brief, AGENTS.md
-```
-
-### Release & version bump
-
-A versão vive em **UM lugar**: `radkeys.config.toml` → `[app] version`.
-Tudo o mais é derivado/automatizado.
-
-O **ciclo de desenvolvimento** é:
-1. Desenvolver na branch `feat/*`.
-2. `go test ./...` passa.
-3. `gofmt -w . && go vet ./...` limpo.
-4. Bump de versão em `radkeys.config.toml`.
-5. Commit: `fix: version bump X.Y.Z -> A.B.C (contexto)`.
-6. Push para `main`.
-7. Criar tag **lightweight**: `git tag vX.Y.Z <sha>` (NÃO `git tag -a`, NÃO `-m`).
-8. `git push origin vX.Y.Z`.
-9. CI roda testes → se passarem, **auto-release** cria a release com:
-   - Binários compilados (linux, windows, macos) como assets.
-   - `radkeys.config.toml` como asset.
-   - Changelog categorizado a partir dos conventional commits.
-10. **NUNCA** criar/editar a release manualmente — o CI `release` job é dono.
-
-### 🚫 NEVER (release)
-
-- `git tag -a` / `git tag -m` — tags anotadas duplicam o título na release.
-- `gh release create` / `gh release edit` — o CI é dono da release.
-- Bump de versão em qualquer lugar que não `radkeys.config.toml`.
-- Force-push de tag depois que o CI criou a release.
 
 ## Boundaries
 
 ### ✅ Always
-
-- `gofmt -w . && go vet ./...` antes de commitar.
-- `go test ./...` passando antes de push.
-- Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`).
-- Validar APIs contra docs reais antes de usar (não confiar na memória de treino).
-- Embed tudo no binário (ícone, traduções) — release = 1 executável + 1 config.
-
-### ⚠️ Ask first
-
-- Mudar dependência de versão major (Fyne, go-hid).
-- Adicionar nova dependência externa.
-- Mudar o protocolo HID ou o formato do config TOML.
-- Mudar a arquitetura de pacotes.
+- `gofmt -w . && go vet ./... && go test ./...` before commit.
+- Conventional commits.
+- Embed everything (icon, i18n, themes) → release = 1 binary + 1 config.
+- Monitor CI after tag push until release is created.
 
 ### 🚫 Never
-
-- Usar teclado HID (F13-F24) como input — foi rejeitado pelo produto.
-- Usar `RequestAlwaysOnTop()` sem verificar que a versão do Fyne tem a API.
-- Hardcoded de strings de UI — usar `i18n.T()`.
-- Adicionar widgets editáveis focáveis na aba Atalhos.
-- Criar tags anotadas (`-a`, `-m`).
-- Editar a release manualmente — o CI é dono.
-- Instalar Go em diretórios de gambiarra (`~/.local/go`) — usar apt ou método oficial.
+- Keyboard HID (F13-F24) input — rejected by product.
+- `RequestAlwaysOnTop()` without verifying Fyne version.
+- Hardcoded UI strings — use `i18n.T()`.
+- Annotated tags (`git tag -a`, `git tag -m`).
+- Cross-compile in CI — agent does it locally.
+- End the turn before CI release is confirmed published.
