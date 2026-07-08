@@ -34,9 +34,9 @@
   "settings.saved_title": {"other": "Salvato"},
   "settings.saved_msg": {"other": "Impostazioni salvate."},
   "about.version": {"other": "Versione %s"},
-  "about.description": {"other": "Compagno multipiattaforma per deck di scorciatoie radiologiche. Mostra pulsanti di frasi configurabili e copia il testo via USB HID o tastiera virtuale."},
+  "about.description": {"other": "RadKeys è un compagno multipiattaforma per deck di scorciatoie radiologiche."},
   "about.author": {"other": "Autore: docg1701"},
   "about.license": {"other": "Licenza: MIT"},
-  "about.stack": {"other": "Go · Fyne · go-hid · go-i18n · BurntSushi/toml"},
-  "about.i18n": {"other": "Disponibile in 7 lingue: English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
+  "about.stack": {"other": "Realizzato con Go, Fyne, go-hid, go-i18n e BurntSushi/toml."},
+  "about.i18n": {"other": "Disponibile in 7 lingue."}
 }

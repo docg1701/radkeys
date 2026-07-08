@@ -34,9 +34,9 @@
   "settings.saved_title": {"other": "Enregistré"},
   "settings.saved_msg": {"other": "Réglages enregistrés."},
   "about.version": {"other": "Version %s"},
-  "about.description": {"other": "Compagnon multiplateforme pour les decks de raccourcis en radiologie. Affiche des boutons de phrases configurables et copie le texte via USB HID ou clavier virtuel."},
+  "about.description": {"other": "RadKeys est un compagnon multiplateforme pour les decks de raccourcis en radiologie."},
   "about.author": {"other": "Auteur : docg1701"},
   "about.license": {"other": "Licence : MIT"},
-  "about.stack": {"other": "Go · Fyne · go-hid · go-i18n · BurntSushi/toml"},
-  "about.i18n": {"other": "Disponible en 7 langues : English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano"}
+  "about.stack": {"other": "Construit avec Go, Fyne, go-hid, go-i18n et BurntSushi/toml."},
+  "about.i18n": {"other": "Disponible en 7 langues."}
 }
