@@ -359,8 +359,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			configRow,
 		),
 		makeCard(i18n.T("settings.group_device"), "",
-			makeUSBRow(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt),
-			makeFieldRow(i18n.T("settings.protocol"), protoSel),
+			makeUSBRow(i18n.T("settings.vid"), vidEnt, i18n.T("settings.pid"), pidEnt, i18n.T("settings.protocol"), protoSel),
 		),
 	}
 
@@ -439,13 +438,11 @@ func makeDualField(l1 string, i1 fyne.CanvasObject, l2 string, i2 fyne.CanvasObj
 	)
 }
 
-func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pidInput fyne.CanvasObject) fyne.CanvasObject {
-	lblV := widget.NewLabel(vidLabel)
-	lblP := widget.NewLabel(pidLabel)
-	vidBox := container.NewBorder(nil, nil, lblV, nil, vidInput)
-	pidBox := container.NewBorder(nil, nil, lblP, nil, pidInput)
-	return container.NewHBox(
-		container.NewPadded(vidBox),
-		container.NewPadded(pidBox),
-	)
+func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pidInput fyne.CanvasObject, protoLabel string, protoInput fyne.CanvasObject) fyne.CanvasObject {
+	vidCell := container.NewVBox(widget.NewLabel(vidLabel), vidInput)
+	pidCell := container.NewVBox(widget.NewLabel(pidLabel), pidInput)
+	topRow := container.NewGridWithColumns(2, vidCell, pidCell)
+
+	protoCell := container.NewVBox(widget.NewLabel(protoLabel), protoInput)
+	return container.NewVBox(topRow, protoCell)
 }
