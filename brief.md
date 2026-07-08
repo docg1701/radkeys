@@ -231,3 +231,9 @@ Fluxo:
 4. Se o ícone for SVG, converter para PNG 256×256 antes de embutir.
 5. Reconstruir o binário e verificar que o ícone aparece na janela
    e na barra de tarefas.
+6. **Adicionar seletor de ícone na aba Ajustes**: o usuário deve poder
+   trocar o ícone pelo seletor de tema, sem precisar editar código.
+   Usar `dialog.NewFileOpen` com filtro PNG ou uma galeria embutida
+   com os ícones disponíveis. O ícone escolhido persiste no config.
+7. **Embutir múltiplos ícones no binário** (via `embed`) para que o
+   seletor funcione offline, ou carregar de `icons/` se existir.
