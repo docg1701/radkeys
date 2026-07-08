@@ -1,109 +1,143 @@
+# =============================================================================
+# RadKeys — arquivo de configuração (TOML)
+# =============================================================================
+#
+# Este arquivo configura TUDO no RadKeys: dados do radiologista, dispositivo USB,
+# layout/cores da interface, e as telas/botões com as frases de laudo.
+#
+# Edite este arquivo manualmente (com um editor de texto ou um agente LLM).
+# A interface do RadKeys NÃO edita telas e botões — só ajustes básicos.
+# Salve o arquivo e reinicie o RadKeys (ou use a aba "Ajustes" para recarregar).
+#
+# ESTRUTURA:
+#   [app]               → dados do app e do radiologista
+#   [app.device]        → dispositivo USB HID (VID/PID/protocolo)
+#   [app.fixed_buttons] → índices dos 3 botões fixos (copy/level_up/go_home)
+#   [app.layout]        → layout do keypad virtual (columns/rows)
+#   [app.theme]         → cores da interface (hex)
+#   [[screens]]        → cada tela (página) do deck de atalhos
+#
+# TELAS E BOTÕES:
+#   Cada [[screens]] é uma tela com id, title e buttons[].
+#   Botão tem: index (posição física no keypad), label (texto no botão),
+#   action ("navigate" ou "text"), e:
+#     - se action = "navigate": target = id da tela de destino
+#     - se action = "text": content = texto do laudo (multilinha, usa """...""")
+#
+#   Os 3 botões fixos (índices 0, 1, 2 por padrão) são globais: sempre fazem
+#   Copiar (0), Voltar (1), Início (2). Os demais índices (3, 4, 5, ...) são
+#   configuráveis e mudam conforme a tela ativa.
+#
+#   Hierarquia: para organizar centenas de frases, use navigate para entrar
+#   em sub-telas. level_up (botão 1) sobe um nível; go_home (botão 2) volta
+#   à tela raiz. Ex.: raiz → "RX Tórax" → frases de tórax.
+#
+# EXEMPLO DE BOTÃO TEXT (frase de laudo):
+#   { index = 3, label = "Normal", action = "text", content = """
+#   Radiografia de tórax em incidências PA e perfil.
+#   Arcada costal intacta, campos pulmonares livres.
+#   """ }
+#
+# EXEMPLO DE BOTÃO NAVIGATE (entra numa sub-tela):
+#   { index = 3, label = "RX Tórax", action = "navigate", target = "rx_torax" }
+#
+# PROTOCOLOS DO DISPOSITIVO:
+#   "elgato"    → Stream Deck original ou clone compatível (protocolo Elgato).
+#   "radkeys-diy" → dispositivo DIY com firmware RadKeys (Arduino/RP2040).
+#
+# CORES:
+#   Hex sem alpha, ex: "#1a1a1a" (preto), "#2a2a2a" (cinza escuro).
+#
+# =============================================================================
+
 [app]
-  name = "RadKeys"
-  version = "1.2"
-  [app.device]
-    vendor_id = 4057
-    product_id = 99
-    protocol = "elgato"
-  [app.fixed_buttons]
-    copy = 0
-    level_up = 1
-    go_home = 2
-  [app.layout]
-    columns = 4
-    rows = 6
-    preview = "center"
-  [app.theme]
-    background = ""
-    button = ""
-    fixed = ""
+name = "RadKeys"
+radiologist = "Dr. Galvani"
+language = "pt-BR"
+version = "2.0"
+
+[app.device]
+# Elgato Stream Deck original: 0x0fd9:0x0063.
+# DIY RadKeys (Arduino): 0x1234:0xABCD (edite conforme o firmware).
+vendor_id  = 0x0fd9
+product_id = 0x0063
+protocol   = "elgato"
+
+[app.fixed_buttons]
+# Índices (0-based) dos 3 botões fixos globais.
+# Função constante em qualquer tela: copiar preview, subir nível, voltar ao início.
+copy     = 0
+level_up = 1
+go_home  = 2
+
+[app.layout]
+# Layout do keypad virtual. columns = nº de colunas, rows = nº de linhas.
+# O keypad mostra columns × rows slots. Default: 4×5 = 20 slots.
+# Adapte ao seu hardware: 4×6=24, 4×3=12, 3×4=12, etc.
+columns = 4
+rows    = 5
 
 [app.theme]
-background = "#1a1a1a"
-button     = "#2a2a2a"
-fixed      = "#3a3a3a"
+preset = "Dracula"
+# Cores em hex (sem alpha). Defaults se vazio.
+background = "#1a1a1a"  # fundo do preview
+button     = "#2a2a2a"  # cor do slot vazio
+fixed      = "#3a3a3a"  # cor do botão fixo (reservado)
+
+# =============================================================================
+# TELAS E BOTÕES — edite manualmente
+# =============================================================================
 
 [[screens]]
-  id = "root"
-  title = "Início"
-
-  [[screens.buttons]]
-    index = 3
-    label = "RX Tórax"
-    action = "navigate"
-    target = "rx_torax"
-
-  [[screens.buttons]]
-    index = 4
-    label = "RX Abdome"
-    action = "navigate"
-    target = "rx_abdome"
-
-  [[screens.buttons]]
-    index = 5
-    label = "TC"
-    action = "navigate"
-    target = "tc_menu"
-
-  [[screens.buttons]]
-    index = 6
-    label = "RM"
-    action = "navigate"
-    target = "mr_menu"
+id = "root"
+title = "Início"
+buttons = [
+  { index = 3, label = "RX Tórax",  action = "navigate", target = "rx_torax" },
+  { index = 4, label = "RX Abdome", action = "navigate", target = "rx_abdome" },
+  { index = 5, label = "TC",        action = "navigate", target = "tc_menu" },
+  { index = 6, label = "RM",        action = "navigate", target = "mr_menu" },
+]
 
 [[screens]]
-  id = "rx_torax"
-  title = "RX Tórax"
-
-  [[screens.buttons]]
-    index = 3
-    label = "Normal"
-    action = "text"
-    content = "Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.\nArcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.\nNão há evidência de derrame pleural, pneumotórax ou consolidação.\n"
-
-  [[screens.buttons]]
-    index = 4
-    label = "Derrame direito"
-    action = "text"
-    content = "Radiografia de tórax demonstrando opacidade basal direita com obliteração do seio costofrênico,\nsugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.\n"
-
-  [[screens.buttons]]
-    index = 5
-    label = "Derrame esquerdo"
-    action = "text"
-    content = "Radiografia de tórax demonstrando opacidade basal esquerda com obliteração do seio costofrênico,\nsugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.\n"
-
-  [[screens.buttons]]
-    index = 6
-    label = "Pneumotórax"
-    action = "text"
-    content = "Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.\nAvaliação clínica conjunta recomendada.\n"
+id = "rx_torax"
+title = "RX Tórax"
+buttons = [
+  { index = 3, label = "Normal", action = "text", content = """
+Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.
+Arcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.
+Não há evidência de derrame pleural, pneumotórax ou consolidação.
+""" },
+  { index = 4, label = "Derrame direito", action = "text", content = """
+Radiografia de tórax demonstrando opacidade basal direita com obliteração do seio costofrênico,
+sugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.
+""" },
+  { index = 5, label = "Derrame esquerdo", action = "text", content = """
+Radiografia de tórax demonstrando opacidade basal esquerda com obliteração do seio costofrênico,
+sugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.
+""" },
+  { index = 6, label = "Pneumotórax", action = "text", content = """
+Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.
+Avaliação clínica conjunta recomendada.
+""" },
+]
 
 [[screens]]
-  id = "rx_abdome"
-  title = "RX Abdome"
-
-  [[screens.buttons]]
-    index = 3
-    label = "Normal"
-    action = "text"
-    content = "Radiografia simples de abdome em decúbito e em pé.\nDistribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos\nnem calcificações patológicas. Posição e morfologia das alças preservadas.\n"
-
-[[screens]]
-  id = "tc_menu"
-  title = "TC"
-  buttons = []
+id = "rx_abdome"
+title = "RX Abdome"
+buttons = [
+  { index = 3, label = "Normal", action = "text", content = """
+Radiografia simples de abdome em decúbito e em pé.
+Distribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos
+nem calcificações patológicas. Posição e morfologia das alças preservadas.
+""" },
+]
 
 [[screens]]
-  id = "mr_menu"
-  title = "RM"
-  buttons = []
+id = "tc_menu"
+title = "TC"
+buttons = []
 
 [[screens]]
-  id = "tela_5"
-  title = "Nova tela"
-
-  [[screens.buttons]]
-    index = 3
-    label = "Novo"
-    action = "text"
+id = "mr_menu"
+title = "RM"
+buttons = []

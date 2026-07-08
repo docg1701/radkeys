@@ -1,13 +1,14 @@
-name: build
+name: CI
 
 on:
   push:
-    branches: [main, feat/*]
+    branches: [main]
+    tags: ['v*.*.*']
   pull_request:
     branches: [main]
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -23,18 +24,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev
-
-      - name: macOS deps
-        if: runner.os == 'macOS'
-        run: |
-          # hidapi needs nothing extra (IOKit/CoreFoundation are system frameworks)
-
-      - name: Windows deps
-        if: runner.os == 'Windows'
-        run: |
-          # hidapi and Fyne need GCC (MinGW). setup-go provides it via CGO.
-          # No extra packages needed.
+          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
 
       - name: Build
         run: go build -v ./...
@@ -44,3 +34,90 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Linux deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev gcc-mingw-w64
+
+      - name: Build release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          git fetch --tags --force 2>/dev/null || true
+
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "${{ github.ref_name }}" | head -1 || true)
+
+          SUBTITLE=$(git tag -l --format='%(contents)' "${{ github.ref_name }}" 2>/dev/null | head -1 || true)
+          if [ -z "$SUBTITLE" ]; then
+            TITLE="${{ github.ref_name }}"
+          else
+            TITLE="${{ github.ref_name }}: $SUBTITLE"
+          fi
+
+          strip() { sed -E 's/^- [a-z]+(\([^)]*\))?: /- /'; }
+
+          NOTES=/tmp/release-notes.md
+          :> "$NOTES"
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${{ github.ref_name }}"
+          else
+            RANGE="${{ github.ref_name }}"
+          fi
+
+          ADDED=$(git log --pretty=format:"- %s" $RANGE --grep="^feat" -E 2>/dev/null | strip || true)
+          if [ -n "$ADDED" ]; then
+            { echo "### Added"; echo "$ADDED"; echo ""; } >> "$NOTES"
+          fi
+
+          FIXED=$(git log --pretty=format:"- %s" $RANGE --grep="^fix" -E 2>/dev/null | strip || true)
+          if [ -n "$FIXED" ]; then
+            { echo "### Fixed"; echo "$FIXED"; echo ""; } >> "$NOTES"
+          fi
+
+          CHANGED=$(git log --pretty=format:"- %s" $RANGE | grep -E '^- (chore|docs|ci|refactor|style|test|perf|revert|build)(\(.+\))?:' | strip || true)
+          if [ -n "$CHANGED" ]; then
+            { echo "### Changed"; echo "$CHANGED"; echo ""; } >> "$NOTES"
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> "$NOTES"
+          fi
+
+          # Build binaries for 3 platforms
+          mkdir -p /tmp/assets
+
+          # Linux
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /tmp/assets/radkeys-linux .
+          # Windows (cross-compile with mingw)
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o /tmp/assets/radkeys.exe .
+          # macOS (amd64)
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o /tmp/assets/radkeys-macos-intel .
+
+          # Copy config template
+          cp radkeys.config.toml /tmp/assets/radkeys.config.toml
+
+          gh release create ${{ github.ref_name }} \
+            --title "$TITLE" \
+            --notes-file "$NOTES" \
+            /tmp/assets/radkeys-linux \
+            /tmp/assets/radkeys.exe \
+            /tmp/assets/radkeys-macos-intel \
+            /tmp/assets/radkeys.config.toml

@@ -1,10 +1,12 @@
 // Package ui renders RadKeys: preview on top half, virtual keypad on bottom
-// half. Layout (columns/rows) and colors are fully configurable via TOML.
+// half. Two tabs: "Atalhos" (preview + keypad) and "Ajustes" (settings).
+// All UI strings go through i18n.T(). Translations and icon are embedded.
 package ui
 
 import (
 	"fmt"
 	"image/color"
+	"os"
 	"strconv"
 	"strings"
 
@@ -12,19 +14,31 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/BurntSushi/toml"
+
+	"github.com/docg1701/radkeys/internal/assets"
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/deck"
 	"github.com/docg1701/radkeys/internal/hid"
+	"github.com/docg1701/radkeys/internal/i18n"
+	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
 func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
 	a.Settings().SetTheme(theme.DarkTheme())
+	iconRes := fyne.NewStaticResource("icon.png", assets.IconPNG)
+	a.SetIcon(iconRes)
+
 	w := a.NewWindow("RadKeys")
 	w.Resize(fyne.NewSize(1280, 800))
+	w.SetIcon(iconRes)
+
+	i18n.SetLanguage(cfg.App.Language)
 
 	cols := cfg.App.Layout.Columns
 	if cols <= 0 {
@@ -35,6 +49,8 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		rows = 5
 	}
 
+	thm := resolveTheme(cfg)
+
 	u := &appUI{
 		cfg:        cfg,
 		configPath: configPath,
@@ -44,28 +60,22 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		win:        w,
 		cols:       cols,
 		rows:       rows,
-		thm:        parseTheme(cfg),
-		preview:    widget.NewLabel("Selecione uma frase."),
-		title:      widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		thm:        thm,
+		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
 	u.preview.TextStyle = fyne.TextStyle{Monospace: true}
 
-	// Bottom half: virtual keypad (grid of buttons).
 	u.keypad = container.NewGridWithColumns(cols)
 
 	previewArea := u.previewBox()
 	keypadArea := container.NewPadded(u.keypad)
-
-	// Split: top = preview (50%), bottom = keypad (50%).
 	split := container.NewVSplit(previewArea, keypadArea)
 	split.SetOffset(0.5)
 
-	useTab := container.NewBorder(u.title, nil, nil, nil, split)
-
 	tabs := container.NewAppTabs(
-		container.NewTabItem("Atalhos", useTab),
-		container.NewTabItem("Editar", u.buildEditor()),
+		container.NewTabItem(i18n.T("tab.shortcuts"), split),
+		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
 	)
 	w.SetContent(tabs)
 	u.renderScreen()
@@ -87,7 +97,6 @@ type appUI struct {
 	fapp       fyne.App
 	win        fyne.Window
 	preview    *widget.Label
-	title      *widget.Label
 	cols       int
 	rows       int
 	thm        themeColors
@@ -95,19 +104,25 @@ type appUI struct {
 }
 
 type themeColors struct {
-	bg      color.NRGBA
-	preview color.NRGBA
-	button  color.NRGBA
-	fixed   color.NRGBA
+	bg     color.NRGBA
+	button color.NRGBA
+	fixed  color.NRGBA
 }
 
-func parseTheme(cfg *config.Config) themeColors {
-	t := cfg.App.Theme
+// resolveTheme returns colors from the preset if set, otherwise from individual fields.
+func resolveTheme(cfg *config.Config) themeColors {
+	bg := cfg.App.Theme.Background
+	btn := cfg.App.Theme.Button
+	fix := cfg.App.Theme.Fixed
+	if cfg.App.Theme.Preset != "" {
+		if p, ok := themes.FindPreset(cfg.App.Theme.Preset); ok && p.Name != "Custom" {
+			bg, btn, fix = p.Background, p.Button, p.Fixed
+		}
+	}
 	return themeColors{
-		bg:      parseHex(t.Background, 0x1a, 0x1a, 0x1a),
-		preview: parseHex(t.Background, 0x1a, 0x1a, 0x1a),
-		button:  parseHex(t.Button, 0x2a, 0x2a, 0x2a),
-		fixed:   parseHex(t.Fixed, 0x3a, 0x3a, 0x3a),
+		bg:     parseHex(bg, 0x1a, 0x1a, 0x1a),
+		button: parseHex(btn, 0x2a, 0x2a, 0x2a),
+		fixed:  parseHex(fix, 0x3a, 0x3a, 0x3a),
 	}
 }
 
@@ -136,41 +151,31 @@ func (u *appUI) press(index int) {
 
 func (u *appUI) renderScreen() {
 	s := u.deck.CurrentScreen()
-	u.title.SetText(fmt.Sprintf("%s — %s", u.cfg.App.Name, s.Title))
-
 	f := u.cfg.App.FixedButtons
 	fixed := []config.Button{
-		{Index: f.Copy, Label: "Copiar"},
-		{Index: f.LevelUp, Label: "Voltar"},
-		{Index: f.GoHome, Label: "Início"},
+		{Index: f.Copy, Label: i18n.T("button.copy")},
+		{Index: f.LevelUp, Label: i18n.T("button.back")},
+		{Index: f.GoHome, Label: i18n.T("button.home")},
 	}
-
 	all := append(append([]config.Button{}, fixed...), s.Buttons...)
-	// Fill the grid with available buttons; empty slots get a placeholder.
+
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
 	for i := 0; i < totalSlots; i++ {
 		if i < len(all) {
-			u.keypad.Objects = append(u.keypad.Objects, u.makeBtn(all[i]))
+			b := all[i]
+			btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
+			u.keypad.Objects = append(u.keypad.Objects, btn)
 		} else {
-			u.keypad.Objects = append(u.keypad.Objects, u.emptySlot())
+			rect := canvas.NewRectangle(u.thm.button)
+			u.keypad.Objects = append(u.keypad.Objects, rect)
 		}
 	}
 	u.keypad.Refresh()
 }
 
-func (u *appUI) makeBtn(b config.Button) fyne.CanvasObject {
-	btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
-	return container.NewGridWrap(fyne.NewSize(120, 80), btn)
-}
-
-func (u *appUI) emptySlot() fyne.CanvasObject {
-	rect := canvas.NewRectangle(u.thm.button)
-	return container.NewGridWrap(fyne.NewSize(120, 80), rect)
-}
-
 func (u *appUI) previewBox() fyne.CanvasObject {
-	bg := canvas.NewRectangle(u.thm.preview)
+	bg := canvas.NewRectangle(u.thm.bg)
 	scroll := container.NewVScroll(u.preview)
 	return container.NewStack(bg, container.NewPadded(scroll))
 }
@@ -183,4 +188,117 @@ func (u *appUI) pollHID() {
 		idx := ev.Index
 		fyne.Do(func() { u.press(idx) })
 	}
+}
+
+func (u *appUI) buildSettings() fyne.CanvasObject {
+	cfg := u.cfg
+
+	radEnt := widget.NewEntry()
+	radEnt.SetText(cfg.App.Radiologist)
+
+	nameEnt := widget.NewEntry()
+	nameEnt.SetText(cfg.App.Name)
+
+	pathLbl := widget.NewLabel(u.configPath)
+
+	colsEnt := widget.NewEntry()
+	colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
+
+	rowsEnt := widget.NewEntry()
+	rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
+
+	themeSel := widget.NewSelect(themes.PresetNames(), nil)
+	themeSel.SetSelected(cfg.App.Theme.Preset)
+
+	bgEnt := widget.NewEntry()
+	bgEnt.SetText(cfg.App.Theme.Background)
+
+	btnEnt := widget.NewEntry()
+	btnEnt.SetText(cfg.App.Theme.Button)
+
+	fixedEnt := widget.NewEntry()
+	fixedEnt.SetText(cfg.App.Theme.Fixed)
+
+	vidEnt := widget.NewEntry()
+	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
+
+	pidEnt := widget.NewEntry()
+	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
+
+	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
+	protoSel.SetSelected(cfg.App.Device.Protocol)
+
+	langSel := widget.NewSelect(i18n.Supported, nil)
+	langSel.SetSelected(cfg.App.Language)
+
+	save := func() {
+		cfg.App.Name = nameEnt.Text
+		cfg.App.Radiologist = radEnt.Text
+		if v, err := strconv.Atoi(colsEnt.Text); err == nil {
+			cfg.App.Layout.Columns = v
+		}
+		if v, err := strconv.Atoi(rowsEnt.Text); err == nil {
+			cfg.App.Layout.Rows = v
+		}
+		cfg.App.Theme.Preset = themeSel.Selected
+		cfg.App.Theme.Background = bgEnt.Text
+		cfg.App.Theme.Button = btnEnt.Text
+		cfg.App.Theme.Fixed = fixedEnt.Text
+		if v, err := strconv.ParseUint(strings.TrimPrefix(vidEnt.Text, "0x"), 16, 16); err == nil {
+			cfg.App.Device.VendorID = uint16(v)
+		}
+		if v, err := strconv.ParseUint(strings.TrimPrefix(pidEnt.Text, "0x"), 16, 16); err == nil {
+			cfg.App.Device.ProductID = uint16(v)
+		}
+		cfg.App.Device.Protocol = protoSel.Selected
+		cfg.App.Language = langSel.Selected
+
+		f, err := os.Create(u.configPath)
+		if err != nil {
+			dialog.ShowError(fmt.Errorf("salvar: %w", err), u.win)
+			return
+		}
+		defer f.Close()
+		if err := toml.NewEncoder(f).Encode(cfg); err != nil {
+			dialog.ShowError(fmt.Errorf("TOML: %w", err), u.win)
+			return
+		}
+		i18n.SetLanguage(cfg.App.Language)
+		u.thm = resolveTheme(cfg)
+		u.renderScreen()
+		dialog.ShowInformation(i18n.T("settings.saved_title"), i18n.T("settings.saved_msg"), u.win)
+	}
+
+	saveBtn := widget.NewButtonWithIcon(i18n.T("settings.save"), theme.DocumentSaveIcon(), save)
+
+	form := container.NewVBox(
+		widget.NewLabelWithStyle(i18n.T("settings.radiologist"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		radEnt,
+		widget.NewLabelWithStyle(i18n.T("settings.app_name"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		nameEnt,
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle(i18n.T("settings.language"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		langSel,
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle(i18n.T("settings.config_file"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		pathLbl,
+		widget.NewLabel(i18n.T("settings.config_hint")),
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle(i18n.T("settings.layout"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		container.NewHBox(widget.NewLabel(i18n.T("settings.columns")), colsEnt, widget.NewLabel(i18n.T("settings.rows")), rowsEnt),
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle("Theme", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		themeSel,
+		widget.NewLabelWithStyle(i18n.T("settings.colors"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		container.NewHBox(widget.NewLabel(i18n.T("settings.background")), bgEnt),
+		container.NewHBox(widget.NewLabel(i18n.T("settings.button_color")), btnEnt),
+		container.NewHBox(widget.NewLabel(i18n.T("settings.fixed_color")), fixedEnt),
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle(i18n.T("settings.device"), fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		container.NewHBox(widget.NewLabel("VID"), vidEnt, widget.NewLabel("PID"), pidEnt),
+		protoSel,
+		widget.NewSeparator(),
+		saveBtn,
+	)
+	return container.NewVScroll(form)
 }

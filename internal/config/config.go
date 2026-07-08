@@ -27,6 +27,8 @@ type Config struct {
 // App holds app-wide settings.
 type App struct {
 	Name         string       `toml:"name"`
+	Radiologist  string       `toml:"radiologist"`
+	Language     string       `toml:"language"`
 	Version      string       `toml:"version"`
 	Device       Device       `toml:"device"`
 	FixedButtons FixedButtons `toml:"fixed_buttons"`
@@ -43,6 +45,7 @@ type Layout struct {
 
 // Theme holds configurable colors (hex strings like "#1a1a1a").
 type Theme struct {
+	Preset     string `toml:"preset"`
 	Background string `toml:"background"` // preview/background color
 	Button     string `toml:"button"`     // configurable button color
 	Fixed      string `toml:"fixed"`      // fixed button color
@@ -98,6 +101,9 @@ func (c *Config) validate() error {
 	if c.App.Device.Protocol != ProtocolElgato && c.App.Device.Protocol != ProtocolDIY {
 		return fmt.Errorf("config: device.protocol must be %q or %q, got %q",
 			ProtocolElgato, ProtocolDIY, c.App.Device.Protocol)
+	}
+	if c.App.Language == "" {
+		c.App.Language = "en"
 	}
 	if c.App.Layout.Columns <= 0 {
 		c.App.Layout.Columns = 4
