@@ -147,13 +147,14 @@ func (u *appUI) renderScreen() {
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
 	th := u.a.Settings().Theme()
+	v := variantFor(th)
 	for i := 0; i < totalSlots; i++ {
 		if i < len(all) {
 			b := all[i]
 			btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
 			u.keypad.Objects = append(u.keypad.Objects, btn)
 		} else {
-			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, 0))
+			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v))
 			u.keypad.Objects = append(u.keypad.Objects, rect)
 		}
 	}
@@ -173,7 +174,7 @@ func appIconData(cfg *config.Config) []byte {
 
 func (u *appUI) previewBox() fyne.CanvasObject {
 	th := u.a.Settings().Theme()
-	u.previewBg = canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, 0))
+	u.previewBg = canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, variantFor(th)))
 	scroll := container.NewVScroll(u.preview)
 	return container.NewStack(u.previewBg, container.NewPadded(scroll))
 }
@@ -317,7 +318,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		newTheme := resolveFullTheme(cfg)
 		u.a.Settings().SetTheme(newTheme)
 		if u.previewBg != nil {
-			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, 0)
+			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme))
 			canvas.Refresh(u.previewBg)
 		}
 
@@ -447,6 +448,17 @@ func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	items := []fyne.CanvasObject{header}
 	items = append(items, rows...)
 	return container.NewVBox(items...)
+}
+
+// variantFor detects whether the theme is light or dark by checking the
+// background colour luminance. Works for DefaultTheme and RadKeysTheme.
+func variantFor(th fyne.Theme) fyne.ThemeVariant {
+	bg := th.Color(fyneTheme.ColorNameBackground, fyneTheme.VariantDark)
+	r, g, b, _ := bg.RGBA()
+	if 0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b) > 0xffff*0.45 {
+		return fyneTheme.VariantLight
+	}
+	return fyneTheme.VariantDark
 }
 
 // showFileDialog opens a file picker filtered by extensions, resized to 900x650.

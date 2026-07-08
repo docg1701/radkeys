@@ -188,15 +188,6 @@ func (t *RadKeysTheme) fgOnPrimary() color.NRGBA {
 	return color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}
 }
 
-// fgOnAccent returns white or black depending on the fix (accent) luminance,
-// ensuring text on primary buttons is always readable.
-func (t *RadKeysTheme) fgOnAccent() color.NRGBA {
-	if isLightNRGBA(t.fix) {
-		return color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xff}
-	}
-	return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
-}
-
 // ---------------------------------------------------------------------------
 // colour operations
 // ---------------------------------------------------------------------------
