@@ -214,13 +214,16 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	configLbl := widget.NewLabel(cfg.App.ConfigPath)
 	configLbl.Wrapping = fyne.TextTruncate
 	chooseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
-		dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
+		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 			if err != nil || rc == nil {
 				return
 			}
 			u.configPath = rc.URI().Path()
 			configLbl.SetText(u.configPath)
-		}, u.win).Show()
+		}, u.win)
+		fd.SetFilter(storage.NewExtensionFileFilter([]string{".toml"}))
+		fd.Resize(fyne.NewSize(800, 600))
+		fd.Show()
 	})
 	chooseBtn.Importance = widget.MediumImportance
 
