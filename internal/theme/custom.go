@@ -73,7 +73,7 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) colo
 	case theme.ColorNamePlaceHolder:
 		return blend(t.bg, t.fg, 0.42)
 	case theme.ColorNameHyperlink:
-		return t.fix
+		return t.fg
 
 	// ── interactive states ────────────────────────────────────
 	case theme.ColorNameHover:

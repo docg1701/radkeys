@@ -392,7 +392,12 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 
 	repoURL, _ := url.Parse("https://github.com/docg1701/radkeys")
 	repo := widget.NewHyperlink("github.com/docg1701/radkeys", repoURL)
-	repoLine := container.NewHBox(widget.NewLabel(i18n.T("about.repository")), repo)
+	repoLine := container.NewHBox(
+		widget.NewLabel(i18n.T("about.author") + "  |  "),
+		widget.NewLabel(i18n.T("about.license") + "  |  "),
+		widget.NewLabel(i18n.T("about.repository")),
+		repo,
+	)
 
 	author := widget.NewLabel(i18n.T("about.author"))
 	author.Wrapping = fyne.TextWrapWord
@@ -406,7 +411,7 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 	langs.Wrapping = fyne.TextWrapWord
 
 	return container.NewVScroll(container.NewPadded(
-		container.NewVBox(header, desc, stack, langs, author, license, repoLine),
+		container.NewVBox(header, desc, stack, langs, repoLine),
 	))
 }
 
