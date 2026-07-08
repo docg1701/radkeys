@@ -192,11 +192,13 @@ func (u *appUI) renderScreen() {
 }
 
 func appIconData(cfg *config.Config) []byte {
+	// Custom icon file path.
 	if cfg.App.Theme.Icon != "" {
-		if data := assets.IconData(cfg.App.Theme.Icon); data != nil {
+		if data, err := os.ReadFile(cfg.App.Theme.Icon); err == nil {
 			return data
 		}
 	}
+	// Fallback: embedded default icon.
 	return assets.IconPNG
 }
 
@@ -263,17 +265,37 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
-	// --- Icon gallery ---
+	// --- Icon selector (like config file: current path + Browse button) ---
 
-	selectedIcon := cfg.App.Theme.Icon
-	iconGrid := buildIconGallery(&selectedIcon)
+	customIconPath := cfg.App.Theme.Icon
+	iconPreview := canvas.NewImageFromResource(fyne.NewStaticResource("icon.png", appIconData(cfg)))
+	iconPreview.SetMinSize(fyne.NewSize(48, 48))
+	iconPreview.FillMode = canvas.ImageFillContain
+
+	iconBrowseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
+		dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
+			if err != nil || rc == nil {
+				return
+			}
+			customIconPath = rc.URI().Path()
+			// Reload preview.
+			data, err := os.ReadFile(customIconPath)
+			if err != nil {
+				return
+			}
+			iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
+			iconPreview.Refresh()
+		}, u.win).Show()
+	})
+	iconBrowseBtn.Importance = widget.MediumImportance
+	iconRow := container.NewBorder(nil, nil, iconPreview, iconBrowseBtn, widget.NewLabel(""))
 
 	// --- Save action ---
 
 	save := func() {
 		cfg.App.Radiologist = radEnt.Text
 		cfg.App.Language = langSel.Selected
-		cfg.App.Theme.Icon = selectedIcon
+		cfg.App.Theme.Icon = customIconPath
 		cfg.App.Theme.Preset = themeSel.Selected
 		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 {
 			cfg.App.Layout.Columns = v
@@ -355,7 +377,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			),
 		),
 		makeCard(i18n.T("settings.group_icon"), "",
-			iconGrid,
+			iconRow,
 		),
 		makeCard(i18n.T("settings.group_layout"), "",
 			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
@@ -445,28 +467,4 @@ func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pi
 
 	protoCell := container.NewVBox(widget.NewLabel(protoLabel), protoInput)
 	return container.NewVBox(topRow, protoCell)
-}
-
-func buildIconGallery(selected *string) fyne.CanvasObject {
-	const cols = 6
-	cells := make([]fyne.CanvasObject, 0)
-
-	// Default (built-in) icon.
-	cells = append(cells, iconTile("", assets.IconPNG, selected))
-
-	// Embedded Obsidian icons.
-	for _, name := range assets.IconNames() {
-		data := assets.IconData(name)
-		if data == nil {
-			continue
-		}
-		cells = append(cells, iconTile(name, data, selected))
-	}
-
-	return container.NewGridWithColumns(cols, cells...)
-}
-
-func iconTile(name string, data []byte, selected *string) fyne.CanvasObject {
-	res := fyne.NewStaticResource(name+".png", data)
-	return widget.NewButtonWithIcon("", res, func() { *selected = name })
 }
