@@ -130,6 +130,12 @@ do projeto, como todo bom aplicativo open source:
 
 ### 7.3 Reformulação completa dos temas
 
+**Problema raiz encontrado:** `a.Settings().SetTheme(theme.DarkTheme())` hardcoded
+em `internal/ui/ui.go:32`. Isso força o tema escuro do Fyne em toda a interface
+(tabs, texto, scrollbars, janela) independente do preset selecionado. O
+`resolveTheme()` só aplica 3 cores (bg, button, fixed) ao preview e aos slots
+vazios. Temas claros nunca funcionam porque o Fyne nunca troca para `LightTheme`.
+
 Os 12 temas atuais são aplicados apenas ao fundo do preview e aos botões,
 mas o tema global do Fyne (`DarkTheme`) sobrescreve o restante da interface.
 Resultado: mesmo os temas "Light" e "Solarized Light" ficam escuros.
