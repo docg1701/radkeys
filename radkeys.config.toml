@@ -2,7 +2,7 @@
   name = "RadKeys"
   radiologist = "Dr. Galvani"
   language = "en"
-  version = "2.2"
+  version = "0.2.0"
   [app.device]
     vendor_id = 4057
     product_id = 99
