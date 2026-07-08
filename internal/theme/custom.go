@@ -57,7 +57,7 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) colo
 	case theme.ColorNameMenuBackground:
 		return t.btn
 	case theme.ColorNameOverlayBackground:
-		return setAlpha(t.fg, 0x28)
+		return setAlpha(t.fg, 0xCC)
 
 	// ── input fields ──────────────────────────────────────────
 	case theme.ColorNameInputBackground:
