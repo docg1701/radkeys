@@ -19,6 +19,66 @@ var current *i18n.Localizer
 // Key = message ID. Value = map[language]translation.
 // Missing translations fall back to English.
 var messages = map[string]map[string]string{
+	// ── Theme names (i18n) ─────────────────────────────────
+	"theme.system": {
+		"en": "System default", "pt-BR": "Padrão do sistema", "pt-PT": "Padrão do sistema",
+		"es": "Predeterminado del sistema", "fr": "Défaut système", "de": "Systemstandard",
+		"it": "Predefinito di sistema",
+	},
+	"theme.dracula": {
+		"en": "Dracula", "pt-BR": "Dracula", "pt-PT": "Dracula",
+		"es": "Drácula", "fr": "Dracula", "de": "Dracula", "it": "Dracula",
+	},
+	"theme.solarized_dark": {
+		"en": "Solarized Dark", "pt-BR": "Solarized Escuro", "pt-PT": "Solarized Escuro",
+		"es": "Solarized Oscuro", "fr": "Solarized Sombre", "de": "Solarized Dunkel",
+		"it": "Solarized Scuro",
+	},
+	"theme.monokai": {
+		"en": "Monokai", "pt-BR": "Monokai", "pt-PT": "Monokai",
+		"es": "Monokai", "fr": "Monokai", "de": "Monokai", "it": "Monokai",
+	},
+	"theme.gruvbox_dark": {
+		"en": "Gruvbox Dark", "pt-BR": "Gruvbox Escuro", "pt-PT": "Gruvbox Escuro",
+		"es": "Gruvbox Oscuro", "fr": "Gruvbox Sombre", "de": "Gruvbox Dunkel",
+		"it": "Gruvbox Scuro",
+	},
+	"theme.nord": {
+		"en": "Nord", "pt-BR": "Nord", "pt-PT": "Nord",
+		"es": "Nord", "fr": "Nord", "de": "Nord", "it": "Nord",
+	},
+	"theme.one_dark": {
+		"en": "One Dark", "pt-BR": "One Dark", "pt-PT": "One Dark",
+		"es": "One Dark", "fr": "One Dark", "de": "One Dark", "it": "One Dark",
+	},
+	"theme.tokyo_night": {
+		"en": "Tokyo Night", "pt-BR": "Tokyo Night", "pt-PT": "Tokyo Night",
+		"es": "Tokyo Night", "fr": "Tokyo Night", "de": "Tokyo Night", "it": "Tokyo Night",
+	},
+	"theme.catppuccin_mocha": {
+		"en": "Catppuccin Mocha", "pt-BR": "Catppuccin Mocha", "pt-PT": "Catppuccin Mocha",
+		"es": "Catppuccin Mocha", "fr": "Catppuccin Mocha", "de": "Catppuccin Mocha",
+		"it": "Catppuccin Mocha",
+	},
+	"theme.solarized_light": {
+		"en": "Solarized Light", "pt-BR": "Solarized Claro", "pt-PT": "Solarized Claro",
+		"es": "Solarized Claro", "fr": "Solarized Clair", "de": "Solarized Hell",
+		"it": "Solarized Chiaro",
+	},
+	"theme.gruvbox_light": {
+		"en": "Gruvbox Light", "pt-BR": "Gruvbox Claro", "pt-PT": "Gruvbox Claro",
+		"es": "Gruvbox Claro", "fr": "Gruvbox Clair", "de": "Gruvbox Hell",
+		"it": "Gruvbox Chiaro",
+	},
+	"theme.light_gray": {
+		"en": "Light Gray", "pt-BR": "Cinza Claro", "pt-PT": "Cinzento Claro",
+		"es": "Gris Claro", "fr": "Gris Clair", "de": "Hellgrau", "it": "Grigio Chiaro",
+	},
+	"theme.dark_gray": {
+		"en": "Dark Gray", "pt-BR": "Cinza Escuro", "pt-PT": "Cinzento Escuro",
+		"es": "Gris Oscuro", "fr": "Gris Foncé", "de": "Dunkelgrau", "it": "Grigio Scuro",
+	},
+
 	// ── Tabs ──────────────────────────────────────────────
 	"tab.shortcuts": {
 		"en": "Shortcuts", "pt-BR": "Atalhos", "pt-PT": "Atalhos",

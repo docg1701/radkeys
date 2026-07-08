@@ -18,7 +18,7 @@
     rows = 4
     preview = ""
   [app.theme]
-    preset = "Light Gray"
+    preset = "light_gray"
     background = "#1a1a1a"
     button = "#2a2a2a"
     fixed = "#3a3a3a"

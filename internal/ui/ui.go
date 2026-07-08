@@ -202,8 +202,21 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	langSel := widget.NewSelect(i18n.Supported, nil)
 	langSel.SetSelected(cfg.App.Language)
 
-	themeSel := widget.NewSelect(themes.PresetNames(), nil)
-	themeSel.SetSelected(cfg.App.Theme.Preset)
+	// Build theme selector with i18n display names.
+	themeIDs := make([]string, len(themes.Presets))
+	themeNames := make([]string, len(themes.Presets))
+	for i, p := range themes.Presets {
+		themeIDs[i] = p.ID
+		themeNames[i] = i18n.T("theme." + p.ID)
+	}
+	themeSel := widget.NewSelect(themeNames, nil)
+	// Map current preset ID to its index in the dropdown.
+	for i, id := range themeIDs {
+		if id == cfg.App.Theme.Preset {
+			themeSel.SetSelectedIndex(i)
+			break
+		}
+	}
 
 	colsEnt := widget.NewEntry()
 	colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
@@ -256,7 +269,11 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		cfg.App.Radiologist = radEnt.Text
 		cfg.App.Language = langSel.Selected
 		cfg.App.Theme.Icon = customIconPath
-		cfg.App.Theme.Preset = themeSel.Selected
+		// Map selected display name back to preset ID.
+		selIdx := themeSel.SelectedIndex()
+		if selIdx >= 0 && selIdx < len(themeIDs) {
+			cfg.App.Theme.Preset = themeIDs[selIdx]
+		}
 		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 {
 			cfg.App.Layout.Columns = v
 		} else {

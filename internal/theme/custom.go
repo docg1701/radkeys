@@ -29,7 +29,7 @@ type RadKeysTheme struct {
 
 // NewCustomTheme returns a fyne.Theme for preset p.
 func NewCustomTheme(p Preset) fyne.Theme {
-	if p.Name == "Padrão do sistema" {
+	if p.ID == "system" {
 		return theme.DefaultTheme()
 	}
 	bg := parseHex(p.Background)
