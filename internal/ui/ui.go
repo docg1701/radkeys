@@ -263,16 +263,17 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
-	iconOpts := append([]string{""}, assets.IconNames()...)
-	iconSel := widget.NewSelect(iconOpts, nil)
-	iconSel.SetSelected(cfg.App.Theme.Icon)
+	// --- Icon gallery ---
+
+	selectedIcon := cfg.App.Theme.Icon
+	iconGrid := buildIconGallery(&selectedIcon)
 
 	// --- Save action ---
 
 	save := func() {
 		cfg.App.Radiologist = radEnt.Text
 		cfg.App.Language = langSel.Selected
-		cfg.App.Theme.Icon = iconSel.Selected
+		cfg.App.Theme.Icon = selectedIcon
 		cfg.App.Theme.Preset = themeSel.Selected
 		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 {
 			cfg.App.Layout.Columns = v
@@ -348,11 +349,13 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			labeled(i18n.T("settings.radiologist"), radEnt),
 		),
 		makeCard(i18n.T("settings.group_locale"), "",
-			container.NewGridWithColumns(3,
+			container.NewGridWithColumns(2,
 				labeled(i18n.T("settings.language"), langSel),
 				labeled(i18n.T("settings.theme"), themeSel),
-				labeled(i18n.T("settings.icon"), iconSel),
 			),
+		),
+		makeCard(i18n.T("settings.group_icon"), "",
+			iconGrid,
 		),
 		makeCard(i18n.T("settings.group_layout"), "",
 			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
@@ -381,19 +384,21 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 		ver = "dev"
 	}
 
-	appName := widget.NewLabel("RadKeys")
-	appName.TextStyle = fyne.TextStyle{Bold: true}
-
-	version := widget.NewLabel(fmt.Sprintf(i18n.T("about.version"), ver))
+	header := widget.NewLabel(fmt.Sprintf("RadKeys — %s", fmt.Sprintf(i18n.T("about.version"), ver)))
+	header.TextStyle = fyne.TextStyle{Bold: true}
 
 	desc := widget.NewLabel(i18n.T("about.description"))
 	desc.Wrapping = fyne.TextWrapWord
 
-	author := widget.NewLabel(i18n.T("about.author"))
-	license := widget.NewLabel(i18n.T("about.license"))
-
 	repoURL, _ := url.Parse("https://github.com/docg1701/radkeys")
 	repo := widget.NewHyperlink("github.com/docg1701/radkeys", repoURL)
+	meta := container.NewHBox(
+		widget.NewLabel(i18n.T("about.author")),
+		widget.NewLabel("·"),
+		widget.NewLabel(i18n.T("about.license")),
+		widget.NewLabel("·"),
+		repo,
+	)
 
 	stack := widget.NewLabel(i18n.T("about.stack"))
 	stack.Wrapping = fyne.TextWrapWord
@@ -401,19 +406,9 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 	langs := widget.NewLabel(i18n.T("about.i18n"))
 	langs.Wrapping = fyne.TextWrapWord
 
-	items := []fyne.CanvasObject{
-		appName, version,
-		widget.NewSeparator(),
-		desc,
-		widget.NewSeparator(),
-		author, license, repo,
-		widget.NewSeparator(),
-		stack,
-		widget.NewSeparator(),
-		langs,
-	}
-
-	return container.NewVScroll(container.NewPadded(container.NewVBox(items...)))
+	return container.NewVScroll(container.NewPadded(
+		container.NewVBox(header, desc, meta, stack, langs),
+	))
 }
 
 // ---------------------------------------------------------------------------
@@ -444,4 +439,28 @@ func makeUSBRow(vidLabel string, vidInput fyne.CanvasObject, pidLabel string, pi
 
 	protoCell := container.NewVBox(widget.NewLabel(protoLabel), protoInput)
 	return container.NewVBox(topRow, protoCell)
+}
+
+func buildIconGallery(selected *string) fyne.CanvasObject {
+	const cols = 6
+	cells := make([]fyne.CanvasObject, 0)
+
+	// Default (built-in) icon.
+	cells = append(cells, iconTile("", assets.IconPNG, selected))
+
+	// Embedded Obsidian icons.
+	for _, name := range assets.IconNames() {
+		data := assets.IconData(name)
+		if data == nil {
+			continue
+		}
+		cells = append(cells, iconTile(name, data, selected))
+	}
+
+	return container.NewGridWithColumns(cols, cells...)
+}
+
+func iconTile(name string, data []byte, selected *string) fyne.CanvasObject {
+	res := fyne.NewStaticResource(name+".png", data)
+	return widget.NewButtonWithIcon("", res, func() { *selected = name })
 }
