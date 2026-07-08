@@ -11,7 +11,7 @@
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
 5. Push to main
 6. Build all release binaries LOCALLY to dist/:
-   go build -o dist/radkeys-linux-amd64 .
+   go build -tags flatpak -o dist/radkeys-linux-amd64 .
    CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
 7. macOS: build on a Mac (cross-compile from Linux is impossible — needs Apple SDK).
    On macOS: CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 . && CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
@@ -28,8 +28,8 @@
 ## Commands
 
 ```bash
-# Build native (Linux)
-go build -o dist/radkeys-linux-amd64 .
+# Build native (Linux) — use flatpak tag for native file dialogs via xdg-desktop-portal
+go build -tags flatpak -o dist/radkeys-linux-amd64 .
 
 # Cross-compile Windows from Linux
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
