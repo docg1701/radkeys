@@ -24,6 +24,7 @@
 | Firmware RP2040 | ✅ `firmware/rp2040/diy24.ino` (24 GPIO) |
 | CI | ✅ Linux-only, test + release com binário Linux |
 | Release Windows | ✅ Cross-compile local (mingw), upload manual |
+| Release Linux | ✅ `go build -tags flatpak` para file dialog nativo via portal |
 | Release macOS | ❌ Cross-compile impossível (SDK Apple). Build nativo num Mac. |
 | Always-on-top | ⏳ Pendente Fyne v2.8.0 estável |
 | Botão Paste | ✅ Adicionado como 4º botão fixo (Copy, Paste, Back, Home) |
@@ -32,17 +33,11 @@
 
 ## 2. Pendências
 
-### 2.1 File dialog usa locale do SO
-
-O `dialog.NewFileOpen` do Fyne usa o idioma do sistema operacional, não o
-idioma selecionado no app. Sem API no Fyne para sobrescrever. Workaround:
-executar com `LANG=en_US.UTF-8`.
-
-### 2.2 macOS
+### 2.1 macOS
 
 Cross-compile impossível com CGO. Build nativo num Mac. Pendente.
 
-### 2.3 Always-on-top
+### 2.2 Always-on-top
 
 Pendente Fyne v2.8.0 estável (função `RequestAlwaysOnTop`).
 
