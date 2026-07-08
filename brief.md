@@ -255,7 +255,7 @@ sugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomend
 
 ### 8.1 Opções (MVP)
 1. **Comprar pronto — Stream Deck/clone (protocolo Elgato):** original Elgato (caro) ou clone compatível com o protocolo Elgato (médio custo). Pronto, sem construir. 15/32 teclas.
-2. **DIY HID custom de 24 (firmware RadKeys):** alguém monta (Arduino/ESP32 como HID custom, vendor-defined). ~R$50–100 em peças. 24 teclas. Firmware open source no repo.
+2. **DIY HID custom de 24 (firmware RadKeys):** Arduino Pro Micro (ATmega32U4) + chaves reaproveitadas de teclado chinês barato + caixa 3D printed + cabo USB. Matriz 6×4 (10 pinos GPIO). ~R$30-50 em peças. 24 teclas. Firmware open source no repo (`firmware/arduino/`). Alternativa: Raspberry Pi Pico (RP2040, 24 GPIO diretos, `firmware/rp2040/`).
 
 > Rejeitado: macro-keypad que envia teclas (F13–F24/letras/combos) — limita a ~12 inertes e/ou vaza modificadores para o RIS.
 
