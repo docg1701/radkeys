@@ -1,9 +1,12 @@
 package config
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/BurntSushi/toml"
 )
 
 const sample = `
@@ -137,5 +140,30 @@ buttons = [ { index = 3, label = "X", action = "text", content = "" } ]
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
 		t.Fatal("expected error for text without content")
+	}
+}
+
+func TestRoundtrip(t *testing.T) {
+	cfg, err := Load(writeFile(t, "radkeys.config.toml", sample))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := toml.NewEncoder(&buf).Encode(cfg); err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	// Parse back.
+	var cfg2 Config
+	if err := toml.Unmarshal(buf.Bytes(), &cfg2); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if err := cfg2.validate(); err != nil {
+		t.Fatalf("validate roundtripped: %v", err)
+	}
+	if cfg2.App.Device.Protocol != cfg.App.Device.Protocol {
+		t.Fatalf("protocol mismatch: %q vs %q", cfg2.App.Device.Protocol, cfg.App.Device.Protocol)
+	}
+	if len(cfg2.Screens) != len(cfg.Screens) {
+		t.Fatalf("screen count: %d vs %d", len(cfg2.Screens), len(cfg.Screens))
 	}
 }
