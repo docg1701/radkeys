@@ -140,13 +140,13 @@ func (t *RadKeysTheme) Size(name fyne.ThemeSizeName) float32 {
 // ---------------------------------------------------------------------------
 
 // headerBg returns a colour for the tab bar / header area.
-// Dark theme: slightly lighter than bg so tab bar stands out.
-// Light theme: slightly darker than bg so tab bar stands out.
+// Dark theme: much lighter than bg so tab bar clearly stands out.
+// Light theme: much darker than bg so tab bar clearly stands out.
 func (t *RadKeysTheme) headerBg() color.NRGBA {
 	if isLightNRGBA(t.bg) {
-		return darken(t.bg, 0.06)
+		return darken(t.bg, 0.12)
 	}
-	return lighten(t.bg, 0.08)
+	return lighten(t.bg, 0.20)
 }
 
 // inputBg returns a colour slightly distinct from bg so Entry/Select fields
