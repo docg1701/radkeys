@@ -402,8 +402,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	)
 
 	footer := container.NewGridWithColumns(3,
-		container.NewCenter(saveBtn),
 		widget.NewLabel(""),
+		container.NewPadded(container.NewCenter(saveBtn)),
 		widget.NewLabel(""),
 	)
 
