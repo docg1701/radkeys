@@ -66,36 +66,16 @@ CGO_ENABLED=1 go build -o radkeys-linux-amd64 .
 # Windows (on Windows, or cross-compile from Linux with mingw)
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
 
-# macOS Intel (on macOS, or cross-compile from Linux with osxcross)
-CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o radkeys-macos-amd64 .
-
-# macOS Apple Silicon (on macOS)
-CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o radkeys-macos-arm64 .
+# macOS (on macOS only — cross-compile from Linux is unsupported)
+CGO_ENABLED=1 go build -o radkeys-macos-amd64 .
+CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
 ```
 
-### Cross-compile from Linux
-
-Install the cross-compilation toolchains:
+### Cross-compile from Linux (Windows only)
 
 ```bash
-# Windows target
 sudo apt install -y gcc-mingw-w64
-
-# macOS target (complex — needs macOS SDK via osxcross)
-# See: https://github.com/tpoechtrager/osxcross
-```
-
-With toolchains installed:
-
-```bash
-# Windows
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
-
-# macOS Intel (requires osxcross, replace CC with the osxcross wrapper path)
-CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 CC=o64-clang go build -o radkeys-macos-amd64 .
-
-# macOS ARM64
-CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 CC=oa64-clang go build -o radkeys-macos-arm64 .
 ```
 
 ### Test
