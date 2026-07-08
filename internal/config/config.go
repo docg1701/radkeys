@@ -28,6 +28,7 @@ type Config struct {
 type App struct {
 	Name         string       `toml:"name"`
 	Radiologist  string       `toml:"radiologist"`
+	ConfigPath   string       `toml:"config_path"`
 	Language     string       `toml:"language"`
 	Version      string       `toml:"version"`
 	Device       Device       `toml:"device"`

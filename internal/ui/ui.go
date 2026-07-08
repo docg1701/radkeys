@@ -34,6 +34,9 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a.SetIcon(iconRes)
 
 	i18n.SetLanguage(cfg.App.Language)
+	if cfg.App.ConfigPath == "" {
+		cfg.App.ConfigPath = configPath
+	}
 
 	title := fmt.Sprintf("RadKeys — %s", cfg.App.Radiologist)
 	w := a.NewWindow(title)
@@ -194,26 +197,22 @@ func (u *appUI) pollHID() {
 func (u *appUI) buildSettings() fyne.CanvasObject {
 	cfg := u.cfg
 
-	// --- Radiologista ---
 	radEnt := widget.NewEntry()
 	radEnt.SetText(cfg.App.Radiologist)
 
-	// --- Idioma ---
 	langSel := widget.NewSelect(i18n.Supported, nil)
 	langSel.SetSelected(cfg.App.Language)
 
-	// --- Tema ---
 	themeSel := widget.NewSelect(themes.PresetNames(), nil)
 	themeSel.SetSelected(cfg.App.Theme.Preset)
 
-	// --- Layout ---
 	colsEnt := widget.NewEntry()
 	colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
+
 	rowsEnt := widget.NewEntry()
 	rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
 
-	// --- Arquivo de config (seletor) ---
-	configLbl := widget.NewLabel(u.configPath)
+	configLbl := widget.NewLabel(cfg.App.ConfigPath)
 	configLbl.Wrapping = fyne.TextTruncate
 	chooseBtn := widget.NewButton("Procurar...", func() {
 		dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
@@ -225,7 +224,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}, u.win).Show()
 	})
 
-	// --- Dispositivo ---
 	vidEnt := widget.NewEntry()
 	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
 	pidEnt := widget.NewEntry()
@@ -251,6 +249,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}
 		cfg.App.Device.Protocol = protoSel.Selected
 
+		cfg.App.ConfigPath = u.configPath
+
 		f, err := os.Create(u.configPath)
 		if err != nil {
 			dialog.ShowError(fmt.Errorf("salvar: %w", err), u.win)
@@ -262,19 +262,14 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			return
 		}
 
-		// Aplicar mudanças imediatamente.
 		i18n.SetLanguage(cfg.App.Language)
-
 		u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
-
 		u.thm = resolveTheme(cfg)
 
-		// Reconstruir keypad se columns/rows mudaram.
 		if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
 			u.cols = cfg.App.Layout.Columns
 			u.rows = cfg.App.Layout.Rows
 			u.keypad = container.NewGridWithColumns(u.cols)
-			// Reconstruir o VSplit: o offset do preview se mantém.
 			previewArea := u.previewBox()
 			keypadArea := container.NewPadded(u.keypad)
 			split := container.NewVSplit(previewArea, keypadArea)
@@ -292,30 +287,17 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		dialog.ShowInformation(i18n.T("settings.saved_title"), i18n.T("settings.saved_msg"), u.win)
 	}
 
-	saveBtn := widget.NewButtonWithIcon(i18n.T("settings.save"), theme.DocumentSaveIcon(), save)
-
-	form := container.NewVBox(
-		formRow("Radiologista", radEnt),
-		formRow("Idioma", langSel),
-		formRow("Tema", themeSel),
-		widget.NewSeparator(),
-		formRow("Colunas", colsEnt),
-		formRow("Linhas", rowsEnt),
-		widget.NewSeparator(),
-		widget.NewLabelWithStyle("Arquivo de configuração", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewHBox(configLbl, chooseBtn),
-		widget.NewSeparator(),
-		widget.NewLabelWithStyle("Dispositivo USB", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewHBox(widget.NewLabel("VID"), vidEnt, widget.NewLabel("PID"), pidEnt, protoSel),
-		widget.NewSeparator(),
-		saveBtn,
+	form := widget.NewForm(
+		widget.NewFormItem("Radiologista", radEnt),
+		widget.NewFormItem("Idioma", langSel),
+		widget.NewFormItem("Tema", themeSel),
+		widget.NewFormItem("Colunas", colsEnt),
+		widget.NewFormItem("Linhas", rowsEnt),
+		widget.NewFormItem("Arquivo de config", container.NewHBox(configLbl, chooseBtn)),
+		widget.NewFormItem("Dispositivo USB", container.NewHBox(widget.NewLabel("VID"), vidEnt, widget.NewLabel("PID"), pidEnt, protoSel)),
 	)
+	form.SubmitText = i18n.T("settings.save")
+	form.OnSubmit = save
+
 	return container.NewVScroll(form)
-}
-
-func formRow(label string, w fyne.CanvasObject) fyne.CanvasObject {
-	return container.NewHBox(
-		widget.NewLabelWithStyle(label, fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		w,
-	)
 }
