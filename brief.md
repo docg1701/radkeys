@@ -1,10 +1,14 @@
 # RadKeys — Brief Técnico Completo
 
-> **Versão:** 2.0
+> **Versão:** 2.1
 > **Data:** 2026-07-08
 > **Autor:** Nonatinho (consultor)
 > **Cliente:** Galvani (radiologista)
 > **Repo:** https://github.com/docg1701/radkeys
+>
+> **v2.1 — registra 9 bugs na aba Ajustes para correção pelo próximo agente.**
+> O agente atual (Nonatinho) não conseguiu corrigir a aba Ajustes a contento.
+> Esta versão documenta os bugs para o próximo agente resolver.
 
 ---
 
@@ -20,14 +24,14 @@ uma frase pronta de laudo; o usuário confirma a cópia, o texto vai para a
 A operação é feita por um **dispositivo USB HID custom**, lido diretamente
 pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do RIS**.
 
-### Modelo de botões (N botões físicos via hidapi)
+### Modelo de botões
 
 | Botões | Função | Configurável? |
 |--------|--------|---------------|
 | **3 fixos** (índices 0/1/2 por padrão) | `copy`, `level_up`, `go_home` | Fixa (global) |
 | **N−3 configuráveis** | `navigate` (sub-tela) ou `text` (frase) | Por tela |
 
-- **N** = botões do hardware, descoberto em runtime. Alvo: **24** (DIY).
+- **N** = botões do hardware. Alvo: 24 (DIY).
 - **Hierarquia de telas**: `navigate` entra em sub-tela; `level_up`/`go_home` retornam.
 
 ---
@@ -39,9 +43,12 @@ pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do R
 | Open source | MIT |
 | Config | `radkeys.config.toml` (plaintext TOML) |
 | Plataformas | Windows 10/11, macOS (Intel+AS), Linux |
-| Distribuição | Executável único, sem instalação |
+| Distribuição | **1 executável + 1 config**. Tudo embed no binário (ícone, traduções, temas). |
 | Hardware | HID custom: Stream Deck/clone (Elgato) ou DIY 24 (Arduino) |
 | Botões | 3 fixos + (N−3) configuráveis; alvo 24 |
+| i18n | 7 idiomas (en, pt-BR, pt-PT, es, fr, de, it) via go-i18n |
+| Temas | 12 presets (10 de terminal + 2 cinza) |
+| Ícone | Do tema Obsidian (preferences-desktop-keyboard-shortcuts), embarcado |
 
 ---
 
@@ -52,6 +59,7 @@ pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do R
 | Linguagem | Go 1.22+ |
 | GUI | Fyne v2.7.4 (estável) |
 | HID | `github.com/sstallion/go-hid` v0.15.0 (hidapi, CGO) |
+| i18n | `github.com/nicksnyder/go-i18n/v2` v2.6.1 |
 | Config | `github.com/BurntSushi/toml` |
 | Build | `fyne-cross` ou nativo por OS |
 
@@ -61,10 +69,7 @@ pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do R
   (PR #6184 mergeado em `develop`/v2.8.0, ainda rc1). MVP sem always-on-top;
   re-adicionar ao subir para v2.8.0 estável. Ver `research/fyne-always-on-top.md`.
 - **Clipboard**: `a.Clipboard().SetContent(texto)` (disponível desde 2.6).
-- **go-hid**: `hid.Init()` → `hid.OpenFirst(vid,pid)` → `d.ReadWithTimeout(buf, 50ms)`
-  (retorna `hid.ErrTimeout` sem evento) → `d.Close()`.
-- **Elgato**: input report `0x01/0x00`, 1 byte/botão. Feature `0x08` = rows×cols.
-- **DIY**: vendor-defined, report ID 1 + 24 bytes (1 por botão).
+- **go-hid**: `hid.Init()` → `hid.OpenFirst(vid,pid)` → `d.ReadWithTimeout(buf, 50ms)` → `d.Close()`.
 
 ---
 
@@ -74,13 +79,13 @@ pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do R
 ┌──────────────────────────────────────┐
 │            RadKeys (Fyne UI)          │
 │  ┌────────────┐  ┌─────────────────┐  │
-│  │ Aba        │  │ Aba "Editar"    │  │
-│  │ "Atalhos"  │  │ (editor visual) │  │
+│  │ Aba        │  │ Aba "Ajustes"   │  │
+│  │ "Atalhos"  │  │ (settings)     │  │
 │  │            │  │                 │  │
-│  │ ┌────────┐ │  │  Lista de telas │  │
-│  │ │Preview │ │  │  + formulário   │  │
-│  │ │(topo,  │ │  │  + botões       │  │
-│  │ │ 50%)   │ │  │  + salvar       │  │
+│  │ ┌────────┐ │  │                 │  │
+│  │ │Preview │ │  │                 │  │
+│  │ │(topo,  │ │  │                 │  │
+│  │ │ 50%)   │ │  │                 │  │
 │  │ ├────────┤ │  │                 │  │
 │  │ │Keypad  │ │  │                 │  │
 │  │ │(baixo, │ │  │                 │  │
@@ -89,58 +94,23 @@ pelo RadKeys — o hardware **não envia teclas**, logo **não rouba o foco do R
 │  │ └────────┘ │  │                 │  │
 │  └────────────┘  └─────────────────┘  │
 └──────────────────────────────────────┘
-        │              │
-        ▼              ▼
-  ┌──────────┐  ┌──────────────┐
-  │ Deck     │  │ Clipboard   │
-  │ (naveg.) │  │ (Fyne)       │
-  └──────────┘  └──────────────┘
-        │
-        ▼
-  ┌──────────────────────┐
-  │ HID Reader (go-hid)  │
-  │ Elgato / DIY         │
-  └──────────────────────┘
-        ▲
-        │
-  ┌──────────────┐
-  │ USB HID custom│
-  │ Stream Deck /│
-  │ DIY 24       │
-  └──────────────┘
 ```
-
-### Fluxo de dados
-
-1. App carrega `radkeys.config.toml` (cria template se não existe).
-2. Abre o dispositivo por VID/PID (`hid.OpenFirst`).
-3. Tela "Atalhos": preview no topo, keypad 4×N embaixo.
-4. Loop de poll `ReadWithTimeout(50ms)`: parseia input report.
-5. Botão fixo → `copy`/`level_up`/`go_home`. Botão configurável → `navigate`/`text`.
-6. `copy` → `Clipboard().SetContent(previewText)`.
-7. Usuário cola no RIS. Foco nunca saiu do RIS.
-8. Tela "Editar": edita telas/botões, salva TOML, recarrega e aplica à tela de atalhos.
 
 ---
 
 ## 5. Formato do config
 
-### 5.1 Arquivo
-
-`radkeys.config.toml` no mesmo diretório do executável. Se não existe, app
-cria template mínimo.
-
-### 5.2 Estrutura TOML
-
 ```toml
 [app]
 name = "RadKeys"
+radiologist = "Dr. Galvani"
+language = "pt-BR"
 version = "2.0"
 
 [app.device]
 vendor_id  = 0x0fd9
 product_id = 0x0063
-protocol   = "elgato"   # "elgato" ou "radkeys-diy"
+protocol   = "elgato"
 
 [app.fixed_buttons]
 copy     = 0
@@ -148,13 +118,11 @@ level_up = 1
 go_home  = 2
 
 [app.layout]
-columns = 4    # colunas do keypad virtual (default 4)
-rows    = 5    # linhas do keypad virtual (default 5)
+columns = 4
+rows    = 5
 
 [app.theme]
-background = "#1a1a1a"  # fundo do preview
-button     = "#2a2a2a"  # cor do slot vazio
-fixed      = "#3a3a3a"  # cor do botão fixo (reservado)
+preset = "Dracula"
 
 [[screens]]
 id = "root"
@@ -163,41 +131,20 @@ buttons = [
   { index = 3, label = "RX Tórax", action = "navigate", target = "rx_torax" },
   { index = 4, label = "Normal", action = "text", content = "..." },
 ]
-
-[[screens]]
-id = "rx_torax"
-title = "RX Tórax"
-buttons = [
-  { index = 3, label = "Normal", action = "text", content = "..." },
-]
 ```
-
-### 5.3 Regras
-
-- `[app.device]`: VID/PID + protocolo.
-- `[app.fixed_buttons]`: índices dos 3 botões fixos globais.
-- `[app.layout]`: columns/rows do keypad virtual. Default 4×5.
-- `[app.theme]`: cores em hex (configuráveis; defaults se vazio).
-- `[[screens]]`: `id`, `title`, `buttons[]`.
-- Botão: `index`, `label`, `action` (`navigate`+`target` ou `text`+`content`).
 
 ---
 
 ## 6. Interface do usuário
 
-### 6.1 Tela "Atalhos"
+### 6.1 Aba "Atalhos"
 
-- Janela **redimensionável** (1280×800 default, sem `SetFixedSize`).
-- Tema **escuro** (DarkTheme).
-- **Topo**: título da tela ativa (centro, negrito).
-- **Metade superior**: **preview** — `widget.Label` monospace com scroll,
-  preserva quebras de linha do laudo. Fundo com cor `[app.theme].background`.
-- **Metade inferior**: **keypad virtual** — grid `columns × rows` (default 4×5 = 20).
-  Cada slot é `NewGridWrap(120×80)` (tamanho fixo, todos iguais). Botões
-  preenchidos = `widget.Button`; slots vazios = `canvas.Rectangle` com
-  `[app.theme].button`. Os 3 fixos (Copiar/Voltar/Início) sempre ocupam os
-  primeiros slots.
-- Sem `SetFixedSize`; sem `RequestFocus()` na tela de uso.
+- **Título da janela**: `"RadKeys — <nome do radiologista>"` (NÃO hardcoded; usa `cfg.App.Radiologist`).
+- **Topo (50%)**: preview — `widget.Label` monospace com scroll, preserva quebras de linha.
+- **Baixo (50%)**: keypad virtual — grid `columns × rows` (default 4×5). Botões e slots
+  vazios têm o **mesmo tamanho** (o grid garante; não usar `NewGridWrap` com tamanhos diferentes).
+- **Sem título** acima do preview (removido em v2.0).
+- Tema escuro. Janela redimensionável (1280×800 default).
 
 ### 6.2 Navegação
 
@@ -207,159 +154,174 @@ buttons = [
 - `navigate`: entra em sub-tela.
 - `text`: carrega texto no preview.
 
-### 6.3 Tela "Editar"
+### 6.3 Aba "Ajustes"
 
-- **Abas**: "Atalhos" e "Editar" (`container.NewAppTabs`).
-- **Editor**: lista de telas à esquerda (`widget.List`), formulário à direita.
-  - Selecionar tela → mostra ID, Título, e lista de botões (cada botão num
-    `widget.NewCard` com índice, rótulo, ação, target, conteúdo multiline).
-  - "Nova tela": adiciona e **seleciona** a nova tela (atualiza o formulário).
-  - "Novo botão": adiciona e **rebuild** da lista de botões.
-  - "Remover": remove tela/botão e atualiza.
-  - "Salvar e aplicar": escreve TOML, recarrega config, recria deck,
-    **re-renderiza o keypad** da aba Atalhos.
-- Modo edição aceita foco (janela RadKeys tem foco; aceitável).
+**DEVE CONTER APENAS:**
+- Nome do radiologista (Entry; **deve atualizar o título da janela ao salvar**).
+- Idioma (Select com 7 opções: en, pt-BR, pt-PT, es, fr, de, it).
+- Tema (Select com 12 presets: Dracula, Solarized Dark, Monokai, Gruvbox Dark,
+  Nord, One Dark, Tokyo Night, Catppuccin Mocha, Solarized Light, Gruvbox Light,
+  Light Gray, Dark Gray).
+- Layout: colunas e linhas (Entry numérico cada).
+- Dispositivo: VID (Entry), PID (Entry), protocolo (Select: elgato / radkeys-diy).
+- Botão Salvar (largura **normal**, não full-width).
+
+**NÃO DEVE CONTER:**
+- ❌ Campo "Nome do app" (remover — imbecil).
+- ❌ Campo "Arquivo de configuração" (remover — inútil, não é editável).
+- ❌ Frase "Telas e botões são editados manualmente..." (remover da UI).
+- ❌ Campos individuais de cor (background/button/fixed) — só o preset de tema.
+- ❌ Dropdown "elgato" com label cortado ("elgado") — corrigir label.
+
+**AO SALVAR:**
+- As mudanças **devem aplicar-se imediatamente à interface** (re-renderizar
+  keypad, atualizar título, trocar tema, trocar idioma). O bug atual é que
+  salvar não muda nada na UI.
 
 ---
 
-## 7. Comportamento de foco
+## 7. BUGS REGISTRADOS (v2.1) — para o próximo agente corrigir
 
-- **Modo uso (aba Atalhos)**: sem roubar foco do RIS. Dispositivo HID custom
-  não envia teclas — nada chega ao sistema. Leitura via hidapi.
-- **Modo edição (aba Editar)**: janela RadKeys tem foco, aceita teclado comum.
-- **Mouse**: clicar no RadKeys muda o foco (normal).
+| # | Bug | Severidade |
+|---|-----|------------|
+| 1 | Mudar o nome do radiologista não muda a interface. Deveria compor o título da janela (`"RadKeys — <radiologista>"`). | Alta |
+| 2 | Campo "Nome do app" nos Ajustes é inútil e imbecil. Remover. | Média |
+| 3 | Salvar ajustes não aplica nada na interface (keypad, tema, idioma não atualizam). O `save()` chama `resolveTheme` e `renderScreen` mas não reconstrói o layout se columns/rows mudaram, não atualiza o título com o radiologista, e o tema pode não estar sendo aplicado corretamente. | Crítica |
+| 4 | Arquivo de config aparece na tela de Ajustes mas não é editável. Remover. | Média |
+| 5 | Frase "Telas e botões são editados manualmente neste arquivo (TOML)" na UI. Remover. | Baixa |
+| 6 | Campos individuais de cor (background/button/fixed) na aba Ajustes. Remover — só o seletor de tema. | Média |
+| 7 | Seção "Dispositivo USB": VID/PID em caixinhas minúsculas + dropdown "elgado" (label cortado). Corrigir layout e label. | Média |
+| 8 | Botão Salvar ocupa a largura toda da tela. Deve ter largura normal. | Baixa |
+| 9 | Layout geral da aba Ajustes é caótico. Reorganizar: agrupar por seção com labels claros, espaçamento adequado, sem elementos inúteis. | Alta |
 
 ---
 
 ## 8. Hardware USB
 
-### 8.1 Opções
+### Opções
 
 1. **Comprar pronto**: Stream Deck/clone (protocolo Elgato). 15/32 teclas.
-2. **DIY (primário)**: Arduino Pro Micro (ATmega32U4) + chaves de teclado
-   chinês barato + caixa 3D printed + cabo USB. Matriz 6×4 (10 pinos).
-   ~R$30-50. Firmware: `firmware/arduino/`.
-3. **DIY (alt)**: Raspberry Pi Pico (RP2040), 24 GPIO diretos. `firmware/rp2040/`.
+2. **DIY (primário)**: Arduino Pro Micro (ATmega32U4) + chaves de teclado chinês
+   + caixa 3D + cabo USB. Matriz 6×4. ~R$30-50. Firmware: `firmware/arduino/`.
+3. **DIY (alt)**: Raspberry Pi Pico (RP2040). `firmware/rp2040/`.
 
-### 8.2 Protocolos
+### Protocolos
 
 - **Elgato**: input report `0x01/0x00`, 1 byte/botão. Feature `0x08` = rows×cols.
-- **DIY**: vendor-defined, report ID 1 + 24 bytes. `parseDIYReport` aceita
-  25 bytes (com report ID) ou 24 bytes (sem).
+- **DIY**: vendor-defined, report ID 1 + 24 bytes. `parseDIYReport` aceita 25 ou 24 bytes.
 
-### 8.3 Permissões Linux
+### Permissões Linux
 
-- `/dev/hidraw*` (não `/dev/input/event*`). Grupo `input` ou regra udev por VID/PID.
-- Funciona em X11, Wayland e console.
+`/dev/hidraw*`. Grupo `input` ou regra udev por VID/PID.
 
 ---
 
-## 9. Modelo de negócio
+## 9. i18n
 
-- Gratuito: código (MIT) + firmware (MIT) + configs da comunidade.
-- Pago: arquivos premium (frases curadas por modalidade).
-- Hardware: versão pronta/afiliada (não é core).
-
----
-
-## 10. Build e deploy
-
-### 10.1 Dependências
-
-- Go 1.22+ e **GCC** (CGO por go-hid).
-- Linux: `libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev`.
-- macOS: IOKit (system). Windows: MinGW.
-
-### 10.2 CI
-
-- `.github/workflows/build.yml`: build/test/vet em ubuntu, macos, windows.
-
-### 10.3 Targets
-
-| Plataforma | Artefato |
-|------------|----------|
-| Windows x64 | `radkeys.exe` |
-| macOS Intel | `radkeys` |
-| macOS AS | `radkeys` |
-| Linux x64 | `radkeys` |
+- `internal/i18n/` com go-i18n v2.6.1 e 7 arquivos JSON embed.
+- Idiomas: en (default), pt-BR, pt-PT, es, fr, de, it.
+- `i18n.T(key)` para todas as strings de UI.
+- `i18n.SetLanguage(lang)` troca o idioma em runtime.
+- Para adicionar um idioma: criar `locales/<code>.json` e adicionar a `i18n.Supported`.
 
 ---
 
-## 11. Riscos
+## 10. Temas
 
-| Risco | Mitigação |
-|-------|-----------|
-| CGO + hidapi complica cross-compile | Imagens Docker por OS; build nativo fallback |
-| Clone não fala Elgato | Priorizar DIY (protocolo controlado) |
-| Always-on-top indisponível em v2.7.4 | MVP sem; re-adicionar em v2.8.0 estável |
-| `/dev/hidraw*` sem permissão | Documentar udev/grupo |
-
----
-
-## 12. Próximos passos
-
-1. ~~Bump go.mod~~ (feito: Fyne v2.7.4 + go-hid v0.15.0)
-2. ~~Parser TOML~~ (feito + testes)
-3. ~~HID Reader~~ (feito: Elgato + DIY + mock)
-4. ~~Tela de uso~~ (feito: preview + keypad 4×N)
-5. ~~Clipboard~~ (feito)
-6. Always-on-top: pendente v2.8.0 estável
-7. ~~Tela de edição~~ (feito: editor visual com salvar+aplicar)
-8. ~~Firmware DIY~~ (feito: Arduino Pro Micro + RP2040)
-9. ~~CI~~ (feito: GitHub Actions)
-10. Testar com hardware real
-11. Polir UI (cores custom theme completo, animações)
+- `internal/theme/presets.go` com 12 presets + "Custom".
+- 10 inspirados em temas de terminal: Dracula, Solarized Dark/Light, Monokai,
+  Gruvbox Dark/Light, Nord, One Dark, Tokyo Night, Catppuccin Mocha.
+- 2 de cinza: Light Gray, Dark Gray.
+- Seletor na aba Ajustes. Ao selecionar, aplica as cores do preset.
+- **Não mostrar campos individuais de cor** — só o seletor de preset.
 
 ---
 
-## 13. Fontes-chave
+## 11. Release
+
+- **1 executável + 1 config**. Tudo embed: ícone (Obsidian), traduções (7 JSON),
+  temas (12 presets). Nenhum arquivo externo além do config.
+- CI: `.github/workflows/build.yml` — testes em 3 OS + auto-release de tag
+  (binários linux/windows/macos + radkeys.config.toml como assets).
+- Tag **lightweight**: `git tag vX.Y.Z <sha>` (NÃO anotada).
+- Changelog categorizado por conventional commits.
+
+---
+
+## 12. Estado atual de desenvolvimento
+
+| Componente | Status | Notas |
+|------------|--------|-------|
+| Parser TOML | ✅ | `internal/config/` com testes |
+| Navegação (deck) | ✅ | `internal/deck/` com testes |
+| HID reader (Elgato+DIY) | ✅ | `internal/hid/` com build tags cgo/!cgo |
+| HID mock | ✅ | `internal/hid/hid.go` |
+| UI — aba Atalhos | ✅ | Preview + keypad 4×5 |
+| UI — aba Ajustes | ❌ **9 bugs** | Ver seção 7 |
+| i18n (7 idiomas) | ✅ | `internal/i18n/` |
+| Temas (12 presets) | ✅ | `internal/theme/` |
+| Ícone (Obsidian) | ✅ | `internal/assets/` |
+| Firmware Arduino | ✅ | `firmware/arduino/` |
+| Firmware RP2040 | ✅ | `firmware/rp2040/` |
+| CI | ✅ | `.github/workflows/build.yml` |
+| AGENTS.md | ✅ | 6 áreas + ciclo dev→CI→release |
+| README.md | ✅ | Best practices 2026 |
+| Always-on-top | ⏳ | Pendente Fyne v2.8.0 estável |
+| Cross-compile Windows/macOS | ⏳ | CI testa mas não validado localmente |
+
+---
+
+## 13. Próximos passos (para o próximo agente)
+
+1. **Corrigir os 9 bugs da aba Ajustes** (seção 7). Prioridade: bug #3 (crítico).
+2. Ao salvar Ajustes: reconstruir o keypad se columns/rows mudaram,
+   atualizar título com radiologista, aplicar tema, aplicar idioma.
+3. Remover: campo "Nome do app", campo "Arquivo de config", frase "Telas e
+   botões...", campos individuais de cor.
+4. Reorganizar a aba Ajustes com layout limpo e agrupado.
+5. Botão Salvar com largura normal (não full-width).
+6. Dispositivo: VID/PID com labels e tamanho adequados, dropdown com label correto.
+7. Testar com hardware real (Stream Deck ou DIY 24).
+8. Validar cross-compile Windows/macOS.
+
+---
+
+## 14. Fontes-chave
 
 - `sstallion/go-hid`: https://pkg.go.dev/github.com/sstallion/go-hid
 - libusb/hidapi: https://github.com/libusb/hidapi
 - Elgato HID: https://docs.elgato.com/streamdeck/hid/general
 - Fyne v2.7.4: https://pkg.go.dev/fyne.io/fyne/v2
-- PR #6184 (always-on-top, em develop): https://github.com/fyne-io/fyne/pull/6184
-- Análise always-on-top: `research/fyne-always-on-top.md`
+- PR #6184 (always-on-top): https://github.com/fyne-io/fyne/pull/6184
+- go-i18n: https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2
 - DIY Stream Deck (ref): https://github.com/Mercawa/DIYStreamDeck-HIDKeyboard
-- `fyne-cross`: https://github.com/fyne-io/fyne-cross
 
 ---
 
-## 14. Estrutura do repo
+## 15. Estrutura do repo
 
 ```
 radkeys/
-├── brief.md                        # este brief (v2.0)
-├── go.mod / go.sum                 # Fyne v2.7.4 + go-hid + BurntSushi/toml
-├── main.go                         # entrypoint: load config, open HID, run UI
-├── radkeys.config.toml             # config de exemplo
-├── README.md
-├── LICENSE                         # MIT
-├── .github/workflows/build.yml     # CI cross-platform
+├── AGENTS.md                      # Regras para agentes (6 áreas + ciclo release)
+├── brief.md                       # Este brief (v2.1)
+├── main.go                        # Entrypoint
+├── radkeys.config.toml            # Config de exemplo (comentado para humano/LLM)
+├── README.md / LICENSE
+├── go.mod / go.sum
+├── .github/workflows/build.yml    # CI: test + auto-release
 ├── internal/
-│   ├── config/
-│   │   ├── config.go               # parser TOML + validação + Theme/Layout
-│   │   └── config_test.go           # testes (6 testes, roundtrip TOML)
-│   ├── deck/
-│   │   ├── deck.go                 # estado de navegação (navigate/text/copy/up/home)
-│   │   └── deck_test.go            # testes (8 testes)
-│   ├── hid/
-│   │   ├── hid.go                   # interface Reader + MockReader
-│   │   ├── reader_cgo.go           # implementação go-hid (Elgato + DIY)
-│   │   ├── reader_nocgo.go         # fallback sem CGO
-│   │   └── hid_test.go             # testes do mock (4 testes)
-│   └── ui/
-│       ├── ui.go                   # tela Atalhos (preview + keypad)
-│       └── edit.go                  # tela Editar (editor visual)
+│   ├── config/                    # Parser TOML + validação + tipos
+│   ├── deck/                      # Estado de navegação
+│   ├── hid/                       # Interface Reader + Mock + go-hid
+│   ├── ui/                        # Fyne UI (Atalhos + Ajustes)
+│   ├── i18n/                       # go-i18n + 7 JSON embed
+│   ├── theme/                     # 12 preset themes
+│   └── assets/                    # Ícone Obsidian embarcado
 ├── firmware/
-│   ├── arduino/
-│   │   ├── diy24.ino                # Arduino Pro Micro (matriz 6×4, HID vendor-defined)
-│   │   └── README.md               # BOM, pinagem, udev, protocolo
-│   └── rp2040/
-│       ├── diy24.ino                # RP2040 (24 GPIO diretos, Adafruit_TinyUSB)
-│       └── README.md
+│   ├── arduino/                   # Arduino Pro Micro (matriz 6×4)
+│   └── rp2040/                    # RP2040 (24 GPIO)
 └── research/
-    └── fyne-always-on-top.md        # investigação do PR #6184
+    └── fyne-always-on-top.md      # Investigação PR #6184
 ```
 
 ### Testes
@@ -367,12 +329,5 @@ radkeys/
 ```
 go test ./...  →  config: ok (6)  deck: ok (8)  hid: ok (4)
 go vet ./...   →  clean
-go build .     →  radkeys (31 MB, CGO + Fyne + go-hid)
+go build .     →  radkeys (32 MB, CGO + Fyne + go-hid + i18n + icon embed)
 ```
-
-### Validação
-
-- Compila em Linux amd64 (Go 1.22.2, GCC 13.3, libudev 255, libxxf86vm OK).
-- Executável roda: sem hardware → mock → UI funcional via mouse.
-- `go test ./...` passa (18 testes).
-- `go vet ./...` limpo.
