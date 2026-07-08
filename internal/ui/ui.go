@@ -17,8 +17,9 @@ import (
 )
 
 // Run builds the window, wires the HID reader to the deck, and blocks until
-// the window closes.
-func Run(cfg *config.Config, reader hid.Reader) error {
+// the window closes. configPath is the path to radkeys.config.toml (for the
+// editor to save back to).
+func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
 	w := a.NewWindow("RadKeys")
 	w.SetFixedSize(true)
@@ -30,10 +31,12 @@ func Run(cfg *config.Config, reader hid.Reader) error {
 	title := widget.NewLabel("")
 	grid := container.NewGridWithColumns(6)
 
-	u := &appUI{cfg: cfg, deck: deck.New(cfg), reader: reader, fapp: a, win: w, preview: preview, title: title, grid: grid}
+	u := &appUI{cfg: cfg, configPath: configPath, deck: deck.New(cfg), reader: reader, fapp: a, win: w, preview: preview, title: title, grid: grid}
 	u.renderScreen()
 
-	w.SetContent(container.NewBorder(title, preview, nil, nil, grid))
+	editBtn := widget.NewButton("Editar", u.openEditor)
+	top := container.NewHBox(title, editBtn)
+	w.SetContent(container.NewBorder(top, preview, nil, nil, grid))
 
 	// Always-on-top: NOT available in Fyne v2.7.4 (PR #6184 is on develop / v2.8.0,
 	// still rc1 as of 2026-07-07). Decision: MVP stays on v2.7.4 stable without
@@ -52,14 +55,15 @@ func Run(cfg *config.Config, reader hid.Reader) error {
 }
 
 type appUI struct {
-	cfg     *config.Config
-	deck    *deck.Deck
-	reader  hid.Reader
-	fapp    fyne.App
-	win     fyne.Window
-	preview *widget.Label
-	title   *widget.Label
-	grid    *fyne.Container
+	cfg        *config.Config
+	configPath string
+	deck       *deck.Deck
+	reader     hid.Reader
+	fapp       fyne.App
+	win        fyne.Window
+	preview    *widget.Label
+	title      *widget.Label
+	grid       *fyne.Container
 }
 
 func (u *appUI) press(index int) {

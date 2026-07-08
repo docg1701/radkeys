@@ -28,7 +28,7 @@ func main() {
 		reader = hid.NewMock()
 	}
 
-	if err := ui.Run(cfg, reader); err != nil {
+	if err := ui.Run(cfg, configPath(), reader); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
 }
