@@ -20,6 +20,7 @@
   "settings.pid": {"other": "PID"},
   "settings.protocol": {"other": "Protokoll"},
   "settings.icon": {"other": "Icon"},
+  "settings.group_icon": {"other": "App Icon"},
   "settings.browse": {"other": "Durchsuchen…"},
   "settings.save": {"other": "Speichern"},
   "settings.group_general": {"other": "Allgemein"},
