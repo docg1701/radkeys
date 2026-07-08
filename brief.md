@@ -35,6 +35,29 @@ Pendente Fyne v2.8.0.
 ### 2.3 🔴 JOGAR FORA E REFAZER — Sistema de temas
 
 **`internal/theme/custom.go` não tem conserto. Deve ser apagado e refeito do zero.**
+Ver seção dedicada abaixo.
+
+### 2.4 🔴 Limpeza geral — dívida técnica
+
+**`internal/ui/ui.go`:**
+1. Dead code em `buildAbout()`: variáveis `author` e `license` criadas com
+   Wrapping mas nunca usadas — `repoLine` usa `i18n.T()` direto.
+2. `renderScreen()` recria todos os botões (20+ closures novas) a cada chamada.
+3. Save recria `buildSettings()` e `buildAbout()` inteiros — devia usar Refresh.
+4. `resolveFullTheme`: fallback silencioso para Presets[0] se FindPreset falha.
+5. `appIconData`: suprime erros de leitura, sem aviso ao usuário.
+6. `configLbl.Wrapping = fyne.TextTruncate` — path truncado.
+
+**`internal/config/config.go`:**
+1. Campos mortos em `Theme`: Background, Button, Fixed — não usados.
+2. `Layout.Preview`: "reserved for future use" — morto.
+3. `validate()` não valida VID/PID, preset inexistente, Language.
+
+**`internal/theme/presets.go`:**
+1. `Preset` só tem 3 cores — insuficiente.
+2. `FindPreset` aceita nome legado mas não loga aviso.
+
+### 2.5 Regras para o novo sistema de temas
 
 A premissa está errada: derivar 28 cores de 3 hexes com `lighten`/`darken`/`blend`
 e fatores mágicos (0.20, 0.38, 0.42, 0xCC, etc.) não funciona.
