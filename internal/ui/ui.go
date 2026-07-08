@@ -345,12 +345,14 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 
 	cards := []fyne.CanvasObject{
 		makeCard(i18n.T("settings.group_general"), "",
-			makeFieldRow(i18n.T("settings.radiologist"), radEnt),
+			labeled(i18n.T("settings.radiologist"), radEnt),
 		),
 		makeCard(i18n.T("settings.group_locale"), "",
-			makeFieldRow(i18n.T("settings.language"), langSel),
-			makeFieldRow(i18n.T("settings.theme"), themeSel),
-			makeFieldRow(i18n.T("settings.icon"), iconSel),
+			container.NewGridWithColumns(3,
+				labeled(i18n.T("settings.language"), langSel),
+				labeled(i18n.T("settings.theme"), themeSel),
+				labeled(i18n.T("settings.icon"), iconSel),
+			),
 		),
 		makeCard(i18n.T("settings.group_layout"), "",
 			makeDualField(i18n.T("settings.columns"), colsEnt, i18n.T("settings.rows"), rowsEnt),
@@ -418,23 +420,20 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // Layout helpers for the settings tab
 // ---------------------------------------------------------------------------
 
+// labeled returns label above input so the input gets full width.
+func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
+	return container.NewVBox(widget.NewLabel(label), input)
+}
+
 func makeCard(title string, subtitle string, items ...fyne.CanvasObject) fyne.CanvasObject {
 	body := container.NewVBox(items...)
 	return widget.NewCard(title, subtitle, body)
 }
 
-func makeFieldRow(label string, input fyne.CanvasObject) fyne.CanvasObject {
-	lbl := widget.NewLabel(label)
-	return container.NewBorder(nil, nil, lbl, nil, input)
-}
-
 func makeDualField(l1 string, i1 fyne.CanvasObject, l2 string, i2 fyne.CanvasObject) fyne.CanvasObject {
-	lbl1 := widget.NewLabel(l1)
-	lbl2 := widget.NewLabel(l2)
-	return container.NewHBox(
-		container.NewBorder(nil, nil, lbl1, nil, i1),
-		widget.NewSeparator(),
-		container.NewBorder(nil, nil, lbl2, nil, i2),
+	return container.NewGridWithColumns(2,
+		labeled(l1, i1),
+		labeled(l2, i2),
 	)
 }
 
