@@ -1,10 +1,4 @@
 // Package config loads and validates radkeys.config.toml.
-//
-// Exemplo:
-//
-//	cfg, err := config.Load("radkeys.config.toml")
-//	if err != nil { log.Fatal(err) }
-//	root, ok := cfg.ScreenByID(cfg.App.Device.VendorID)
 package config
 
 import (
@@ -14,13 +8,11 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Device protocol selectors.
 const (
 	ProtocolElgato = "elgato"
 	ProtocolDIY    = "radkeys-diy"
 )
 
-// Button actions.
 const (
 	ActionNavigate = "navigate"
 	ActionText     = "text"
@@ -32,22 +24,28 @@ type Config struct {
 	Screens []Screen `toml:"screens"`
 }
 
-// App holds app-wide settings: device connection, the 3 fixed buttons, and
-// the on-screen layout (adapts to any DIY device).
+// App holds app-wide settings.
 type App struct {
 	Name         string       `toml:"name"`
 	Version      string       `toml:"version"`
 	Device       Device       `toml:"device"`
 	FixedButtons FixedButtons `toml:"fixed_buttons"`
 	Layout       Layout       `toml:"layout"`
+	Theme        Theme        `toml:"theme"`
 }
 
-// Layout describes how the UI arranges buttons and preview, so it adapts to
-// any DIY device (12, 16, 24, 32 buttons, etc.).
+// Layout describes the on-screen keypad dimensions (adapts to any DIY device).
 type Layout struct {
-	Columns int    `toml:"columns"` // grid columns for buttons (0 = default 4)
-	Rows    int    `toml:"rows"`    // grid rows for buttons (0 = auto)
-	Preview string `toml:"preview"` // "center" | "top" | "bottom" | "left" | "right"
+	Columns int    `toml:"columns"` // grid columns (0 = default 4)
+	Rows    int    `toml:"rows"`    // grid rows (0 = default 5)
+	Preview string `toml:"preview"` // reserved for future use
+}
+
+// Theme holds configurable colors (hex strings like "#1a1a1a").
+type Theme struct {
+	Background string `toml:"background"` // preview/background color
+	Button     string `toml:"button"`     // configurable button color
+	Fixed      string `toml:"fixed"`      // fixed button color
 }
 
 // Device identifies the USB HID custom device to open.
@@ -104,13 +102,8 @@ func (c *Config) validate() error {
 	if c.App.Layout.Columns <= 0 {
 		c.App.Layout.Columns = 4
 	}
-	switch c.App.Layout.Preview {
-	case "", "center", "top", "bottom", "left", "right":
-		if c.App.Layout.Preview == "" {
-			c.App.Layout.Preview = "center"
-		}
-	default:
-		return fmt.Errorf("config: layout.preview must be center|top|bottom|left|right, got %q", c.App.Layout.Preview)
+	if c.App.Layout.Rows <= 0 {
+		c.App.Layout.Rows = 5
 	}
 	if len(c.Screens) == 0 {
 		return fmt.Errorf("config: at least one screen is required")

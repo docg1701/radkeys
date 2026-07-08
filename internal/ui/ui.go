@@ -1,11 +1,12 @@
-// Package ui renders the RadKeys use screen: square buttons around a central
-// preview area. Layout is driven by [app.layout] in the config so it adapts
-// to any DIY device. Two tabs: "Uso" (buttons + preview) and "Config" (editor).
+// Package ui renders RadKeys: preview on top half, virtual keypad on bottom
+// half. Layout (columns/rows) and colors are fully configurable via TOML.
 package ui
 
 import (
 	"fmt"
 	"image/color"
+	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -23,8 +24,16 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
 	a.Settings().SetTheme(theme.DarkTheme())
 	w := a.NewWindow("RadKeys")
-	w.SetFixedSize(true)
-	w.Resize(fyne.NewSize(960, 640))
+	w.Resize(fyne.NewSize(1280, 800))
+
+	cols := cfg.App.Layout.Columns
+	if cols <= 0 {
+		cols = 4
+	}
+	rows := cfg.App.Layout.Rows
+	if rows <= 0 {
+		rows = 5
+	}
 
 	u := &appUI{
 		cfg:        cfg,
@@ -33,27 +42,30 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		reader:     reader,
 		fapp:       a,
 		win:        w,
-		preview:    widget.NewRichTextFromMarkdown("*Selecione uma frase.*"),
+		cols:       cols,
+		rows:       rows,
+		thm:        parseTheme(cfg),
+		preview:    widget.NewLabel("Selecione uma frase."),
 		title:      widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
+	u.preview.TextStyle = fyne.TextStyle{Monospace: true}
 
-	cols := cfg.App.Layout.Columns
-	if cols <= 0 {
-		cols = 4
-	}
-	u.topRowC = container.NewGridWithColumns(cols)
-	u.bottomRowC = container.NewGridWithColumns(cols)
-	u.leftColC = container.NewVBox()
-	u.rightColC = container.NewVBox()
+	// Bottom half: virtual keypad (grid of buttons).
+	u.keypad = container.NewGridWithColumns(cols)
 
-	previewCenter := u.previewBox()
-	ring := container.NewBorder(u.topRowC, u.bottomRowC, u.leftColC, u.rightColC, previewCenter)
-	useTab := container.NewBorder(u.title, nil, nil, nil, ring)
+	previewArea := u.previewBox()
+	keypadArea := container.NewPadded(u.keypad)
+
+	// Split: top = preview (50%), bottom = keypad (50%).
+	split := container.NewVSplit(previewArea, keypadArea)
+	split.SetOffset(0.5)
+
+	useTab := container.NewBorder(u.title, nil, nil, nil, split)
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("Uso", useTab),
-		container.NewTabItem("Config", u.buildEditor()),
+		container.NewTabItem("Atalhos", useTab),
+		container.NewTabItem("Editar", u.buildEditor()),
 	)
 	w.SetContent(tabs)
 	u.renderScreen()
@@ -74,12 +86,40 @@ type appUI struct {
 	reader     hid.Reader
 	fapp       fyne.App
 	win        fyne.Window
-	preview    *widget.RichText
+	preview    *widget.Label
 	title      *widget.Label
-	topRowC    *fyne.Container
-	bottomRowC *fyne.Container
-	leftColC   *fyne.Container
-	rightColC  *fyne.Container
+	cols       int
+	rows       int
+	thm        themeColors
+	keypad     *fyne.Container
+}
+
+type themeColors struct {
+	bg      color.NRGBA
+	preview color.NRGBA
+	button  color.NRGBA
+	fixed   color.NRGBA
+}
+
+func parseTheme(cfg *config.Config) themeColors {
+	t := cfg.App.Theme
+	return themeColors{
+		bg:      parseHex(t.Background, 0x1a, 0x1a, 0x1a),
+		preview: parseHex(t.Background, 0x1a, 0x1a, 0x1a),
+		button:  parseHex(t.Button, 0x2a, 0x2a, 0x2a),
+		fixed:   parseHex(t.Fixed, 0x3a, 0x3a, 0x3a),
+	}
+}
+
+func parseHex(s string, dr, dg, db uint8) color.NRGBA {
+	s = strings.TrimPrefix(s, "#")
+	if len(s) != 6 {
+		return color.NRGBA{R: dr, G: dg, B: db, A: 0xFF}
+	}
+	r, _ := strconv.ParseUint(s[0:2], 16, 8)
+	g, _ := strconv.ParseUint(s[2:4], 16, 8)
+	b, _ := strconv.ParseUint(s[4:6], 16, 8)
+	return color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 0xFF}
 }
 
 func (u *appUI) press(index int) {
@@ -90,7 +130,7 @@ func (u *appUI) press(index int) {
 	case deck.EffectNavigate:
 		u.renderScreen()
 	case deck.EffectPreview:
-		u.preview.ParseMarkdown(eff.Text)
+		u.preview.SetText(eff.Text)
 	}
 }
 
@@ -99,67 +139,40 @@ func (u *appUI) renderScreen() {
 	u.title.SetText(fmt.Sprintf("%s — %s", u.cfg.App.Name, s.Title))
 
 	f := u.cfg.App.FixedButtons
-	all := append([]config.Button{
+	fixed := []config.Button{
 		{Index: f.Copy, Label: "Copiar"},
 		{Index: f.LevelUp, Label: "Voltar"},
 		{Index: f.GoHome, Label: "Início"},
-	}, s.Buttons...)
-
-	cols := u.cfg.App.Layout.Columns
-	if cols <= 0 {
-		cols = 4
 	}
 
-	topN := cols
-	if len(all) <= cols {
-		topN = len(all)
-	}
-	bottomN := 0
-	if len(all) > cols {
-		bottomN = cols
-		if bottomN > len(all)-topN {
-			bottomN = len(all) - topN
+	all := append(append([]config.Button{}, fixed...), s.Buttons...)
+	// Fill the grid with available buttons; empty slots get a placeholder.
+	totalSlots := u.cols * u.rows
+	u.keypad.Objects = u.keypad.Objects[:0]
+	for i := 0; i < totalSlots; i++ {
+		if i < len(all) {
+			u.keypad.Objects = append(u.keypad.Objects, u.makeBtn(all[i]))
+		} else {
+			u.keypad.Objects = append(u.keypad.Objects, u.emptySlot())
 		}
 	}
-	rest := len(all) - topN - bottomN
-	leftN := rest / 2
-	rightN := rest - leftN
-
-	u.fillRow(u.topRowC, all[:topN])
-	if bottomN > 0 {
-		u.fillRow(u.bottomRowC, all[topN:topN+bottomN])
-	} else {
-		u.bottomRowC.Objects = u.bottomRowC.Objects[:0]
-		u.bottomRowC.Refresh()
-	}
-	rs := topN + bottomN
-	u.fillCol(u.leftColC, all[rs:rs+leftN])
-	u.fillCol(u.rightColC, all[rs+leftN:rs+leftN+rightN])
+	u.keypad.Refresh()
 }
 
-func (u *appUI) fillRow(c *fyne.Container, btns []config.Button) {
-	c.Objects = c.Objects[:0]
-	for _, b := range btns {
-		c.Objects = append(c.Objects, u.makeBtn(b))
-	}
-	c.Refresh()
+func (u *appUI) makeBtn(b config.Button) fyne.CanvasObject {
+	btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
+	return container.NewGridWrap(fyne.NewSize(120, 80), btn)
 }
 
-func (u *appUI) fillCol(c *fyne.Container, btns []config.Button) {
-	c.Objects = c.Objects[:0]
-	for _, b := range btns {
-		c.Objects = append(c.Objects, u.makeBtn(b))
-	}
-	c.Refresh()
-}
-
-func (u *appUI) makeBtn(b config.Button) *widget.Button {
-	return widget.NewButton(b.Label, func() { u.press(b.Index) })
+func (u *appUI) emptySlot() fyne.CanvasObject {
+	rect := canvas.NewRectangle(u.thm.button)
+	return container.NewGridWrap(fyne.NewSize(120, 80), rect)
 }
 
 func (u *appUI) previewBox() fyne.CanvasObject {
-	bg := canvas.NewRectangle(color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xFF})
-	return container.NewStack(bg, container.NewPadded(u.preview))
+	bg := canvas.NewRectangle(u.thm.preview)
+	scroll := container.NewVScroll(u.preview)
+	return container.NewStack(bg, container.NewPadded(scroll))
 }
 
 func (u *appUI) pollHID() {

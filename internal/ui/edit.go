@@ -17,11 +17,11 @@ import (
 	"github.com/docg1701/radkeys/internal/deck"
 )
 
-// buildEditor returns the configuration tab content: list of screens on the
-// left, form on the right, save/close at the bottom.
+// buildEditor returns the "Editar" tab: left = list of screens, right = form
+// to edit the selected screen's ID, title, and buttons. Buttons can be added
+// and removed. Save writes TOML and reloads the live config + keypad.
 func (u *appUI) buildEditor() fyne.CanvasObject {
-	ed := &editor{app: u, cfg: cloneConfig(u.cfg), path: u.configPath}
-	ed.sel = -1
+	ed := &editor{app: u, cfg: cloneConfig(u.cfg), path: u.configPath, sel: -1}
 
 	ed.list = widget.NewList(
 		func() int { return len(ed.cfg.Screens) },
@@ -33,53 +33,53 @@ func (u *appUI) buildEditor() fyne.CanvasObject {
 	ed.list.OnSelected = func(i int) { ed.selectScreen(i) }
 
 	ed.titleEnt = widget.NewEntry()
+	ed.idEnt = widget.NewEntry()
+	ed.btnScroll = container.NewVBox()
+
 	ed.titleEnt.OnChanged = func(s string) {
 		if ed.sel >= 0 && ed.sel < len(ed.cfg.Screens) {
 			ed.cfg.Screens[ed.sel].Title = s
 			ed.list.Refresh()
 		}
 	}
-	ed.idEnt = widget.NewEntry()
 	ed.idEnt.OnChanged = func(s string) {
 		if ed.sel >= 0 && ed.sel < len(ed.cfg.Screens) {
 			ed.cfg.Screens[ed.sel].ID = s
 		}
 	}
 
-	ed.btnList = container.NewVBox()
-
 	addScr := widget.NewButtonWithIcon("Nova tela", theme.ContentAddIcon(), ed.addScreen)
-	delScr := widget.NewButtonWithIcon("Remover tela", theme.ContentRemoveIcon(), ed.delScreen)
+	delScr := widget.NewButtonWithIcon("Remover tela", theme.DeleteIcon(), ed.delScreen)
 	addBtn := widget.NewButtonWithIcon("Novo botão", theme.ContentAddIcon(), ed.addButton)
-	saveBtn := widget.NewButtonWithIcon("Salvar", theme.DocumentSaveIcon(), ed.save)
+	saveBtn := widget.NewButtonWithIcon("Salvar e aplicar", theme.DocumentSaveIcon(), ed.save)
 
 	left := container.NewBorder(nil, container.NewVBox(addScr, delScr), nil, nil, ed.list)
 
-	form := container.NewBorder(
+	rightForm := container.NewBorder(
 		container.NewVBox(
-			widget.NewLabelWithStyle("ID", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-			ed.idEnt,
-			widget.NewLabelWithStyle("Título", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-			ed.titleEnt,
+			widget.NewLabelWithStyle("Tela", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+			widget.NewLabel("ID"), ed.idEnt,
+			widget.NewLabel("Título"), ed.titleEnt,
 			widget.NewSeparator(),
 			widget.NewLabelWithStyle("Botões", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		), nil, nil, nil,
-		container.NewBorder(nil, container.NewVBox(addBtn, saveBtn), nil, nil,
-			container.NewVScroll(ed.btnList)),
+		),
+		container.NewVBox(addBtn, saveBtn),
+		nil, nil,
+		container.NewVScroll(ed.btnScroll),
 	)
 
-	return container.NewHSplit(left, form)
+	return container.NewHSplit(left, rightForm)
 }
 
 type editor struct {
-	app      *appUI
-	cfg      *config.Config
-	path     string
-	list     *widget.List
-	sel      int
-	titleEnt *widget.Entry
-	idEnt    *widget.Entry
-	btnList  *fyne.Container
+	app       *appUI
+	cfg       *config.Config
+	path      string
+	list      *widget.List
+	sel       int
+	titleEnt  *widget.Entry
+	idEnt     *widget.Entry
+	btnScroll *fyne.Container
 }
 
 func (ed *editor) selectScreen(i int) {
@@ -87,8 +87,8 @@ func (ed *editor) selectScreen(i int) {
 	if i < 0 || i >= len(ed.cfg.Screens) {
 		ed.titleEnt.SetText("")
 		ed.idEnt.SetText("")
-		ed.btnList.Objects = ed.btnList.Objects[:0]
-		ed.btnList.Refresh()
+		ed.btnScroll.Objects = ed.btnScroll.Objects[:0]
+		ed.btnScroll.Refresh()
 		return
 	}
 	s := ed.cfg.Screens[i]
@@ -98,15 +98,15 @@ func (ed *editor) selectScreen(i int) {
 }
 
 func (ed *editor) rebuildButtons() {
-	ed.btnList.Objects = ed.btnList.Objects[:0]
+	ed.btnScroll.Objects = ed.btnScroll.Objects[:0]
 	if ed.sel < 0 || ed.sel >= len(ed.cfg.Screens) {
 		return
 	}
 	for j := range ed.cfg.Screens[ed.sel].Buttons {
 		j := j
-		ed.btnList.Objects = append(ed.btnList.Objects, ed.buttonCard(j))
+		ed.btnScroll.Objects = append(ed.btnScroll.Objects, ed.buttonCard(j))
 	}
-	ed.btnList.Refresh()
+	ed.btnScroll.Refresh()
 }
 
 func (ed *editor) buttonCard(j int) fyne.CanvasObject {
@@ -129,31 +129,25 @@ func (ed *editor) buttonCard(j int) fyne.CanvasObject {
 	})
 	actSel.SetSelected(b.Action)
 
-	targetEnt := widget.NewEntry()
-	targetEnt.SetText(b.Target)
-	targetEnt.OnChanged = func(s string) { b.Target = s }
-
 	contentEnt := widget.NewEntry()
 	contentEnt.SetText(b.Content)
 	contentEnt.OnChanged = func(s string) { b.Content = s }
 	contentEnt.MultiLine = true
 	contentEnt.Wrapping = fyne.TextWrapWord
 
-	delBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() { ed.delButton(j) })
+	targetEnt := widget.NewEntry()
+	targetEnt.SetText(b.Target)
+	targetEnt.OnChanged = func(s string) { b.Target = s }
 
-	form := container.NewVBox(
-		container.NewHBox(
-			widget.NewLabel("Índice"), idxEnt,
-			widget.NewLabel("Rótulo"), labelEnt,
-			actSel,
-			delBtn,
-		),
-		widget.NewLabel("Target"),
-		targetEnt,
-		widget.NewLabel("Conteúdo"),
+	delBtn := widget.NewButtonWithIcon("Remover", theme.DeleteIcon(), func() { ed.delButton(j) })
+
+	return widget.NewCard("", fmt.Sprintf("Botão %d", j), container.NewVBox(
+		container.NewHBox(widget.NewLabel("Índice"), idxEnt, widget.NewLabel("Rótulo"), labelEnt, actSel, delBtn),
+		widget.NewLabel("Conteúdo (texto do laudo)"),
 		contentEnt,
-	)
-	return widget.NewCard("", fmt.Sprintf("Botão %d", j), form)
+		widget.NewLabel("Target (se navigate)"),
+		targetEnt,
+	))
 }
 
 func (ed *editor) addScreen() {
@@ -162,6 +156,8 @@ func (ed *editor) addScreen() {
 		Title: "Nova tela",
 	})
 	ed.list.Refresh()
+	idx := len(ed.cfg.Screens) - 1
+	ed.list.Select(idx)
 }
 
 func (ed *editor) delScreen() {
@@ -172,9 +168,10 @@ func (ed *editor) delScreen() {
 	ed.sel = -1
 	ed.titleEnt.SetText("")
 	ed.idEnt.SetText("")
-	ed.btnList.Objects = ed.btnList.Objects[:0]
-	ed.btnList.Refresh()
+	ed.btnScroll.Objects = ed.btnScroll.Objects[:0]
+	ed.btnScroll.Refresh()
 	ed.list.Refresh()
+	ed.list.UnselectAll()
 }
 
 func (ed *editor) addButton() {
@@ -182,10 +179,17 @@ func (ed *editor) addButton() {
 		return
 	}
 	s := &ed.cfg.Screens[ed.sel]
+	nextIdx := 3
+	for _, b := range s.Buttons {
+		if b.Index >= nextIdx {
+			nextIdx = b.Index + 1
+		}
+	}
 	s.Buttons = append(s.Buttons, config.Button{
-		Index:  len(s.Buttons) + 3,
-		Label:  "Novo",
-		Action: config.ActionText,
+		Index:   nextIdx,
+		Label:   "Novo botão",
+		Action:  config.ActionText,
+		Content: "Texto do laudo.",
 	})
 	ed.rebuildButtons()
 }
@@ -218,10 +222,11 @@ func (ed *editor) save() {
 		dialog.ShowError(fmt.Errorf("recarregar: %w", err), ed.app.win)
 		return
 	}
+	// Atualiza a config viva e o deck.
 	ed.app.cfg = reloaded
 	ed.app.deck = deck.New(reloaded)
 	ed.app.renderScreen()
-	dialog.ShowInformation("Salvo", "Configuração salva e recarregada.", ed.app.win)
+	dialog.ShowInformation("Salvo", "Configuração salva e aplicada à tela de atalhos.", ed.app.win)
 }
 
 func cloneConfig(c *config.Config) *config.Config {
