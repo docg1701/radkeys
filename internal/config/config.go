@@ -32,12 +32,22 @@ type Config struct {
 	Screens []Screen `toml:"screens"`
 }
 
-// App holds app-wide settings: device connection and the 3 fixed buttons.
+// App holds app-wide settings: device connection, the 3 fixed buttons, and
+// the on-screen layout (adapts to any DIY device).
 type App struct {
 	Name         string       `toml:"name"`
 	Version      string       `toml:"version"`
 	Device       Device       `toml:"device"`
 	FixedButtons FixedButtons `toml:"fixed_buttons"`
+	Layout       Layout       `toml:"layout"`
+}
+
+// Layout describes how the UI arranges buttons and preview, so it adapts to
+// any DIY device (12, 16, 24, 32 buttons, etc.).
+type Layout struct {
+	Columns int    `toml:"columns"` // grid columns for buttons (0 = default 4)
+	Rows    int    `toml:"rows"`    // grid rows for buttons (0 = auto)
+	Preview string `toml:"preview"` // "center" | "top" | "bottom" | "left" | "right"
 }
 
 // Device identifies the USB HID custom device to open.
@@ -90,6 +100,17 @@ func (c *Config) validate() error {
 	if c.App.Device.Protocol != ProtocolElgato && c.App.Device.Protocol != ProtocolDIY {
 		return fmt.Errorf("config: device.protocol must be %q or %q, got %q",
 			ProtocolElgato, ProtocolDIY, c.App.Device.Protocol)
+	}
+	if c.App.Layout.Columns <= 0 {
+		c.App.Layout.Columns = 4
+	}
+	switch c.App.Layout.Preview {
+	case "", "center", "top", "bottom", "left", "right":
+		if c.App.Layout.Preview == "" {
+			c.App.Layout.Preview = "center"
+		}
+	default:
+		return fmt.Errorf("config: layout.preview must be center|top|bottom|left|right, got %q", c.App.Layout.Preview)
 	}
 	if len(c.Screens) == 0 {
 		return fmt.Errorf("config: at least one screen is required")

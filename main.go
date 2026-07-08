@@ -16,7 +16,9 @@ import (
 const configFileName = "radkeys.config.toml"
 
 func main() {
-	cfg, err := config.Load(configPath())
+	path := configPath()
+	ensureConfig(path)
+	cfg, err := config.Load(path)
 	if err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
@@ -46,4 +48,34 @@ func configPath() string {
 		}
 	}
 	return configFileName
+}
+
+// ensureConfig writes a minimal template if the config file does not exist
+// (brief section 5.1: "Se não existir: app cria template minimal").
+func ensureConfig(path string) {
+	if _, err := os.Stat(path); err == nil {
+		return
+	}
+	const tmpl = `[app]
+name = "RadKeys"
+version = "1.2"
+
+[app.device]
+vendor_id  = 0x0fd9
+product_id = 0x0063
+protocol   = "elgato"
+
+[app.fixed_buttons]
+copy     = 0
+level_up = 1
+go_home  = 2
+
+[[screens]]
+id = "root"
+title = "Início"
+buttons = [
+  { index = 3, label = "Exemplo", action = "text", content = "Frase de exemplo." },
+]
+`
+	_ = os.WriteFile(path, []byte(tmpl), 0o644)
 }

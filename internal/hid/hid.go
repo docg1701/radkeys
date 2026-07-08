@@ -20,9 +20,11 @@ type Reader interface {
 
 // MockReader is an in-process Reader for development without hardware.
 type MockReader struct {
-	ch   chan Event
-	done chan struct{}
-	once sync.Once
+	ch     chan Event
+	done   chan struct{}
+	closed bool
+	mu     sync.Mutex
+	once   sync.Once
 }
 
 // NewMock returns a MockReader.
@@ -34,12 +36,21 @@ func (m *MockReader) Open() error          { return nil }
 func (m *MockReader) Events() <-chan Event { return m.ch }
 
 func (m *MockReader) Close() error {
+	m.mu.Lock()
+	m.closed = true
+	m.mu.Unlock()
 	m.once.Do(func() { close(m.done); close(m.ch) })
 	return nil
 }
 
 // Put injects an event (non-blocking). Safe to call before or after Close.
 func (m *MockReader) Put(e Event) {
+	m.mu.Lock()
+	if m.closed {
+		m.mu.Unlock()
+		return
+	}
+	m.mu.Unlock()
 	select {
 	case <-m.done:
 	case m.ch <- e:

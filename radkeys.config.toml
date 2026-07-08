@@ -18,6 +18,13 @@ copy     = 0   # copia o preview para o clipboard
 level_up = 1   # sobe um nível na hierarquia
 go_home  = 2   # volta à tela raiz
 
+[app.layout]
+# Adaptável a qualquer dispositivo DIY. columns = colunas do grid de botões.
+# preview = onde fica o preview: "center" (botões ao redor), "top", "bottom", "left", "right".
+columns = 4
+rows    = 6
+preview = "center"
+
 [[screens]]
 id = "root"
 title = "Início"
