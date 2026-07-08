@@ -10,17 +10,17 @@
 3. Bump version in radkeys.config.toml ([app] version)
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
 5. Push to main
-6. Build all release binaries LOCALLY:
-   go build -o radkeys-linux-amd64 .
-   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+6. Build all release binaries LOCALLY to dist/:
+   go build -o dist/radkeys-linux-amd64 .
+   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
 7. macOS: build on a Mac (cross-compile from Linux is impossible — needs Apple SDK).
-   On macOS: CGO_ENABLED=1 go build -o radkeys-macos-amd64 . && CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
+   On macOS: CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 . && CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
 8. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
 9. git push origin vA.B.C
 10. MONITOR: gh run watch <run-id> --exit-status
     Wait until CI passes → release auto-created by CI.
 11. Upload the locally-built binaries to the release:
-    gh release upload vA.B.C radkeys-linux-amd64 radkeys-windows-amd64.exe
+    gh release upload vA.B.C dist/radkeys-linux-amd64 dist/radkeys-windows-amd64.exe
     (and macOS binaries if available)
     The agent MUST NOT stop until all binaries are in the release.
 ```
@@ -29,14 +29,14 @@
 
 ```bash
 # Build native (Linux)
-go build -o radkeys-linux-amd64 .
+go build -o dist/radkeys-linux-amd64 .
 
 # Cross-compile Windows from Linux
-CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
 
 # macOS (on a Mac — cross-compile from Linux is impossible with CGO)
-CGO_ENABLED=1 go build -o radkeys-macos-amd64 .
-CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
+CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
+CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
 
 # Test
 go test ./... -v
@@ -72,8 +72,8 @@ go mod tidy
 - [ ] `go test ./...` passes
 - [ ] `go vet ./...` clean
 - [ ] Version bumped in `radkeys.config.toml`
-- [ ] `radkeys-linux-amd64` built and uploaded
-- [ ] `radkeys-windows-amd64.exe` built (mingw) and uploaded
+- [ ] `dist/radkeys-linux-amd64` built and uploaded
+- [ ] `dist/radkeys-windows-amd64.exe` built (mingw) and uploaded
 - [ ] macOS binaries built and uploaded (if Mac available)
 - [ ] `git tag vX.Y.Z` (lightweight) pushed
 - [ ] CI passed → release published by CI
