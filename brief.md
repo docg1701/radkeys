@@ -143,3 +143,9 @@ Requisitos:
   Dracula, Monokai, One Dark, Tokyo Night, Catppuccin).
 - Incluir 1 tema claro padrão (ex.: Light Gray) e 1 tema escuro padrão
   (ex.: Dark Gray) que funcionem corretamente.
+- **Adicionar um tema "Padrão do sistema"** que siga o tema nativo do
+  sistema operacional (light/dark). No Linux, detectar se o sistema usa
+  tema claro ou escuro (ex.: `gsettings get org.gnome.desktop.interface
+  color-scheme` ou `XDG_CURRENT_DESKTOP`). No Windows, `AppsUseLightTheme`.
+  No macOS, `AppleInterfaceStyle`. O Fyne já expõe `theme.DefaultTheme()`
+  que segue o SO — usar como base para este preset.
