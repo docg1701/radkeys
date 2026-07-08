@@ -37,6 +37,7 @@
   "about.version": {"other": "Versión %s"},
   "about.description": {"other": "RadKeys es un compañero multiplataforma para decks de atajos en radiología."},
   "about.author": {"other": "Autor: docg1701"},
+  "about.repository": {"other": "Repository: "},
   "about.license": {"other": "Licencia: MIT"},
   "about.stack": {"other": "Hecho con Go, Fyne, go-hid, go-i18n y BurntSushi/toml."},
   "about.i18n": {"other": "Disponible en 7 idiomas."}

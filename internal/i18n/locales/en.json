@@ -38,6 +38,7 @@
   "about.description": {"other": "RadKeys is a cross-platform companion for radiology shortcut decks."},
   "about.author": {"other": "Author: docg1701"},
   "about.license": {"other": "License: MIT"},
+  "about.repository": {"other": "Repository: "},
   "about.stack": {"other": "Built with Go, Fyne, go-hid, go-i18n, and BurntSushi/toml."},
   "about.i18n": {"other": "Available in 7 languages."}
 }
