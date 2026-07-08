@@ -10,6 +10,7 @@ type EffectType int
 const (
 	EffectNone     EffectType = iota // nothing to do
 	EffectCopy                       // copy the preview to the clipboard
+	EffectPaste                      // paste the clipboard into the preview
 	EffectNavigate                   // the active screen changed
 	EffectPreview                    // a text was loaded into the preview
 )
@@ -50,6 +51,8 @@ func (d *Deck) Press(index int) Effect {
 	switch index {
 	case f.Copy:
 		return Effect{Type: EffectCopy, Text: d.preview}
+	case f.Paste:
+		return Effect{Type: EffectPaste}
 	case f.LevelUp:
 		d.levelUp()
 		return Effect{Type: EffectNavigate}

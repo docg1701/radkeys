@@ -111,6 +111,10 @@ var messages = map[string]map[string]string{
 		"en": "Copy", "pt-BR": "Copiar", "pt-PT": "Copiar",
 		"es": "Copiar", "fr": "Copier", "de": "Kopieren", "it": "Copia",
 	},
+	"button.paste": {
+		"en": "Paste", "pt-BR": "Colar", "pt-PT": "Colar",
+		"es": "Pegar", "fr": "Coller", "de": "Einfügen", "it": "Incolla",
+	},
 	"button.back": {
 		"en": "Back", "pt-BR": "Voltar", "pt-PT": "Voltar",
 		"es": "Volver", "fr": "Retour", "de": "Zurück", "it": "Indietro",

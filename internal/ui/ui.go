@@ -4,7 +4,6 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
 	"net/url"
 	"os"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
+	fyneTheme "fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/BurntSushi/toml"
@@ -57,8 +57,6 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		rows = 5
 	}
 
-	thm := resolveKeypadColors(cfg)
-
 	u := &appUI{
 		cfg:        cfg,
 		configPath: configPath,
@@ -69,7 +67,6 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		titleBase:  "RadKeys",
 		cols:       cols,
 		rows:       rows,
-		thm:        thm,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
@@ -109,14 +106,7 @@ type appUI struct {
 	preview    *widget.Label
 	cols       int
 	rows       int
-	thm        keypadColors
 	keypad     *fyne.Container
-}
-
-type keypadColors struct {
-	bg     color.NRGBA
-	button color.NRGBA
-	fixed  color.NRGBA
 }
 
 func resolveFullTheme(cfg *config.Config) fyne.Theme {
@@ -128,38 +118,13 @@ func resolveFullTheme(cfg *config.Config) fyne.Theme {
 	return themes.NewCustomTheme(themes.Presets[0])
 }
 
-func resolveKeypadColors(cfg *config.Config) keypadColors {
-	bg := cfg.App.Theme.Background
-	btn := cfg.App.Theme.Button
-	fix := cfg.App.Theme.Fixed
-	if cfg.App.Theme.Preset != "" {
-		if p, ok := themes.FindPreset(cfg.App.Theme.Preset); ok {
-			bg, btn, fix = p.Background, p.Button, p.Fixed
-		}
-	}
-	return keypadColors{
-		bg:     parseHex(bg, 0x1a, 0x1a, 0x1a),
-		button: parseHex(btn, 0x2a, 0x2a, 0x2a),
-		fixed:  parseHex(fix, 0x3a, 0x3a, 0x3a),
-	}
-}
-
-func parseHex(s string, dr, dg, db uint8) color.NRGBA {
-	s = strings.TrimPrefix(s, "#")
-	if len(s) != 6 {
-		return color.NRGBA{R: dr, G: dg, B: db, A: 0xFF}
-	}
-	r, _ := strconv.ParseUint(s[0:2], 16, 8)
-	g, _ := strconv.ParseUint(s[2:4], 16, 8)
-	b, _ := strconv.ParseUint(s[4:6], 16, 8)
-	return color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 0xFF}
-}
-
 func (u *appUI) press(index int) {
 	eff := u.deck.Press(index)
 	switch eff.Type {
 	case deck.EffectCopy:
 		u.a.Clipboard().SetContent(eff.Text)
+	case deck.EffectPaste:
+		u.preview.SetText(u.a.Clipboard().Content())
 	case deck.EffectNavigate:
 		u.renderScreen()
 	case deck.EffectPreview:
@@ -172,6 +137,7 @@ func (u *appUI) renderScreen() {
 	f := u.cfg.App.FixedButtons
 	fixed := []config.Button{
 		{Index: f.Copy, Label: i18n.T("button.copy")},
+		{Index: f.Paste, Label: i18n.T("button.paste")},
 		{Index: f.LevelUp, Label: i18n.T("button.back")},
 		{Index: f.GoHome, Label: i18n.T("button.home")},
 	}
@@ -179,13 +145,14 @@ func (u *appUI) renderScreen() {
 
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
+	th := u.a.Settings().Theme()
 	for i := 0; i < totalSlots; i++ {
 		if i < len(all) {
 			b := all[i]
 			btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
 			u.keypad.Objects = append(u.keypad.Objects, btn)
 		} else {
-			rect := canvas.NewRectangle(u.thm.button)
+			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, 0))
 			u.keypad.Objects = append(u.keypad.Objects, rect)
 		}
 	}
@@ -204,7 +171,8 @@ func appIconData(cfg *config.Config) []byte {
 }
 
 func (u *appUI) previewBox() fyne.CanvasObject {
-	bg := canvas.NewRectangle(u.thm.bg)
+	th := u.a.Settings().Theme()
+	bg := canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, 0))
 	scroll := container.NewVScroll(u.preview)
 	return container.NewStack(bg, container.NewPadded(scroll))
 }
@@ -338,7 +306,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		u.win.SetIcon(iconRes)
 
 		u.a.Settings().SetTheme(resolveFullTheme(cfg))
-		u.thm = resolveKeypadColors(cfg)
 
 		tabs := u.win.Content().(*container.AppTabs)
 		tabs.Items[0].Text = i18n.T("tab.shortcuts")

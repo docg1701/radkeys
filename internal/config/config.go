@@ -60,9 +60,10 @@ type Device struct {
 	Protocol  string `toml:"protocol"`
 }
 
-// FixedButtons are the indices (0-based) of the 3 global control buttons.
+// FixedButtons are the indices (0-based) of the 4 global control buttons.
 type FixedButtons struct {
 	Copy    int `toml:"copy"`
+	Paste   int `toml:"paste"`
 	LevelUp int `toml:"level_up"`
 	GoHome  int `toml:"go_home"`
 }
@@ -161,8 +162,8 @@ func (c *Config) ScreenByID(id string) (Screen, bool) {
 	return Screen{}, false
 }
 
-// IsFixed reports whether index is one of the 3 global fixed buttons.
+// IsFixed reports whether index is one of the 4 global fixed buttons.
 func (c *Config) IsFixed(index int) bool {
 	f := c.App.FixedButtons
-	return index == f.Copy || index == f.LevelUp || index == f.GoHome
+	return index == f.Copy || index == f.Paste || index == f.LevelUp || index == f.GoHome
 }

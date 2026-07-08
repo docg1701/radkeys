@@ -66,8 +66,9 @@ protocol   = "elgato"
 
 [app.fixed_buttons]
 copy     = 0
-level_up = 1
-go_home  = 2
+paste    = 1
+level_up = 2
+go_home  = 3
 
 [[screens]]
 id = "root"
