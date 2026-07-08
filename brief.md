@@ -97,3 +97,33 @@ radkeys/
 ├── firmware/rp2040/             # RP2040
 └── research/                    # Notas técnicas
 ```
+
+## 7. Pendências para o próximo agente
+
+### 7.1 Análise e reformulação completa da aba Settings
+
+A aba "Ajustes" atual usa `widget.NewForm` mas o resultado é um formulário
+estilo anos 90: labels à esquerda, inputs gigantes até a margem direita, uma
+linha embaixo da outra. O layout precisa ser completamente repensado.
+
+Requisitos:
+- Layout moderno, limpo, profissional.
+- Grupos visuais com cards ou seções colapsáveis.
+- Campos com tamanhos adequados (não gigantescos).
+- Responsivo: adapta-se ao redimensionamento.
+- Dispositivo USB: VID e PID lado a lado em campos pequenos, protocolo
+  com label claro, tudo bem diagramado.
+- Arquivo de config: label do caminho + botão "Procurar..." alinhados.
+- Salvar: botão discreto, integrado ao layout.
+
+### 7.2 Aba "About"
+
+Adicionar uma terceira aba "About" (ou "Sobre") com os dados fundamentais
+do projeto, como todo bom aplicativo open source:
+- Nome e versão do app.
+- Breve descrição (1-2 linhas).
+- Licença (MIT) com link.
+- Repositório (github.com/docg1701/radkeys).
+- Créditos: autor (Nonatinho/Galvani), ícone (Obsidian icon theme).
+- Stack: Go, Fyne, go-hid, go-i18n, BurntSushi/toml.
+- i18n disponível em 7 idiomas.
