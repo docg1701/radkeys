@@ -35,9 +35,9 @@ func NewCustomTheme(p Preset) fyne.Theme {
 	bg := parseHex(p.Background)
 	btn := parseHex(p.Button)
 	fix := parseHex(p.Fixed)
-	fg := color.NRGBA{R: 0xe8, G: 0xe8, B: 0xe8, A: 0xff} // dark fg
+	fg := color.NRGBA{R: 0xc8, G: 0xc8, B: 0xc8, A: 0xff} // muted dark fg
 	if isLightNRGBA(bg) {
-		fg = color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 0xff} // light fg
+		fg = color.NRGBA{R: 0x33, G: 0x33, B: 0x33, A: 0xff} // muted light fg
 	}
 	return &RadKeysTheme{bg: bg, btn: btn, fix: fix, fg: fg}
 }
@@ -171,11 +171,12 @@ func (t *RadKeysTheme) hover() color.NRGBA {
 
 // primary returns the accent colour boosted for contrast — used both for
 // the tab indicator underline and for selected tab text.
+// Maximum contrast: pure white on dark, pure black on light.
 func (t *RadKeysTheme) primary() color.NRGBA {
 	if isLightNRGBA(t.bg) {
-		return darken(t.fix, 0.18)
+		return color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}
 	}
-	return lighten(t.fix, 0.30)
+	return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
 }
 
 // fgOnAccent returns white or black depending on the fix (accent) luminance,
