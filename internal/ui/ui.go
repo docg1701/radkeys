@@ -33,17 +33,24 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	preview.Wrapping = fyne.TextWrapWord
 
 	title := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
-	grid := container.NewGridWithColumns(6)
+	grid := container.NewGridWithColumns(4)
 
 	u := &appUI{cfg: cfg, configPath: configPath, deck: deck.New(cfg), reader: reader, fapp: a, win: w, preview: preview, title: title, grid: grid}
-	u.renderScreen()
 
 	editBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), u.openEditor)
 	editBtn.Importance = widget.LowImportance
 
-	top := container.NewBorder(nil, nil, title, editBtn)
-	content := container.NewBorder(top, u.previewBox(), nil, nil, grid)
+	f := cfg.App.FixedButtons
+	fixedBar := container.NewHBox(
+		u.fixedBtn("Copiar", f.Copy),
+		u.fixedBtn("Voltar", f.LevelUp),
+		u.fixedBtn("Início", f.GoHome),
+	)
+	header := container.NewBorder(nil, nil, title, editBtn, fixedBar)
+	content := container.NewBorder(header, u.previewBox(), nil, nil, grid)
 	w.SetContent(content)
+
+	u.renderScreen()
 
 	// Always-on-top: NOT available in Fyne v2.7.4 (PR #6184 is on develop / v2.8.0,
 	// still rc1 as of 2026-07-07). Decision: MVP stays on v2.7.4 stable without
@@ -89,16 +96,10 @@ func (u *appUI) renderScreen() {
 	s := u.deck.CurrentScreen()
 	u.title.SetText(fmt.Sprintf("%s — %s", u.cfg.App.Name, s.Title))
 
-	f := u.cfg.App.FixedButtons
-	objs := []fyne.CanvasObject{
-		u.fixedBtn("📋 Copiar", f.Copy),
-		u.fixedBtn("⬆ Voltar", f.LevelUp),
-		u.fixedBtn("⌂ Início", f.GoHome),
-	}
+	objs := []fyne.CanvasObject{}
 	for _, b := range s.Buttons {
 		b := b
-		btn := widget.NewButtonWithIcon(fmt.Sprintf("%d  %s", b.Index, b.Label), nil, func() { u.press(b.Index) })
-		btn.Importance = widget.MediumImportance
+		btn := widget.NewButton(fmt.Sprintf("%d  %s", b.Index, b.Label), func() { u.press(b.Index) })
 		objs = append(objs, btn)
 	}
 	u.grid.Objects = objs
@@ -106,7 +107,7 @@ func (u *appUI) renderScreen() {
 }
 
 func (u *appUI) fixedBtn(label string, index int) *widget.Button {
-	btn := widget.NewButtonWithIcon(label, nil, func() { u.press(index) })
+	btn := widget.NewButton(label, func() { u.press(index) })
 	btn.Importance = widget.HighImportance
 	return btn
 }
