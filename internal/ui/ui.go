@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/BurntSushi/toml"
@@ -273,19 +274,21 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	iconPreview.FillMode = canvas.ImageFillContain
 
 	iconBrowseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
-		dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
+		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 			if err != nil || rc == nil {
 				return
 			}
 			customIconPath = rc.URI().Path()
-			// Reload preview.
 			data, err := os.ReadFile(customIconPath)
 			if err != nil {
 				return
 			}
 			iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
 			iconPreview.Refresh()
-		}, u.win).Show()
+		}, u.win)
+		fd.SetFilter(storage.NewExtensionFileFilter([]string{".png"}))
+		fd.Resize(fyne.NewSize(800, 600))
+		fd.Show()
 	})
 	iconBrowseBtn.Importance = widget.MediumImportance
 	iconRow := container.NewBorder(nil, nil, iconPreview, iconBrowseBtn, widget.NewLabel(""))
