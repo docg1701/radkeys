@@ -75,7 +75,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	previewArea := u.previewBox()
 	keypadArea := container.NewPadded(u.keypad)
 	split := container.NewVSplit(previewArea, keypadArea)
-	split.SetOffset(0.5)
+	// No SetOffset — usuário redimensiona livremente.
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem(i18n.T("tab.shortcuts"), split),
@@ -266,6 +266,12 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
 		u.thm = resolveTheme(cfg)
 
+		// Reconstruir tabs com novo idioma.
+		tabs := u.win.Content().(*container.AppTabs)
+		tabs.Items[0].Text = i18n.T("tab.shortcuts")
+		tabs.Items[1].Text = i18n.T("tab.settings")
+		tabs.Items[1].Content = u.buildSettings()
+
 		if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
 			u.cols = cfg.App.Layout.Columns
 			u.rows = cfg.App.Layout.Rows
@@ -273,15 +279,10 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			previewArea := u.previewBox()
 			keypadArea := container.NewPadded(u.keypad)
 			split := container.NewVSplit(previewArea, keypadArea)
-			split.SetOffset(0.5)
 			useTab := container.NewBorder(nil, nil, nil, nil, split)
-			tabs := u.win.Content().(*container.AppTabs)
-			tabs.Items = []*container.TabItem{
-				container.NewTabItem(i18n.T("tab.shortcuts"), useTab),
-				tabs.Items[1],
-			}
-			tabs.Refresh()
+			tabs.Items[0] = container.NewTabItem(i18n.T("tab.shortcuts"), useTab)
 		}
+		tabs.Refresh()
 
 		u.renderScreen()
 		dialog.ShowInformation(i18n.T("settings.saved_title"), i18n.T("settings.saved_msg"), u.win)
