@@ -51,7 +51,10 @@ visualmente:
 - Keypad: botões inativos com cor coerente, não pretos em tema claro.
 - Settings: campos de texto, selects, labels com cores corretas.
 - About: texto, link, fundo tudo coerente.
-- Tabs: barra de abas, fundo, texto.
+- Tabs: **Em temas escuros, a aba selecionada tem fundo escuro que esconde o texto.
+  As abas não selecionadas têm fundo claro que destaca — é o INVERSO do correto.**
+  `ColorNameHeaderBackground` precisa ser mais claro que o fundo em tema escuro,
+  e a aba selecionada deve ser a mais destacada.
 
 **NÃO usar testes automatizados.** Verificação visual, tema por tema:
 

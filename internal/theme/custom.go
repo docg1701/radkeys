@@ -53,7 +53,7 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) colo
 	case theme.ColorNameButton:
 		return t.btn
 	case theme.ColorNameHeaderBackground:
-		return blend(t.bg, t.btn, 0.30)
+		return t.headerBg()
 	case theme.ColorNameMenuBackground:
 		return t.btn
 	case theme.ColorNameOverlayBackground:
@@ -138,6 +138,16 @@ func (t *RadKeysTheme) Size(name fyne.ThemeSizeName) float32 {
 // ---------------------------------------------------------------------------
 // adaptive helpers
 // ---------------------------------------------------------------------------
+
+// headerBg returns a colour for the tab bar / header area.
+// Dark theme: slightly lighter than bg so tab bar stands out.
+// Light theme: slightly darker than bg so tab bar stands out.
+func (t *RadKeysTheme) headerBg() color.NRGBA {
+	if isLightNRGBA(t.bg) {
+		return darken(t.bg, 0.06)
+	}
+	return lighten(t.bg, 0.08)
+}
 
 // inputBg returns a colour slightly distinct from bg so Entry/Select fields
 // are visually separated from the page background.
