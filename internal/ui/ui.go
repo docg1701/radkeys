@@ -107,6 +107,7 @@ type appUI struct {
 	cols       int
 	rows       int
 	keypad     *fyne.Container
+	previewBg  *canvas.Rectangle // background rectangle, updated on theme change
 }
 
 func resolveFullTheme(cfg *config.Config) fyne.Theme {
@@ -172,9 +173,9 @@ func appIconData(cfg *config.Config) []byte {
 
 func (u *appUI) previewBox() fyne.CanvasObject {
 	th := u.a.Settings().Theme()
-	bg := canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, 0))
+	u.previewBg = canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, 0))
 	scroll := container.NewVScroll(u.preview)
-	return container.NewStack(bg, container.NewPadded(scroll))
+	return container.NewStack(u.previewBg, container.NewPadded(scroll))
 }
 
 func (u *appUI) pollHID() {
@@ -314,6 +315,10 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		u.win.SetIcon(iconRes)
 
 		u.a.Settings().SetTheme(resolveFullTheme(cfg))
+		if u.previewBg != nil {
+			u.previewBg.FillColor = u.a.Settings().Theme().Color(fyneTheme.ColorNameBackground, 0)
+			u.previewBg.Refresh()
+		}
 
 		tabs := u.win.Content().(*container.AppTabs)
 		tabs.Items[0].Text = i18n.T("tab.shortcuts")
