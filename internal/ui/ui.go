@@ -393,8 +393,10 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 	repoURL, _ := url.Parse("https://github.com/docg1701/radkeys")
 	repo := widget.NewHyperlink("github.com/docg1701/radkeys", repoURL)
 	repoLine := container.NewHBox(
-		widget.NewLabel(i18n.T("about.author") + "  |  "),
-		widget.NewLabel(i18n.T("about.license") + "  |  "),
+		widget.NewLabel(i18n.T("about.author")),
+		widget.NewLabel("|"),
+		widget.NewLabel(i18n.T("about.license")),
+		widget.NewLabel("|"),
 		widget.NewLabel(i18n.T("about.repository")),
 		repo,
 	)
