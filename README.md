@@ -7,7 +7,7 @@ the clipboard without stealing focus from the RIS/PACS.
 
 ## What it is
 
-A single-binary desktop app for Windows, macOS and Linux. A USB HID custom
+A single-binary desktop app for **Linux and Windows**. (macOS: build from source — cross-compile is impossible with CGO.) A USB HID custom
 device (Stream Deck or DIY 24-key pad) sends button presses directly to the
 app via hidapi — no keyboard keys, no focus stealing, no modifier interference.
 The app shows a preview on top and a virtual keypad on the bottom; press a
@@ -24,9 +24,10 @@ Get the latest release from [Releases](../../releases). Each release includes:
 |------|----------|
 | `radkeys-linux-amd64` | Linux x86_64 |
 | `radkeys-windows-amd64.exe` | Windows x86_64 |
-| `radkeys-macos-amd64` | macOS Intel |
-| `radkeys-macos-arm64` | macOS Apple Silicon |
 | `radkeys.config.toml` | Config template (all platforms) |
+
+**macOS**: not provided (cross-compile from Linux is impossible — needs Apple's
+proprietary SDK). Build from source on a Mac following the instructions below.
 
 Put the binary and `radkeys.config.toml` in the same directory and run.
 
@@ -66,8 +67,10 @@ CGO_ENABLED=1 go build -o radkeys-linux-amd64 .
 # Windows (on Windows, or cross-compile from Linux with mingw)
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
 
-# macOS (on macOS only — cross-compile from Linux is unsupported)
+# macOS Intel (on a Mac — cross-compile from Linux is impossible)
 CGO_ENABLED=1 go build -o radkeys-macos-amd64 .
+
+# macOS Apple Silicon (on a Mac)
 CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
 ```
 
