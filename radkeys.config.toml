@@ -1,100 +1,186 @@
 [app]
-  name = "RadKeys"
-  radiologist = "Dr. Galvani"
-  config_path = "/home/galvani/dev/radkeys/radkeys.config.toml"
-  language = "en"
-  version = "0.2.1"
-  [app.device]
-    vendor_id = 4057
-    product_id = 99
-    protocol = "radkeys-diy"
-  [app.fixed_buttons]
-    copy = 0
-    paste = 1
-    level_up = 2
-    go_home = 3
-  [app.layout]
-    columns = 4
-    rows = 4
-    preview = ""
-  [app.theme]
-    preset = "light_gray"
-    background = "#1a1a1a"
-    button = "#2a2a2a"
-    fixed = "#3a3a3a"
+name = "RadKeys"
+radiologist = "Dr. Galvani"
+language = "en"
+version = "0.2.1"
 
-[[screens]]
-  id = "root"
-  title = "Início"
+[app.device]
+vendor_id = 0x1234
+product_id = 0xABCD
+protocol = "radkeys-diy"
 
-  [[screens.buttons]]
-    index = 3
-    label = "RX Tórax"
-    action = "navigate"
-    target = "rx_torax"
+[app.layout]
+columns = 4
+rows = 4
 
-  [[screens.buttons]]
-    index = 4
-    label = "RX Abdome"
-    action = "navigate"
-    target = "rx_abdome"
+[app.theme]
+preset = "light_gray"
 
-  [[screens.buttons]]
-    index = 5
-    label = "TC"
-    action = "navigate"
-    target = "tc_menu"
+# ── Layers ──
 
-  [[screens.buttons]]
-    index = 6
-    label = "RM"
-    action = "navigate"
-    target = "mr_menu"
+[[layers]]
+name = "RX Tórax"
 
-[[screens]]
-  id = "rx_torax"
-  title = "RX Tórax"
+[[layers.buttons]]
+row = 0
+col = 3
+label = "Normal"
+action = "text"
+content = "Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.\nArcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.\nNão há evidência de derrame pleural, pneumotórax ou consolidação.\n"
 
-  [[screens.buttons]]
-    index = 3
-    label = "Normal"
-    action = "text"
-    content = "Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.\nArcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.\nNão há evidência de derrame pleural, pneumotórax ou consolidação.\n"
+[[layers.buttons]]
+row = 0
+col = 4
+label = "Derrame D"
+action = "text"
+content = "Radiografia de tórax demonstrando opacidade basal direita com obliteração\ndo seio costofrênico, sugestiva de derrame pleural.\nAcompanhamento/ultrassonografia de tórax recomendado.\n"
 
-  [[screens.buttons]]
-    index = 4
-    label = "Derrame direito"
-    action = "text"
-    content = "Radiografia de tórax demonstrando opacidade basal direita com obliteração do seio costofrênico,\nsugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.\n"
+[[layers.buttons]]
+row = 0
+col = 5
+label = "Derrame E"
+action = "text"
+content = "Radiografia de tórax demonstrando opacidade basal esquerda com obliteração\ndo seio costofrênico, sugestiva de derrame pleural.\nAcompanhamento/ultrassonografia de tórax recomendado.\n"
 
-  [[screens.buttons]]
-    index = 5
-    label = "Derrame esquerdo"
-    action = "text"
-    content = "Radiografia de tórax demonstrando opacidade basal esquerda com obliteração do seio costofrênico,\nsugestiva de derrame pleural. Acompanhamento/ultrassonografia de tórax recomendado.\n"
+[[layers.buttons]]
+row = 0
+col = 6
+label = "Pneumotórax"
+action = "text"
+content = "Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.\nAvaliação clínica conjunta recomendada.\n"
 
-  [[screens.buttons]]
-    index = 6
-    label = "Pneumotórax"
-    action = "text"
-    content = "Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.\nAvaliação clínica conjunta recomendada.\n"
+[[layers.buttons]]
+row = 5
+col = 0
+label = "Voltar"
+action = "prev"
 
-[[screens]]
-  id = "rx_abdome"
-  title = "RX Abdome"
+[[layers.buttons]]
+row = 5
+col = 3
+label = "Home"
+action = "home"
 
-  [[screens.buttons]]
-    index = 3
-    label = "Normal"
-    action = "text"
-    content = "Radiografia simples de abdome em decúbito e em pé.\nDistribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos\nnem calcificações patológicas. Posição e morfologia das alças preservadas.\n"
+[[layers.buttons]]
+row = 5
+col = 4
+label = "Copy"
+action = "copy"
 
-[[screens]]
-  id = "tc_menu"
-  title = "TC"
-  buttons = []
+[[layers.buttons]]
+row = 5
+col = 5
+label = "Paste"
+action = "paste"
 
-[[screens]]
-  id = "mr_menu"
-  title = "RM"
-  buttons = []
+[[layers.buttons]]
+row = 5
+col = 6
+label = "Próx"
+action = "next"
+
+[[layers]]
+name = "RX Abdome"
+
+[[layers.buttons]]
+row = 0
+col = 3
+label = "Normal"
+action = "text"
+content = "Radiografia simples de abdome em decúbito e em pé.\nDistribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos\nnem calcificações patológicas. Posição e morfologia das alças preservadas.\n"
+
+[[layers.buttons]]
+row = 5
+col = 0
+label = "Voltar"
+action = "prev"
+
+[[layers.buttons]]
+row = 5
+col = 3
+label = "Home"
+action = "home"
+
+[[layers.buttons]]
+row = 5
+col = 4
+label = "Copy"
+action = "copy"
+
+[[layers.buttons]]
+row = 5
+col = 5
+label = "Paste"
+action = "paste"
+
+[[layers.buttons]]
+row = 5
+col = 6
+label = "Próx"
+action = "next"
+
+[[layers]]
+name = "TC"
+
+[[layers.buttons]]
+row = 5
+col = 0
+label = "Voltar"
+action = "prev"
+
+[[layers.buttons]]
+row = 5
+col = 3
+label = "Home"
+action = "home"
+
+[[layers.buttons]]
+row = 5
+col = 4
+label = "Copy"
+action = "copy"
+
+[[layers.buttons]]
+row = 5
+col = 5
+label = "Paste"
+action = "paste"
+
+[[layers.buttons]]
+row = 5
+col = 6
+label = "Próx"
+action = "next"
+
+[[layers]]
+name = "RM"
+
+[[layers.buttons]]
+row = 5
+col = 0
+label = "Voltar"
+action = "prev"
+
+[[layers.buttons]]
+row = 5
+col = 3
+label = "Home"
+action = "home"
+
+[[layers.buttons]]
+row = 5
+col = 4
+label = "Copy"
+action = "copy"
+
+[[layers.buttons]]
+row = 5
+col = 5
+label = "Paste"
+action = "paste"
+
+[[layers.buttons]]
+row = 5
+col = 6
+label = "Próx"
+action = "next"

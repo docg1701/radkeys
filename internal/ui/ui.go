@@ -4,6 +4,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"strconv"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/docg1701/radkeys/internal/assets"
 	"github.com/docg1701/radkeys/internal/config"
-	"github.com/docg1701/radkeys/internal/deck"
 	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
@@ -31,7 +31,6 @@ import (
 func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a := app.New()
 
-	// Apply the preset theme to the entire UI.
 	customTheme := resolveFullTheme(cfg)
 	a.Settings().SetTheme(customTheme)
 
@@ -39,9 +38,6 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	a.SetIcon(iconRes)
 
 	i18n.SetLanguage(cfg.App.Language)
-	if cfg.App.ConfigPath == "" {
-		cfg.App.ConfigPath = configPath
-	}
 
 	title := fmt.Sprintf("RadKeys — %s", cfg.App.Radiologist)
 	w := a.NewWindow(title)
@@ -49,18 +45,11 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 	w.SetIcon(iconRes)
 
 	cols := cfg.App.Layout.Columns
-	if cols <= 0 {
-		cols = 4
-	}
 	rows := cfg.App.Layout.Rows
-	if rows <= 0 {
-		rows = 5
-	}
 
 	u := &appUI{
 		cfg:        cfg,
 		configPath: configPath,
-		deck:       deck.New(cfg),
 		reader:     reader,
 		a:          a,
 		win:        w,
@@ -84,7 +73,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
 	)
 	w.SetContent(tabs)
-	u.renderScreen()
+	u.renderGrid()
 
 	if err := reader.Open(); err != nil {
 		return fmt.Errorf("hid: open: %w", err)
@@ -96,18 +85,19 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 }
 
 type appUI struct {
-	cfg        *config.Config
-	configPath string
-	deck       *deck.Deck
-	reader     hid.Reader
-	a          fyne.App
-	win        fyne.Window
-	titleBase  string
-	preview    *widget.Label
-	cols       int
-	rows       int
-	keypad     *fyne.Container
-	previewBg  *canvas.Rectangle // background rectangle, updated on theme change
+	cfg         *config.Config
+	configPath  string
+	layerIndex  int // current layer (sequential)
+	reader      hid.Reader
+	a           fyne.App
+	win         fyne.Window
+	titleBase   string
+	preview     *widget.Label
+	previewText string // current text for copy
+	cols        int
+	rows        int
+	keypad      *fyne.Container
+	previewBg   *canvas.Rectangle
 }
 
 func resolveFullTheme(cfg *config.Config) fyne.Theme {
@@ -119,39 +109,64 @@ func resolveFullTheme(cfg *config.Config) fyne.Theme {
 	return themes.NewCustomTheme(themes.Presets[0])
 }
 
-func (u *appUI) press(index int) {
-	eff := u.deck.Press(index)
-	switch eff.Type {
-	case deck.EffectCopy:
-		u.a.Clipboard().SetContent(eff.Text)
-	case deck.EffectPaste:
-		u.preview.SetText(u.a.Clipboard().Content())
-	case deck.EffectNavigate:
-		u.renderScreen()
-	case deck.EffectPreview:
-		u.preview.SetText(eff.Text)
+func (u *appUI) currentLayer() config.Layer {
+	return u.cfg.Layers[u.layerIndex]
+}
+
+// press handles a button press at physical (row, col).
+func (u *appUI) press(row, col int) {
+	b, ok := u.currentLayer().ButtonAt(row, col)
+	if !ok {
+		return
+	}
+	switch b.Action {
+	case config.ActionText:
+		u.previewText = b.Content
+		u.preview.SetText(b.Content)
+	case config.ActionCopy:
+		u.a.Clipboard().SetContent(u.previewText)
+	case config.ActionPaste:
+		u.previewText = u.a.Clipboard().Content()
+		u.preview.SetText(u.previewText)
+	case config.ActionPrev:
+		u.prevLayer()
+	case config.ActionNext:
+		u.nextLayer()
+	case config.ActionHome:
+		u.homeLayer()
+	}
+	u.renderGrid()
+}
+
+func (u *appUI) nextLayer() {
+	u.layerIndex = (u.layerIndex + 1) % len(u.cfg.Layers)
+}
+
+func (u *appUI) prevLayer() {
+	u.layerIndex--
+	if u.layerIndex < 0 {
+		u.layerIndex = len(u.cfg.Layers) - 1
 	}
 }
 
-func (u *appUI) renderScreen() {
-	s := u.deck.CurrentScreen()
-	f := u.cfg.App.FixedButtons
-	fixed := []config.Button{
-		{Index: f.Copy, Label: i18n.T("button.copy")},
-		{Index: f.Paste, Label: i18n.T("button.paste")},
-		{Index: f.LevelUp, Label: i18n.T("button.back")},
-		{Index: f.GoHome, Label: i18n.T("button.home")},
-	}
-	all := append(append([]config.Button{}, fixed...), s.Buttons...)
+func (u *appUI) homeLayer() {
+	u.layerIndex = 0
+}
 
+func (u *appUI) renderGrid() {
+	layer := u.currentLayer()
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
 	th := u.a.Settings().Theme()
 	v := variantFor(th)
+
 	for i := 0; i < totalSlots; i++ {
-		if i < len(all) {
-			b := all[i]
-			btn := widget.NewButton(b.Label, func() { u.press(b.Index) })
+		r := i / u.cols
+		c := i % u.cols
+		if b, ok := layer.ButtonAt(r, c); ok {
+			row := r
+			col := c
+			btn := widget.NewButton(b.Label, func() { u.press(row, col) })
 			u.keypad.Objects = append(u.keypad.Objects, btn)
 		} else {
 			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v))
@@ -162,13 +177,13 @@ func (u *appUI) renderScreen() {
 }
 
 func appIconData(cfg *config.Config) []byte {
-	// Custom icon file path.
 	if cfg.App.Theme.Icon != "" {
-		if data, err := os.ReadFile(cfg.App.Theme.Icon); err == nil {
+		data, err := os.ReadFile(cfg.App.Theme.Icon)
+		if err == nil {
 			return data
 		}
+		log.Printf("radkeys: cannot read icon %q: %v", cfg.App.Theme.Icon, err)
 	}
-	// Fallback: embedded default icon.
 	return assets.IconPNG
 }
 
@@ -184,8 +199,8 @@ func (u *appUI) pollHID() {
 		if !ev.Pressed {
 			continue
 		}
-		idx := ev.Index
-		fyne.Do(func() { u.press(idx) })
+		row, col := ev.Row, ev.Col
+		fyne.Do(func() { u.press(row, col) })
 	}
 }
 
@@ -196,15 +211,12 @@ func (u *appUI) pollHID() {
 func (u *appUI) buildSettings() fyne.CanvasObject {
 	cfg := u.cfg
 
-	// --- Widgets ---
-
 	radEnt := widget.NewEntry()
 	radEnt.SetText(cfg.App.Radiologist)
 
 	langSel := widget.NewSelect(i18n.Supported, nil)
 	langSel.SetSelected(cfg.App.Language)
 
-	// Build theme selector with i18n display names.
 	themeIDs := make([]string, len(themes.Presets))
 	themeNames := make([]string, len(themes.Presets))
 	for i, p := range themes.Presets {
@@ -212,7 +224,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		themeNames[i] = i18n.T("theme." + p.ID)
 	}
 	themeSel := widget.NewSelect(themeNames, nil)
-	// Map current preset ID to its index in the dropdown.
 	for i, id := range themeIDs {
 		if id == cfg.App.Theme.Preset {
 			themeSel.SetSelectedIndex(i)
@@ -226,8 +237,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	rowsEnt := widget.NewEntry()
 	rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
 
-	configLbl := widget.NewLabel(cfg.App.ConfigPath)
-	configLbl.Wrapping = fyne.TextTruncate
+	configLbl := widget.NewLabel(u.configPath)
+	configLbl.Wrapping = fyne.TextWrapWord
 	chooseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
 		showFileDialog(u.win, []string{".toml"}, func(path string) {
 			u.configPath = path
@@ -245,8 +256,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
-	// --- Icon selector ---
-
 	customIconPath := cfg.App.Theme.Icon
 	iconPreview := canvas.NewImageFromResource(fyne.NewStaticResource("icon.png", appIconData(cfg)))
 	iconPreview.SetMinSize(fyne.NewSize(48, 48))
@@ -257,6 +266,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			customIconPath = path
 			data, err := os.ReadFile(path)
 			if err != nil {
+				log.Printf("radkeys: cannot read icon %q: %v", path, err)
 				return
 			}
 			iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
@@ -265,24 +275,21 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	})
 	iconBrowseBtn.Importance = widget.MediumImportance
 
-	// --- Save action ---
-
 	save := func() {
 		cfg.App.Radiologist = radEnt.Text
 		cfg.App.Language = langSel.Selected
 		cfg.App.Theme.Icon = customIconPath
-		// Map selected display name back to preset ID.
 		selIdx := themeSel.SelectedIndex()
 		if selIdx >= 0 && selIdx < len(themeIDs) {
 			cfg.App.Theme.Preset = themeIDs[selIdx]
 		}
-		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 {
+		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 && v <= 6 {
 			cfg.App.Layout.Columns = v
 		} else {
 			cfg.App.Layout.Columns = 1
 			colsEnt.SetText("1")
 		}
-		if v, err := strconv.Atoi(rowsEnt.Text); err == nil && v > 0 {
+		if v, err := strconv.Atoi(rowsEnt.Text); err == nil && v > 0 && v <= 6 {
 			cfg.App.Layout.Rows = v
 		} else {
 			cfg.App.Layout.Rows = 1
@@ -295,7 +302,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			cfg.App.Device.ProductID = uint16(v)
 		}
 		cfg.App.Device.Protocol = protoSel.Selected
-		cfg.App.ConfigPath = u.configPath
 
 		f, err := os.Create(u.configPath)
 		if err != nil {
@@ -322,12 +328,14 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			canvas.Refresh(u.previewBg)
 		}
 
+		// Refresh tab labels and content.
 		tabs := u.win.Content().(*container.AppTabs)
 		tabs.Items[0].Text = i18n.T("tab.shortcuts")
 		tabs.Items[1].Text = i18n.T("tab.settings")
 		tabs.Items[2].Text = i18n.T("tab.about")
 		tabs.Items[1].Content = u.buildSettings()
 		tabs.Items[2].Content = u.buildAbout()
+		tabs.Refresh()
 
 		if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
 			u.cols = cfg.App.Layout.Columns
@@ -337,17 +345,16 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			keypadArea := container.NewPadded(u.keypad)
 			split := container.NewVSplit(previewArea, keypadArea)
 			tabs.Items[0] = container.NewTabItem(i18n.T("tab.shortcuts"), split)
+			tabs.Items[0].Content = split
 		}
 		tabs.Refresh()
 
-		u.renderScreen()
-
+		u.layerIndex = 0
+		u.renderGrid()
 	}
 
 	saveBtn := widget.NewButton(i18n.T("settings.save"), save)
 	saveBtn.Importance = widget.HighImportance
-
-	// --- Cards ---
 
 	sections := container.NewVBox(
 		section(i18n.T("settings.group_config"),
@@ -390,7 +397,6 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	)
 
 	content := container.NewVBox(sections, footer)
-
 	return container.NewVScroll(container.NewPadded(content))
 }
 
@@ -421,11 +427,6 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 		repo,
 	)
 
-	author := widget.NewLabel(i18n.T("about.author"))
-	author.Wrapping = fyne.TextWrapWord
-	license := widget.NewLabel(i18n.T("about.license"))
-	license.Wrapping = fyne.TextWrapWord
-
 	stack := widget.NewLabel(i18n.T("about.stack"))
 	stack.Wrapping = fyne.TextWrapWord
 
@@ -438,10 +439,9 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 }
 
 // ---------------------------------------------------------------------------
-// Layout helpers for the settings tab
+// Layout helpers
 // ---------------------------------------------------------------------------
 
-// section returns a titled group: bold header label followed by content rows.
 func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	header := widget.NewLabel(title)
 	header.TextStyle = fyne.TextStyle{Bold: true}
@@ -450,15 +450,10 @@ func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(items...)
 }
 
-// variantFor returns the correct ThemeVariant for the active theme.
-// For the system theme, uses Fyne's OS-detected variant.
-// For custom themes, detects from background luminance.
 func variantFor(th fyne.Theme) fyne.ThemeVariant {
-	// If it's the default (system) theme, trust Fyne's OS detection.
 	if th == fyneTheme.DefaultTheme() {
 		return fyne.CurrentApp().Settings().ThemeVariant()
 	}
-	// Custom theme: detect from the actual background colour.
 	bg := th.Color(fyneTheme.ColorNameBackground, fyneTheme.VariantDark)
 	r, g, b, _ := bg.RGBA()
 	if 0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b) > 0xffff*0.45 {
@@ -467,7 +462,6 @@ func variantFor(th fyne.Theme) fyne.ThemeVariant {
 	return fyneTheme.VariantDark
 }
 
-// showFileDialog opens a file picker filtered by extensions, resized to 900x650.
 func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string)) {
 	fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 		if err != nil || rc == nil {
@@ -480,7 +474,6 @@ func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string
 	fd.Show()
 }
 
-// labeled returns label above input so the input gets full width.
 func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(widget.NewLabel(label), input)
 }

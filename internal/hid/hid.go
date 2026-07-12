@@ -5,9 +5,11 @@ package hid
 
 import "sync"
 
-// Event reports a change in a button's pressed state.
+// Event reports a change in a button's pressed state at (row, col).
+// For Elgato protocol devices, Row is always 0 and Col is the button index.
 type Event struct {
-	Index   int
+	Row     int
+	Col     int
 	Pressed bool
 }
 

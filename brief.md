@@ -3,6 +3,26 @@
 > **Data:** 2026-07-12
 > **Repo:** https://github.com/docg1701/radkeys
 > **Release atual:** v0.2.1 → **meta: v0.3.0 (refatoração arquitetural)**
+> **Status:** 🚧 Em andamento
+
+---
+
+## Progresso da refatoração (v0.3.0)
+
+| Tarefa | Status |
+|--------|--------|
+| config.go — novo modelo (Layers, ações, sem FixedButtons) | ✅ |
+| config_test.go — testes atualizados | ✅ |
+| hid.go — Event com (Row, Col) | ✅ |
+| reader_cgo.go — protocolo DIY (row,col) 2 bytes | ✅ |
+| reader_nocgo.go — sem alterações necessárias | ✅ |
+| ui.go — reescrever sem deck, layerIndex, novas ações | ✅ |
+| deck/ — deletar | ✅ |
+| main.go — atualizar ensureConfig | ✅ |
+| radkeys.config.toml — novo formato | ✅ |
+| hid_test.go — atualizar com (Row, Col) | ✅ |
+| theme/custom.go — refazer do zero | ✅ |
+| theme/presets.go — campos com cores explícitas por preset | ✅ |
 
 ---
 

@@ -53,19 +53,17 @@ func (b *baseReader) Close() error {
 	return b.dev.Close()
 }
 
-// emitRise forwards a press only on the 0->1 transition (debounced).
-func (b *baseReader) emitRise(i int, pressed bool, prev byte) {
-	if pressed && prev == 0 {
-		select {
-		case b.ch <- Event{Index: i, Pressed: true}:
-		default:
-		}
+// emit sends an event. Non-blocking — drops if channel is full (shouldn't happen).
+func (b *baseReader) emit(e Event) {
+	select {
+	case b.ch <- e:
+	default:
 	}
 }
 
 // elgatoReader implements the Elgato Stream Deck input protocol.
 // Input report: Report ID 0x01, Command 0x00, payload = 1 byte per button
-// (0x00 released, 0x01 pressed). Host polls with a timed HID READ.
+// (0x00 released, 0x01 pressed). Each button index maps to Col; Row is always 0.
 type elgatoReader struct {
 	baseReader
 	prev []byte
@@ -104,20 +102,24 @@ func (e *elgatoReader) loop() {
 			if i >= len(e.prev) {
 				break
 			}
-			e.emitRise(i, st == 0x01, e.prev[i])
+			if st == 0x01 && e.prev[i] == 0 {
+				e.emit(Event{Row: 0, Col: i, Pressed: true})
+			}
 			e.prev[i] = st
 		}
 	}
 }
 
-// diyButtonCount is the number of buttons on the DIY RadKeys device.
-const diyButtonCount = 24
+// ---------------------------------------------------------------------------
+// DIY reader: protocolo (row, col) — 2 bytes
+// ---------------------------------------------------------------------------
 
-// diyReader implements the RadKeys DIY protocol: input report = N bytes,
-// one per button (0x00 released, 0x01 pressed), N = diyButtonCount.
+const diyReportLen = 2
+
+// diyReader implements the RadKeys DIY protocol: input report = 2 bytes
+// [row, col] via HID vendor-defined (TinyUSB on RP2040-Zero).
 type diyReader struct {
 	baseReader
-	prev [diyButtonCount]byte
 }
 
 func (d *diyReader) Open() error {
@@ -127,7 +129,7 @@ func (d *diyReader) Open() error {
 
 func (d *diyReader) loop() {
 	defer close(d.done)
-	buf := make([]byte, 1+diyButtonCount) // report ID + 24 states
+	buf := make([]byte, diyReportLen)
 	for {
 		select {
 		case <-d.stop:
@@ -141,31 +143,8 @@ func (d *diyReader) loop() {
 			}
 			return
 		}
-		states := parseDIYReport(buf[:n])
-		if states == nil {
-			continue
+		if n >= diyReportLen {
+			d.emit(Event{Row: int(buf[0]), Col: int(buf[1]), Pressed: true})
 		}
-		for i, st := range states {
-			if i >= len(d.prev) {
-				break
-			}
-			d.emitRise(i, st == 0x01, d.prev[i])
-			d.prev[i] = st
-		}
-	}
-}
-
-// parseDIYReport returns the 24 button-state bytes from a DIY input report,
-// tolerating both "report-ID(0x01) + 24 states" (25 bytes) and "24 states"
-// (24 bytes) layouts across hidapi backends. Returns nil for anything else.
-func parseDIYReport(b []byte) []byte {
-	const diyReportID = 0x01
-	switch {
-	case len(b) == 1+diyButtonCount && b[0] == diyReportID:
-		return b[1:]
-	case len(b) == diyButtonCount:
-		return b
-	default:
-		return nil
 	}
 }

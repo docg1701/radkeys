@@ -20,12 +20,12 @@ func TestMockReaderPutAndReceive(t *testing.T) {
 	_ = m.Open()
 	defer m.Close()
 
-	m.Put(Event{Index: 3, Pressed: true})
+	m.Put(Event{Row: 0, Col: 3, Pressed: true})
 
 	select {
 	case ev := <-m.Events():
-		if ev.Index != 3 || !ev.Pressed {
-			t.Fatalf("got %+v, want index=3 pressed=true", ev)
+		if ev.Row != 0 || ev.Col != 3 || !ev.Pressed {
+			t.Fatalf("got %+v, want row=0 col=3 pressed=true", ev)
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for event")
@@ -37,7 +37,7 @@ func TestMockReaderPutAfterCloseIsSafe(t *testing.T) {
 	_ = m.Open()
 	_ = m.Close()
 	// Put after close must not panic.
-	m.Put(Event{Index: 0, Pressed: true})
+	m.Put(Event{Row: 0, Col: 0, Pressed: true})
 }
 
 func TestMockReaderEventsClosedAfterClose(t *testing.T) {

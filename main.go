@@ -50,8 +50,7 @@ func configPath() string {
 	return configFileName
 }
 
-// ensureConfig writes a minimal template if the config file does not exist
-// (brief section 5.1: "Se não existir: app cria template minimal").
+// ensureConfig writes a minimal template if the config file does not exist.
 func ensureConfig(path string) {
 	if _, err := os.Stat(path); err == nil {
 		return
@@ -64,18 +63,22 @@ vendor_id  = 0x0fd9
 product_id = 0x0063
 protocol   = "elgato"
 
-[app.fixed_buttons]
-copy     = 0
-paste    = 1
-level_up = 2
-go_home  = 3
+[app.layout]
+columns = 4
+rows    = 3
 
-[[screens]]
-id = "root"
-title = "Início"
-buttons = [
-  { index = 3, label = "Exemplo", action = "text", content = "Frase de exemplo." },
-]
+[app.theme]
+preset = "system"
+
+[[layers]]
+name = "Início"
+
+[[layers.buttons]]
+row = 0
+col = 0
+label = "Exemplo"
+action = "text"
+content = "Frase de exemplo."
 `
 	_ = os.WriteFile(path, []byte(tmpl), 0o644)
 }
