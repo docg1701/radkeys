@@ -132,7 +132,6 @@ Both must pass before every commit. See `.golangci.yml` and `.taplo.toml`.
 
 | Item | Status |
 |------|--------|
-| Always-on-top | ⏳ Blocked by Fyne v2.8.0 |
 | Version bump to 0.3.0 + release cycle | ⏳ Pending |
 | UI test coverage | ⏳ None yet |
 

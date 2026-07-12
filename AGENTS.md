@@ -64,7 +64,6 @@ go mod tidy
 
 ### 🚫 Never
 - Keyboard HID (F13-F24) input — rejected by product.
-- `RequestAlwaysOnTop()` without verifying Fyne version (only available in ≥v2.8.0, not released yet).
 - Hardcoded UI strings — use `i18n.T()`.
 - Hardcoded version numbers in Go source or config files: version is set via `var Version` in `main.go` and injected at build time (`-ldflags "-X main.Version=X.Y.Z"`). Test fixtures use `"0.0.0-test"`.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
