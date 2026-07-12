@@ -13,15 +13,12 @@
 6. Build all release binaries LOCALLY to dist/:
    go build -tags flatpak -o dist/radkeys-linux-amd64 .
    CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
-7. macOS: build on a Mac (cross-compile from Linux is impossible — needs Apple SDK).
-   On macOS: CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 . && CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
-8. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
-9. git push origin vA.B.C
-10. MONITOR: gh run watch <run-id> --exit-status
+7. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
+8. git push origin vA.B.C
+9. MONITOR: gh run watch <run-id> --exit-status
     Wait until CI passes → release auto-created by CI.
-11. Upload the locally-built binaries to the release:
+10. Upload the locally-built binaries to the release:
     gh release upload vA.B.C dist/radkeys-linux-amd64 dist/radkeys-windows-amd64.exe
-    (and macOS binaries if available)
     The agent MUST NOT stop until all binaries are in the release.
 ```
 
@@ -49,14 +46,19 @@ go mod tidy
 ### ✅ Always
 - `gofmt -w . && go vet ./... && go test ./...` before every commit.
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`).
-- Build Windows binary locally (mingw) and upload to the release.
-- Build Linux binary and upload to the release.
+- Build Linux binary (priority — tested) and upload to the release.
+- Build Windows binary locally (mingw) and upload to the release (fornecido, NÃO testado pelo autor).
 - Monitor CI after tag push until release is published.
 - Conventional commits for changelog.
 
-### ⚠️ When possible
-- Build macOS binaries on a Mac and upload to the release.
-- MacOS cross-compile from Linux is **impossible** with CGO (needs Apple's proprietary SDK). Build on a Mac or skip.
+### ⚠️ macOS
+- NÃO entregamos binário macOS. SDK proprietário da Apple exige Mac físico — não pagamos por isso.
+- Fornecemos instruções de build no README para quem tiver Mac.
+- Comandos para referência:
+  ```bash
+  CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
+  CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
+  ```
 
 ### 🚫 Never
 - Keyboard HID (F13-F24) input — rejected by product.
@@ -67,6 +69,10 @@ go mod tidy
 - Cross-compile in CI — agent does it locally.
 - End the turn before CI release is published and all binaries are uploaded.
 - End the turn before the release has Linux + Windows binaries.
+- Build ou upload de binário macOS — não é nossa responsabilidade.
+- Navegação por grafo com `target` / `navigate` — usar `prev`/`next` sequencial.
+- `[app.fixed_buttons]` — removido. Copy/paste/prev/next/home são ações normais.
+- Firmware com bitmap de tamanho fixo — usar protocolo `(row, col)` 2 bytes.
 
 ## Release checklist (agent MUST complete)
 
@@ -75,10 +81,9 @@ go mod tidy
 - [ ] Version bumped in `radkeys.config.toml`
 - [ ] `dist/radkeys-linux-amd64` built and uploaded
 - [ ] `dist/radkeys-windows-amd64.exe` built (mingw) and uploaded
-- [ ] macOS binaries built and uploaded (if Mac available)
 - [ ] `git tag vX.Y.Z` (lightweight) pushed
 - [ ] CI passed → release published by CI
-- [ ] All binaries uploaded to the release
+- [ ] Linux + Windows binaries uploaded to the release
 
 ## Testing
 
@@ -91,33 +96,31 @@ go mod tidy
 ```
 radkeys/
 ├── main.go / go.mod / go.sum
-├── radkeys.config.toml      # Config example (commented for human/LLM)
+├── radkeys.config.toml      # Config example (versionado)
+├── BUILD.md                 # Guia de montagem do hardware
 ├── internal/
 │   ├── config/              # TOML parser + validation + types
-│   ├── deck/                # Navigation state machine
-│   ├── hid/                 # HID reader (go-hid + mock with build tags)
-│   ├── ui/                  # Fyne UI (Atalhos + Ajustes)
-│   ├── i18n/                 # go-i18n + 7 JSON embed
-│   ├── theme/               # 12 preset themes
-│   └── assets/              # Icon (Obsidian) embedded
-├── firmware/arduino/        # Arduino Pro Micro firmware
-├── firmware/rp2040/         # RP2040 firmware
-└── research/                # Technical investigation notes
+│   ├── hid/                 # HID reader (go-hid + mock)
+│   ├── ui/                  # Fyne UI: preview + grid + settings + about
+│   ├── i18n/                # mapa Go único (7 idiomas)
+│   ├── theme/               # presets.go + custom.go
+│   └── assets/              # Ícone embed
+├── firmware/rp2040-zero/    # RP2040-Zero: TinyUSB, protocolo (row, col)
+└── research/                # Notas de investigação
 ```
+
+> `internal/deck/` foi removido. Navegação é `layerIndex int` sequencial.
+> `firmware/arduino/` e `firmware/rp2040/` removidos. Só RP2040-Zero.
 
 ## Code Style
 
 Go idiomático. Funções 4–20 linhas. Nomes específicos. Early return, max 2 níveis indent.
 
 ```go
-// BOM
-func (d *Deck) levelUp() {
-    if len(d.stack) == 0 {
-        d.current = d.cfg.Screens[0].ID
-        return
-    }
-    d.current = d.stack[len(d.stack)-1]
-    d.stack = d.stack[:len(d.stack)-1]
+// BOM: navegação sequencial simples
+func (u *UI) nextLayer() {
+    u.layerIndex = (u.layerIndex + 1) % len(u.cfg.Layers)
+    u.refreshGrid()
 }
 ```
 

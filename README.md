@@ -11,7 +11,7 @@ the clipboard without stealing focus from the RIS/PACS.
 
 A single-binary desktop app for **Linux and Windows**. (macOS: build from
 source — cross-compile is impossible with CGO.) A USB HID custom device
-(Stream Deck or DIY 24-key pad) sends button presses directly to the app via
+(Stream Deck or DIY keypad) sends button presses directly to the app via
 hidapi — no keyboard keys, no focus stealing, no modifier interference.
 The app shows a preview on top and a virtual keypad on the bottom; press a
 button → phrase loads → copy → paste into the RIS.
@@ -44,7 +44,7 @@ clicks.
    commented — a human or LLM can read it and generate a custom config
    following the rules in the comments.
 2. Connect your USB device (Stream Deck / Elgato-compatible clone, or the
-   DIY 24-key pad).
+   DIY keypad).
 3. Run RadKeys.
 4. Press a button → phrase appears in the preview → press Copy → paste in
    the RIS (Ctrl+V).
@@ -96,10 +96,10 @@ go test ./... -v
 | Option | Device | Keys | Cost |
 |--------|--------|------|------|
 | Buy ready | Stream Deck / Elgato-compatible clone | 15 / 32 | $$$ |
-| DIY (primary) | Arduino Pro Micro + salvaged switches + 3D case | 24 | ~R$30-50 |
-| DIY (alt) | Raspberry Pi Pico + switches + 3D case | 24 | ~R$40-60 |
+| DIY | RP2040-Zero + push buttons + 3D case | Até 36 | ~R$40-60 |
 
-Firmware: [`firmware/arduino/`](firmware/arduino/) · [`firmware/rp2040/`](firmware/rp2040/)
+Firmware: [`firmware/rp2040-zero/`](firmware/rp2040-zero/)
+Guia de montagem: [`BUILD.md`](BUILD.md)
 
 ## Configuration
 
