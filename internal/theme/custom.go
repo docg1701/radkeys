@@ -39,15 +39,11 @@ func newCustomTheme(light, dark *BaseColours) fyne.Theme {
 }
 
 func (t *RadKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
-	base := t.dark
-	t.isLight = false
-	if v == theme.VariantLight {
-		base = t.light
-		t.isLight = true
-	}
+	base := t.resolveBase(v)
 	if base == nil {
 		return theme.DefaultTheme().Color(name, v)
 	}
+	t.isLight = v == theme.VariantLight
 
 	switch name {
 
@@ -122,6 +118,28 @@ func (t *RadKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) colo
 
 	// Unreachable — all ThemeColorName values are handled above.
 	return base.Bg
+}
+
+// resolveBase picks the right BaseColours for the requested variant.
+// If the requested variant is nil, falls back to the other variant
+// (so a dark-only theme always looks dark, not DefaultTheme).
+func (t *RadKeysTheme) resolveBase(v fyne.ThemeVariant) *BaseColours {
+	if v == theme.VariantLight {
+		if t.light != nil {
+			return t.light
+		}
+		if t.dark != nil {
+			return t.dark
+		}
+		return nil
+	}
+	if t.dark != nil {
+		return t.dark
+	}
+	if t.light != nil {
+		return t.light
+	}
+	return nil
 }
 
 func (t *RadKeysTheme) Font(style fyne.TextStyle) fyne.Resource {
