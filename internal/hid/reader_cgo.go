@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/docg1701/radkeys/internal/config"
 	"github.com/sstallion/go-hid"
+
+	"github.com/docg1701/radkeys/internal/config"
 )
 
 // Open connects to the configured USB HID custom device and returns a Reader.

@@ -1,0 +1,5 @@
+# taplo configuration — TOML linter and formatter for RadKeys.
+# Run: taplo lint radkeys.config.toml && taplo format radkeys.config.toml
+
+[formatting]
+indent_string = "  "

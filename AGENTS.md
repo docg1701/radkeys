@@ -6,7 +6,7 @@
 
 ```
 1. Desenvolver
-2. gofmt -w . && go vet ./... && go test ./...
+2. gofmt -w . && go vet ./... && golangci-lint run ./... && go test ./...
 3. Bump version in radkeys.config.toml ([app] version) — ONLY HERE. Never hardcode version anywhere else.
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
 5. Push to main
@@ -36,6 +36,8 @@ CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
 CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
 
 # Test
+LINT_VERSION=v1.64.8
+golangci-lint run ./...
 go test ./... -v
 gofmt -w . && go vet ./...
 go mod tidy
@@ -44,7 +46,7 @@ go mod tidy
 ## Agent responsibilities
 
 ### ✅ Always
-- `gofmt -w . && go vet ./... && go test ./...` before every commit.
+- `gofmt -w . && go vet ./... && golangci-lint run ./... && go test ./...` before every commit.
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`).
 - Build Linux binary (priority — tested) and upload to the release.
 - Build Windows binary locally (mingw) and upload to the release (fornecido, NÃO testado pelo autor).
@@ -76,6 +78,7 @@ go mod tidy
 
 ## Release checklist (agent MUST complete)
 
+- [ ] `golangci-lint run ./...` clean
 - [ ] `go test ./...` passes
 - [ ] `go vet ./...` clean
 - [ ] Version bumped in `radkeys.config.toml`

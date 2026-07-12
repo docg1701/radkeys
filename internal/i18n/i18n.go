@@ -238,7 +238,7 @@ func init() {
 
 	for id, langs := range messages {
 		for lang, text := range langs {
-			bundle.AddMessages(language.Make(lang), &i18n.Message{
+			_ = bundle.AddMessages(language.Make(lang), &i18n.Message{
 				ID:    id,
 				Other: text,
 			})

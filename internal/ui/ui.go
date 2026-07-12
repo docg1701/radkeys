@@ -28,7 +28,7 @@ import (
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
-func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
+func Run(cfg *config.Config, configPath string, reader hid.Reader, version string) error {
 	a := app.New()
 
 	customTheme := resolveFullTheme(cfg)
@@ -56,6 +56,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader) error {
 		titleBase:  "RadKeys",
 		cols:       cols,
 		rows:       rows,
+		version:    version,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
@@ -93,7 +94,8 @@ type appUI struct {
 	win         fyne.Window
 	titleBase   string
 	preview     *widget.Label
-	previewText string // current text for copy
+	previewText string
+	version     string
 	cols        int
 	rows        int
 	keypad      *fyne.Container
@@ -308,7 +310,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 			dialog.ShowError(fmt.Errorf("salvar: %w", err), u.win)
 			return
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		if err := toml.NewEncoder(f).Encode(cfg); err != nil {
 			dialog.ShowError(fmt.Errorf("TOML: %w", err), u.win)
 			return
@@ -405,7 +407,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 // ---------------------------------------------------------------------------
 
 func (u *appUI) buildAbout() fyne.CanvasObject {
-	ver := u.cfg.App.Version
+	ver := u.version
 	if ver == "" {
 		ver = "dev"
 	}

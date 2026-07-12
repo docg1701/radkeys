@@ -1,5 +1,5 @@
-// Package theme — 13 preset colour themes for RadKeys.
-// Each preset defines 7 base colours; the theme engine derives the remaining
+// Package theme — 13 preset color themes for RadKeys.
+// Each preset defines 7 base colors; the theme engine derives the remaining
 // 28 Fyne ThemeColorName values from these bases. No DefaultTheme fallback.
 package theme
 
@@ -14,14 +14,14 @@ var _ fyne.Theme = (*radKeysTheme)(nil)
 
 // ─── Theme engine ──────────────────────────────────────────────────────────
 
-// baseColours are the minimum colours a preset must define.
-type baseColours struct {
+// baseColors are the minimum colors a preset must define.
+type baseColors struct {
 	bg, fg, primary, button, header, input, hover color.NRGBA
 }
 
-// radKeysTheme resolves every ThemeColorName from baseColours.
+// radKeysTheme resolves every ThemeColorName from baseColors.
 type radKeysTheme struct {
-	light, dark *baseColours
+	light, dark *baseColors
 	isLight     bool
 }
 
@@ -100,9 +100,9 @@ func (t *radKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) colo
 	return bc.bg
 }
 
-// resolve returns the base colours for the requested variant.
+// resolve returns the base colors for the requested variant.
 // Falls back to the other variant if the requested one is nil.
-func (t *radKeysTheme) resolve(v fyne.ThemeVariant) *baseColours {
+func (t *radKeysTheme) resolve(v fyne.ThemeVariant) *baseColors {
 	if v == theme.VariantLight {
 		if t.light != nil {
 			return t.light
@@ -132,7 +132,7 @@ func (t *radKeysTheme) Size(name fyne.ThemeSizeName) float32 {
 	return theme.DefaultTheme().Size(name)
 }
 
-// ─── Colour operations ─────────────────────────────────────────────────────
+// ─── Color operations ─────────────────────────────────────────────────────
 
 func blend(a, b color.NRGBA, t float64) color.NRGBA {
 	return color.NRGBA{
@@ -176,8 +176,8 @@ func satSub(a, b uint8) uint8 {
 type preset struct {
 	id    string
 	name  string
-	light *baseColours
-	dark  *baseColours
+	light *baseColors
+	dark  *baseColors
 }
 
 var systemDefault = preset{id: "system", name: "System default"}
@@ -215,8 +215,8 @@ func NewCustomTheme(p preset) fyne.Theme { return newTheme(p) }
 // ID returns the machine-readable id (for i18n keys).
 func (p preset) ID() string { return p.id }
 
-func bc(bg, fg, primary, button, header, input, hover [3]uint8) *baseColours {
-	return &baseColours{
+func bc(bg, fg, primary, button, header, input, hover [3]uint8) *baseColors {
+	return &baseColors{
 		bg:      color.NRGBA{bg[0], bg[1], bg[2], 0xff},
 		fg:      color.NRGBA{fg[0], fg[1], fg[2], 0xff},
 		primary: color.NRGBA{primary[0], primary[1], primary[2], 0xff},

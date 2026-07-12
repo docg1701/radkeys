@@ -22,7 +22,6 @@
 name = "RadKeys"               # nome do app (aparece na janela)
 radiologist = "Dr. Galvani"    # seu nome — aparece no título da janela
 language = "en"                # idioma da interface: en, pt-BR, es, fr, de, it
-version = "0.3.0"             # versão do RadKeys — NÃO EDITE
 
 # ── Dispositivo USB ───────────────────────────────────────────────────────
 [app.device]
@@ -165,19 +164,29 @@ name = "RX Abdome"
 
   [[layers.buttons]]
   row = 5
-  col = 0; label = "Voltar"; action = "prev"
+  col = 0
+  label = "Voltar"
+  action = "prev"
   [[layers.buttons]]
   row = 5
-  col = 1; label = "Início"; action = "home"
+  col = 1
+  label = "Início"
+  action = "home"
   [[layers.buttons]]
   row = 5
-  col = 3; label = "Copiar"; action = "copy"
+  col = 3
+  label = "Copiar"
+  action = "copy"
   [[layers.buttons]]
   row = 5
-  col = 4; label = "Colar"; action = "paste"
+  col = 4
+  label = "Colar"
+  action = "paste"
   [[layers.buttons]]
   row = 5
-  col = 5; label = "Próx";  action = "next"
+  col = 5
+  label = "Próx"
+    action = "next"
 
 # ── Camada 3: TC ──────────────────────────────────────────────────────────
 [[layers]]
@@ -186,19 +195,29 @@ name = "TC"
   # Esta camada não tem frases ainda — só navegação.
   [[layers.buttons]]
   row = 5
-  col = 0; label = "Voltar"; action = "prev"
+  col = 0
+  label = "Voltar"
+  action = "prev"
   [[layers.buttons]]
   row = 5
-  col = 1; label = "Início"; action = "home"
+  col = 1
+  label = "Início"
+  action = "home"
   [[layers.buttons]]
   row = 5
-  col = 3; label = "Copiar"; action = "copy"
+  col = 3
+  label = "Copiar"
+  action = "copy"
   [[layers.buttons]]
   row = 5
-  col = 4; label = "Colar"; action = "paste"
+  col = 4
+  label = "Colar"
+  action = "paste"
   [[layers.buttons]]
   row = 5
-  col = 5; label = "Próx";  action = "next"
+  col = 5
+  label = "Próx"
+    action = "next"
 
 # ── Camada 4: RM ──────────────────────────────────────────────────────────
 [[layers]]
@@ -206,16 +225,26 @@ name = "RM"
 
   [[layers.buttons]]
   row = 5
-  col = 0; label = "Voltar"; action = "prev"
+  col = 0
+  label = "Voltar"
+  action = "prev"
   [[layers.buttons]]
   row = 5
-  col = 1; label = "Início"; action = "home"
+  col = 1
+  label = "Início"
+  action = "home"
   [[layers.buttons]]
   row = 5
-  col = 3; label = "Copiar"; action = "copy"
+  col = 3
+  label = "Copiar"
+  action = "copy"
   [[layers.buttons]]
   row = 5
-  col = 4; label = "Colar"; action = "paste"
+  col = 4
+  label = "Colar"
+  action = "paste"
   [[layers.buttons]]
   row = 5
-  col = 5; label = "Próx";  action = "next"
+  col = 5
+  label = "Próx"
+    action = "next"

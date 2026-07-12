@@ -1,0 +1,44 @@
+# golangci-lint configuration for RadKeys.
+# Run: golangci-lint run ./...
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - prealloc
+    - nilerr
+    - bodyclose
+
+linters-settings:
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/docg1701/radkeys
+  misspell:
+    locale: US
+    ignore-words:
+      - Autor
+      - Columnas
+      - Licence
+      - Licencia
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 2m
+  tests: true

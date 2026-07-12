@@ -43,7 +43,6 @@ type App struct {
 	Name        string `toml:"name"`
 	Radiologist string `toml:"radiologist"`
 	Language    string `toml:"language"`
-	Version     string `toml:"version"`
 	Device      Device `toml:"device"`
 	Layout      Layout `toml:"layout"`
 	Theme       Theme  `toml:"theme"`

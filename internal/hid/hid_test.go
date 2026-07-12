@@ -18,7 +18,7 @@ func TestMockReaderOpenClose(t *testing.T) {
 func TestMockReaderPutAndReceive(t *testing.T) {
 	m := NewMock()
 	_ = m.Open()
-	defer m.Close()
+	defer func() { _ = m.Close() }()
 
 	m.Put(Event{Row: 0, Col: 3, Pressed: true})
 
