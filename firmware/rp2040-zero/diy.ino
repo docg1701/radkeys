@@ -1,10 +1,10 @@
 /*
- * RadKeys — firmware RP2040-Zero.
- * Protocolo: envia [row, col] (2 bytes) via HID vendor-defined (TinyUSB).
- * Grid configurável pelo app — firmware NÃO hardcoded tamanho.
+ * RadKeys — RP2040-Zero firmware.
+ * Sends [row, col] (2 bytes) via HID vendor-defined (TinyUSB).
+ * Grid is configurable in the app — firmware does NOT hardcode size.
  *
- * Configuração Arduino IDE:
- *   Placa: "Waveshare RP2040 Zero" (core earlephilhower)
+ * Arduino IDE setup:
+ *   Board: "Waveshare RP2040 Zero" (earlephilhower core)
  *   USB Stack: "Adafruit TinyUSB"
  */
 
@@ -13,11 +13,11 @@
 #define DIY_VID 0x1234
 #define DIY_PID 0xABCD
 
-// Matriz 6×6 — GPIOs do RP2040-Zero
+// 6×6 matrix — RP2040-Zero GPIOs
 const uint8_t colPins[6] = {6, 7, 8, 9, 10, 11};
 const uint8_t rowPins[6] = {0, 1, 2, 3, 4, 5};
 
-// Descritor HID: report ID 1, 2 bytes (row, col)
+// HID descriptor: report ID 1, 2 bytes (row, col)
 static const uint8_t desc_hid[] = {
   TUD_HID_REPORT_DESC_GENERIC_INOUT(2)
 };
@@ -37,12 +37,12 @@ void setup() {
 
   usb_hid.begin();
 
-  // Espera USB enumerar
+  // Wait for USB enumeration
   while (!TinyUSBDevice.mounted()) delay(1);
 }
 
 void loop() {
-  // Só varre quando USB está conectado (evita spam se desconectado)
+  // Only scan when USB is connected (avoids spam if disconnected)
   if (!TinyUSBDevice.mounted()) {
     delay(100);
     return;
