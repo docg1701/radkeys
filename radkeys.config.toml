@@ -1,250 +1,356 @@
 # =============================================================================
-# RadKeys — Arquivo de Configuração (TOML)
+# RadKeys — Configuration File (TOML)
 # =============================================================================
 #
-# Este arquivo define tudo: nome do radiologista, idioma, tema, dispositivo USB
-# e as camadas de botões com frases para laudos.
+# This file defines everything: radiologist name, language, theme, USB device,
+# and the screen hierarchy with shortcut buttons.
 #
-# Regras básicas:
-#   - Cada [[layers]] é uma categoria de laudos (RX Tórax, TC, RM, etc.)
-#   - Dentro de cada camada, cada [[layers.buttons]] é um botão na posição
-#     (row, col) do grid físico.
-#   - row=0, col=0 é o canto superior esquerdo. O grid é definido por
-#     columns × rows (máximo 6×6 = 36 botões).
-#   - As ações disponíveis são: text, copy, paste, prev, next, home.
-#   - Ações prev/next/home navegam entre camadas na ordem deste arquivo.
+# Structure:
+#   - Each [[screens]] is a page with an id (unique) and a name.
+#   - Each [[screens.buttons]] is a button at position (row, col) on the grid.
+#   - Screens are connected via navigate actions with target screen ids.
+#   - The first screen is the home screen.
 #
-# Edite este arquivo com qualquer editor de texto e reinicie o RadKeys.
+# Actions:
+#   text     — loads the content into the preview (requires content)
+#   copy     — copies the preview text to clipboard
+#   paste    — pastes from clipboard into the preview
+#   prev     — goes back to the previous screen (stack-based)
+#   home     — goes to the first screen (root)
+#   navigate — goes to a specific screen (requires target = screen id)
+#
+# Edit this file with any text editor and restart RadKeys.
 # =============================================================================
 
 [app]
-# ── Identificação ─────────────────────────────────────────────────────────
-name = "RadKeys"               # nome do app (aparece na janela)
-radiologist = "Dr. Galvani"    # seu nome — aparece no título da janela
-language = "en"                # idioma da interface: en, pt-BR, es, fr, de, it
+name = "RadKeys"
+radiologist = "Dr. Galvani"
+language = "en"
 
-# ── Dispositivo USB ───────────────────────────────────────────────────────
 [app.device]
-# vendor_id e product_id são os identificadores do hardware (Pro Micro, RP2040).
-# Use 0x1234 / 0xABCD para o dispositivo DIY RadKeys.
-# Use 0x0fd9 / 0x0060-0x0080 para Stream Deck original/clone.
 vendor_id = 0x1234
 product_id = 0xABCD
-
-# protocol: "radkeys-diy" para o teclado DIY, "elgato" para Stream Deck
 protocol = "radkeys-diy"
 
-# ── Grid ──────────────────────────────────────────────────────────────────
 [app.layout]
-columns = 6   # número de colunas do grid físico (1 a 6)
-rows = 6      # número de linhas do grid físico (1 a 6)
+columns = 6
+rows = 6
 
-# ── Tema ──────────────────────────────────────────────────────────────────
 [app.theme]
-# Temas disponíveis:
-#   system, dracula, solarized_dark, monokai, gruvbox_dark, nord, one_dark,
-#   tokyo_night, catppuccin_mocha, solarized_light, gruvbox_light,
-#   light_gray, dark_gray
 preset = "dracula"
 
-# Ícone personalizado (opcional — deixe vazio para usar o padrão)
-# icon = "/caminho/para/icone.png"
-
 # =============================================================================
-# CAMADAS
-# =============================================================================
-# Cada [[layers]] é uma tela com nome e botões. A ordem importa:
-# prev/next navegam sequencialmente. A primeira camada é a tela inicial (home).
-#
-# Ações disponíveis:
-#   text  — carrega o texto no preview (exige content)
-#   copy  — copia o texto do preview para a área de transferência
-#   paste — cola da área de transferência para o preview
-#   prev  — vai para a camada anterior (circular)
-#   next  — vai para a próxima camada (circular)
-#   home  — vai para a primeira camada
+# SCREENS
 # =============================================================================
 
-# ── Camada 1: RX Tórax ────────────────────────────────────────────────────
-[[layers]]
-name = "RX Tórax"
+# ── Root: modality selection ───────────────────────────────────────────────
+[[screens]]
+id = "root"
+name = "Modalities"
 
-  # Botão na posição (0,0): texto do laudo
-  [[layers.buttons]]
-  row = 0          # linha (0 = primeira)
-  col = 0          # coluna (0 = esquerda)
-  label = "Normal"
-  action = "text"
-  content = """
-  Radiografia de tórax em incidências PA e perfil.
-  Arcada costal intacta, campos pulmonares livres,
-  seios costofrênicos agudos. Não há evidência de
-  derrame pleural, pneumotórax ou consolidação.
-  """
+  [[screens.buttons]]
+  row = 0
+  col = 0
+  label = "X-Ray"
+  action = "navigate"
+  target = "xray_menu"
 
-  # Botão na posição (0,1)
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 0
   col = 1
-  label = "Derrame D"
-  action = "text"
-  content = """
-  Opacidade basal direita com obliteração do seio
-  costofrênico, sugestiva de derrame pleural.
-  """
+  label = "CT"
+  action = "navigate"
+  target = "ct_menu"
 
-  # Botão na posição (0,2)
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 0
   col = 2
-  label = "Derrame E"
-  action = "text"
-  content = """
-  Opacidade basal esquerda com obliteração do seio
-  costofrênico, sugestiva de derrame pleural.
-  """
+  label = "MRI"
+  action = "navigate"
+  target = "mri_menu"
 
-  # Botão na posição (0,3)
-  [[layers.buttons]]
+# ── X-Ray submenu ──────────────────────────────────────────────────────────
+[[screens]]
+id = "xray_menu"
+name = "X-Ray"
+
+  [[screens.buttons]]
+  row = 0
+  col = 0
+  label = "Chest"
+  action = "navigate"
+  target = "xray_chest"
+
+  [[screens.buttons]]
+  row = 0
+  col = 1
+  label = "Abdomen"
+  action = "navigate"
+  target = "xray_abdomen"
+
+  [[screens.buttons]]
+  row = 0
+  col = 2
+  label = "Bone Age"
+  action = "navigate"
+  target = "xray_bone_age"
+
+  [[screens.buttons]]
   row = 0
   col = 3
-  label = "Pneumotórax"
-  action = "text"
-  content = """
-  Pneumotórax à direita com retração pulmonar.
-  Avaliação clínica conjunta recomendada.
-  """
+  label = "Scoliosis"
+  action = "navigate"
+  target = "xray_scoliosis"
 
-  # ── Botões de navegação (linha 5 = última linha do grid 6×6) ──
-
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 0
-  label = "Voltar"
+  label = "Back"
   action = "prev"
 
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 1
-  label = "Início"
+  label = "Home"
   action = "home"
 
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 3
-  label = "Copiar"
+  label = "Copy"
   action = "copy"
 
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 4
-  label = "Colar"
+  label = "Paste"
   action = "paste"
 
-  [[layers.buttons]]
-  row = 5
-  col = 5
-  label = "Próx"
-  action = "next"
+# ── X-Ray Chest: report texts ──────────────────────────────────────────────
+[[screens]]
+id = "xray_chest"
+name = "Chest X-Ray"
 
-# ── Camada 2: RX Abdome ───────────────────────────────────────────────────
-[[layers]]
-name = "RX Abdome"
-
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 0
   col = 0
   label = "Normal"
   action = "text"
   content = """
-  Radiografia simples de abdome em decúbito e em pé.
-  Distribuição normal de conteúdo aéreo. Não se observam
-  níveis hidroaéreos nem calcificações patológicas.
+  PA and lateral chest radiographs.
+  Intact thoracic cage, clear lung fields, sharp costophrenic angles.
+  No evidence of pleural effusion, pneumothorax, or consolidation.
   """
 
-  [[layers.buttons]]
+  [[screens.buttons]]
+  row = 0
+  col = 1
+  label = "Effusion R"
+  action = "text"
+  content = """
+  Right basal opacity with blunting of the costophrenic angle,
+  suggestive of pleural effusion. Ultrasound correlation recommended.
+  """
+
+  [[screens.buttons]]
+  row = 0
+  col = 2
+  label = "Effusion L"
+  action = "text"
+  content = """
+  Left basal opacity with blunting of the costophrenic angle,
+  suggestive of pleural effusion. Ultrasound correlation recommended.
+  """
+
+  [[screens.buttons]]
+  row = 0
+  col = 3
+  label = "Pneumothorax"
+  action = "text"
+  content = """
+  Right-sided pneumothorax with pulmonary retraction.
+  Clinical correlation recommended.
+  """
+
+  [[screens.buttons]]
   row = 5
   col = 0
-  label = "Voltar"
+  label = "Back"
   action = "prev"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 1
-  label = "Início"
+  label = "Home"
   action = "home"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 3
-  label = "Copiar"
+  label = "Copy"
   action = "copy"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 4
-  label = "Colar"
+  label = "Paste"
   action = "paste"
-  [[layers.buttons]]
-  row = 5
-  col = 5
-  label = "Próx"
-    action = "next"
 
-# ── Camada 3: TC ──────────────────────────────────────────────────────────
-[[layers]]
-name = "TC"
+# ── X-Ray Abdomen ──────────────────────────────────────────────────────────
+[[screens]]
+id = "xray_abdomen"
+name = "Abdomen X-Ray"
 
-  # Esta camada não tem frases ainda — só navegação.
-  [[layers.buttons]]
+  [[screens.buttons]]
+  row = 0
+  col = 0
+  label = "Normal"
+  action = "text"
+  content = """
+  Supine and upright abdominal radiographs.
+  Normal bowel gas distribution. No air-fluid levels
+  or pathological calcifications.
+  """
+
+  [[screens.buttons]]
   row = 5
   col = 0
-  label = "Voltar"
+  label = "Back"
   action = "prev"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 1
-  label = "Início"
+  label = "Home"
   action = "home"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 3
-  label = "Copiar"
+  label = "Copy"
   action = "copy"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 4
-  label = "Colar"
+  label = "Paste"
   action = "paste"
-  [[layers.buttons]]
-  row = 5
-  col = 5
-  label = "Próx"
-    action = "next"
 
-# ── Camada 4: RM ──────────────────────────────────────────────────────────
-[[layers]]
-name = "RM"
+# ── X-Ray Bone Age ─────────────────────────────────────────────────────────
+[[screens]]
+id = "xray_bone_age"
+name = "Bone Age"
 
-  [[layers.buttons]]
+  [[screens.buttons]]
+  row = 0
+  col = 0
+  label = "Normal"
+  action = "text"
+  content = """
+  Left hand and wrist radiograph for bone age assessment.
+  Bone age is consistent with chronological age
+  according to Greulich and Pyle standards.
+  """
+
+  [[screens.buttons]]
   row = 5
   col = 0
-  label = "Voltar"
+  label = "Back"
   action = "prev"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 1
-  label = "Início"
+  label = "Home"
   action = "home"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 3
-  label = "Copiar"
+  label = "Copy"
   action = "copy"
-  [[layers.buttons]]
+  [[screens.buttons]]
   row = 5
   col = 4
-  label = "Colar"
+  label = "Paste"
   action = "paste"
-  [[layers.buttons]]
+
+# ── X-Ray Scoliosis ────────────────────────────────────────────────────────
+[[screens]]
+id = "xray_scoliosis"
+name = "Scoliosis"
+
+  [[screens.buttons]]
+  row = 0
+  col = 0
+  label = "Normal"
+  action = "text"
+  content = """
+  Full spine radiographs for scoliosis evaluation.
+  No significant spinal curvature. Risser sign appropriate for age.
+  """
+
+  [[screens.buttons]]
   row = 5
-  col = 5
-  label = "Próx"
-    action = "next"
+  col = 0
+  label = "Back"
+  action = "prev"
+  [[screens.buttons]]
+  row = 5
+  col = 1
+  label = "Home"
+  action = "home"
+  [[screens.buttons]]
+  row = 5
+  col = 3
+  label = "Copy"
+  action = "copy"
+  [[screens.buttons]]
+  row = 5
+  col = 4
+  label = "Paste"
+  action = "paste"
+
+# ── CT (placeholder) ───────────────────────────────────────────────────────
+[[screens]]
+id = "ct_menu"
+name = "CT"
+
+  [[screens.buttons]]
+  row = 5
+  col = 0
+  label = "Back"
+  action = "prev"
+  [[screens.buttons]]
+  row = 5
+  col = 1
+  label = "Home"
+  action = "home"
+  [[screens.buttons]]
+  row = 5
+  col = 3
+  label = "Copy"
+  action = "copy"
+  [[screens.buttons]]
+  row = 5
+  col = 4
+  label = "Paste"
+  action = "paste"
+
+# ── MRI (placeholder) ──────────────────────────────────────────────────────
+[[screens]]
+id = "mri_menu"
+name = "MRI"
+
+  [[screens.buttons]]
+  row = 5
+  col = 0
+  label = "Back"
+  action = "prev"
+  [[screens.buttons]]
+  row = 5
+  col = 1
+  label = "Home"
+  action = "home"
+  [[screens.buttons]]
+  row = 5
+  col = 3
+  label = "Copy"
+  action = "copy"
+  [[screens.buttons]]
+  row = 5
+  col = 4
+  label = "Paste"
+  action = "paste"

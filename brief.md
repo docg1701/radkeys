@@ -44,10 +44,10 @@ Exemplo: botão na linha 3, coluna 5 → [0x03, 0x05]
 Vantagem: o usuário define `columns × rows` no config.toml e o app mapeia
 `(row, col) → index` automaticamente. Mesmo firmware funciona com 4×4, 6×6, 3×2...
 
-### 1.2 Navegação sequencial, NÃO grafo com IDs
+### 1.2 Navegação hierárquica com `navigate` + `target`
 
-O modelo é **camadas ordenadas** com navegação `prev`/`next`. Nada de `target:
-"rx_torax"` referenciando IDs de outras screens.
+O modelo é **screens com IDs** conectadas por `navigate` com `target`.
+`prev` (stack-based) volta para a tela anterior. `home` vai para a raiz.
 
 ```
 [[layers]]

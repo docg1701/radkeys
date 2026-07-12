@@ -14,28 +14,28 @@ const (
 )
 
 const (
-	ActionText  = "text"
-	ActionCopy  = "copy"
-	ActionPaste = "paste"
-	ActionPrev  = "prev"
-	ActionNext  = "next"
-	ActionHome  = "home"
+	ActionText     = "text"
+	ActionCopy     = "copy"
+	ActionPaste    = "paste"
+	ActionPrev     = "prev"
+	ActionHome     = "home"
+	ActionNavigate = "navigate"
 )
 
 // ValidActions is the set of all supported button actions.
 var ValidActions = map[string]bool{
-	ActionText:  true,
-	ActionCopy:  true,
-	ActionPaste: true,
-	ActionPrev:  true,
-	ActionNext:  true,
-	ActionHome:  true,
+	ActionText:     true,
+	ActionCopy:     true,
+	ActionPaste:    true,
+	ActionPrev:     true,
+	ActionHome:     true,
+	ActionNavigate: true,
 }
 
 // Config is the root of radkeys.config.toml.
 type Config struct {
-	App    App     `toml:"app"`
-	Layers []Layer `toml:"layers"`
+	App     App      `toml:"app"`
+	Screens []Screen `toml:"screens"`
 }
 
 // App holds app-wide settings.
@@ -67,8 +67,9 @@ type Device struct {
 	Protocol  string `toml:"protocol"`
 }
 
-// Layer is one page of shortcuts with an ordered list of buttons.
-type Layer struct {
+// Screen is one page of the shortcut deck with an ordered list of buttons.
+type Screen struct {
+	ID      string   `toml:"id"`
 	Name    string   `toml:"name"`
 	Buttons []Button `toml:"buttons"`
 }
@@ -78,8 +79,9 @@ type Button struct {
 	Row     int    `toml:"row"`               // 0-based
 	Col     int    `toml:"col"`               // 0-based
 	Label   string `toml:"label"`             // displayed on the button
-	Action  string `toml:"action"`            // text | copy | paste | prev | next | home
-	Content string `toml:"content,omitempty"` // only when action = "text"
+	Action  string `toml:"action"`            // text | copy | paste | prev | home | navigate
+	Target  string `toml:"target,omitempty"`  // screen id (only when action = "navigate")
+	Content string `toml:"content,omitempty"` // report text (only when action = "text")
 }
 
 // Load reads, parses and validates the config file at path.
@@ -87,11 +89,11 @@ type Button struct {
 func Load(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("não foi possível ler %s: %w", path, err)
+		return nil, fmt.Errorf("cannot read %s: %w", path, err)
 	}
 	var c Config
 	if err := toml.Unmarshal(b, &c); err != nil {
-		return nil, fmt.Errorf("erro de sintaxe em %s:\n%w", path, err)
+		return nil, fmt.Errorf("syntax error in %s:\n%w", path, err)
 	}
 	if err := c.validate(); err != nil {
 		return nil, err
@@ -102,7 +104,7 @@ func Load(path string) (*Config, error) {
 func (c *Config) validate() error {
 	if c.App.Device.Protocol != ProtocolElgato && c.App.Device.Protocol != ProtocolDIY {
 		return fmt.Errorf(
-			"[app.device] protocol deve ser %q ou %q, não %q",
+			"[app.device] protocol must be %q or %q, got %q",
 			ProtocolElgato, ProtocolDIY, c.App.Device.Protocol)
 	}
 	if c.App.Language == "" {
@@ -114,51 +116,91 @@ func (c *Config) validate() error {
 	if c.App.Layout.Rows <= 0 || c.App.Layout.Rows > 6 {
 		c.App.Layout.Rows = 5
 	}
-	if len(c.Layers) == 0 {
-		return fmt.Errorf("nenhuma camada definida — crie ao menos uma [[layers]]")
+	if len(c.Screens) == 0 {
+		return fmt.Errorf("no screens defined — add at least one [[screens]]")
 	}
 
 	rows := c.App.Layout.Rows
 	cols := c.App.Layout.Columns
 
-	for i, l := range c.Layers {
-		if l.Name == "" {
-			return fmt.Errorf("camada %d está sem nome (campo 'name')", i+1)
+	ids := map[string]struct{}{}
+	for i, s := range c.Screens {
+		if s.ID == "" {
+			return fmt.Errorf("screen %d has empty id", i+1)
 		}
-		for j, b := range l.Buttons {
+		if _, dup := ids[s.ID]; dup {
+			return fmt.Errorf("duplicate screen id %q", s.ID)
+		}
+		ids[s.ID] = struct{}{}
+		if s.Name == "" {
+			return fmt.Errorf("screen %q has empty name", s.ID)
+		}
+		for j, b := range s.Buttons {
 			if b.Row < 0 || b.Row >= rows {
 				return fmt.Errorf(
-					"camada %q, botão %d: row=%d fora do grid (máximo %d linhas)",
-					l.Name, j+1, b.Row, rows)
+					"screen %q, button %d: row=%d out of range [0,%d)",
+					s.ID, j+1, b.Row, rows)
 			}
 			if b.Col < 0 || b.Col >= cols {
 				return fmt.Errorf(
-					"camada %q, botão %d: col=%d fora do grid (máximo %d colunas)",
-					l.Name, j+1, b.Col, cols)
+					"screen %q, button %d: col=%d out of range [0,%d)",
+					s.ID, j+1, b.Col, cols)
 			}
 			if !ValidActions[b.Action] {
 				return fmt.Errorf(
-					"camada %q, botão %q: ação %q inválida (use: text, copy, paste, prev, next, home)",
-					l.Name, b.Label, b.Action)
+					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate)",
+					s.ID, b.Label, b.Action)
+			}
+			if b.Action == ActionNavigate && b.Target == "" {
+				return fmt.Errorf(
+					"screen %q, button %q: navigate requires target",
+					s.ID, b.Label)
+			}
+			if b.Action != ActionNavigate && b.Target != "" {
+				return fmt.Errorf(
+					"screen %q, button %q: action %q does not accept target",
+					s.ID, b.Label, b.Action)
 			}
 			if b.Action == ActionText && b.Content == "" {
 				return fmt.Errorf(
-					"camada %q, botão %q: ação 'text' exige o campo 'content' com o texto",
-					l.Name, b.Label)
+					"screen %q, button %q: text requires content",
+					s.ID, b.Label)
 			}
 			if b.Action != ActionText && b.Content != "" {
 				return fmt.Errorf(
-					"camada %q, botão %q: ação %q não aceita 'content' (só 'text' aceita)",
-					l.Name, b.Label, b.Action)
+					"screen %q, button %q: action %q does not accept content",
+					s.ID, b.Label, b.Action)
+			}
+		}
+	}
+	// Validate navigate targets exist.
+	for _, s := range c.Screens {
+		for _, b := range s.Buttons {
+			if b.Action == ActionNavigate {
+				if _, ok := ids[b.Target]; !ok {
+					return fmt.Errorf(
+						"screen %q, button %q: target %q does not exist",
+						s.ID, b.Label, b.Target)
+				}
 			}
 		}
 	}
 	return nil
 }
 
-// ButtonAt returns the button at (row, col) for a given layer, or (Button{}, false).
-func (l Layer) ButtonAt(row, col int) (Button, bool) {
-	for _, b := range l.Buttons {
+// ScreenByID returns the screen with the given id.
+func (c *Config) ScreenByID(id string) (Screen, bool) {
+	for _, s := range c.Screens {
+		if s.ID == id {
+			return s, true
+		}
+	}
+	return Screen{}, false
+}
+
+// ButtonAt returns the button at (row, col) for the screen, or (Button{}, false).
+func (s Screen) ButtonAt(row, col int) (Button, bool) {
+	for _, b := range s.Buttons {
 		if b.Row == row && b.Col == col {
 			return b, true
 		}

@@ -31,7 +31,7 @@ func main() {
 
 	reader, err := hid.Open(cfg.App.Device)
 	if err != nil {
-		log.Printf("radkeys: %v; usando mock (clique nos botões da UI)", err)
+		log.Printf("radkeys: %v; using mock (click UI buttons)", err)
 		reader = hid.NewMock()
 	}
 
@@ -42,23 +42,23 @@ func main() {
 
 func showConfigError(configPath string, err error) {
 	a := app.New()
-	w := a.NewWindow("RadKeys — Erro de Configuração")
+	w := a.NewWindow("RadKeys — Config Error")
 	w.Resize(fyne.NewSize(700, 400))
 
 	msg := widget.NewLabel(err.Error())
 	msg.Wrapping = fyne.TextWrapWord
 
-	editBtn := widget.NewButton("Abrir arquivo para editar", func() {
+	editBtn := widget.NewButton("Open file to edit", func() {
 		_ = exec.Command("xdg-open", configPath).Start()
 	})
 	editBtn.Importance = widget.HighImportance
 
-	okBtn := widget.NewButton("Fechar", func() { w.Close() })
+	okBtn := widget.NewButton("Close", func() { w.Close() })
 
 	content := container.NewVBox(
-		widget.NewLabel("O arquivo de configuração contém um erro:\n"),
+		widget.NewLabel("The configuration file contains an error:\n"),
 		msg,
-		widget.NewLabel("\nCorrija o erro acima e reinicie o RadKeys."),
+		widget.NewLabel("\nFix the error above and restart RadKeys."),
 		editBtn,
 		okBtn,
 	)
@@ -99,15 +99,16 @@ rows    = 3
 [app.theme]
 preset = "system"
 
-[[layers]]
-name = "Início"
+[[screens]]
+id = "root"
+name = "Home"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
-label = "Exemplo"
+label = "Example"
 action = "text"
-content = "Frase de exemplo."
+content = "Example phrase."
 `
 	_ = os.WriteFile(path, []byte(tmpl), 0o644)
 }

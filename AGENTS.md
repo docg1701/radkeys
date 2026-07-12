@@ -105,25 +105,27 @@ radkeys/
 │   ├── config/              # TOML parser + validation + types
 │   ├── hid/                 # HID reader (go-hid + mock)
 │   ├── ui/                  # Fyne UI: preview + grid + settings + about
-│   ├── i18n/                # mapa Go único (7 idiomas)
+│   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # presets.go + custom.go
 │   └── assets/              # Ícone embed
 ├── firmware/rp2040-zero/    # RP2040-Zero: TinyUSB, protocolo (row, col)
 └── research/                # Notas de investigação
 ```
 
-> `internal/deck/` foi removido. Navegação é `layerIndex int` sequencial.
-> `firmware/arduino/` e `firmware/rp2040/` removidos. Só RP2040-Zero.
+> `internal/deck/` removed. Navigation is stack-based with screen ids.
+> `firmware/arduino/` and `firmware/rp2040/` removed. Only RP2040-Zero.
 
 ## Code Style
 
-Go idiomático. Funções 4–20 linhas. Nomes específicos. Early return, max 2 níveis indent.
+- **All code, comments, error messages, and identifiers must be written in English.** Never mix Portuguese (or any other language) with code.
+- Go idiomático. Funções 4–20 linhas. Nomes específicos. Early return, max 2 níveis indent.
 
 ```go
-// BOM: navegação sequencial simples
-func (u *UI) nextLayer() {
-    u.layerIndex = (u.layerIndex + 1) % len(u.cfg.Layers)
-    u.refreshGrid()
+// GOOD: stack-based screen navigation
+func (u *appUI) navigate(target string) {
+    u.stack = append(u.stack, u.current)
+    u.current = target
+    u.renderGrid()
 }
 ```
 

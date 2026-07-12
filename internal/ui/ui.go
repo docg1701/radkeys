@@ -1,5 +1,5 @@
 // Package ui renders RadKeys: preview on top half, virtual keypad on bottom.
-// Three tabs: "Atalhos" (preview + keypad), "Ajustes" (settings), "Sobre" (about).
+// Three tabs: shortcuts, settings, about.
 package ui
 
 import (
@@ -58,6 +58,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		rows:       rows,
 		version:    version,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
+		current:    cfg.Screens[0].ID,
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
 	u.preview.TextStyle = fyne.TextStyle{Monospace: true}
@@ -88,7 +89,8 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 type appUI struct {
 	cfg         *config.Config
 	configPath  string
-	layerIndex  int // current layer (sequential)
+	current     string   // current screen id
+	stack       []string // parent screen ids for prev
 	reader      hid.Reader
 	a           fyne.App
 	win         fyne.Window
@@ -111,13 +113,17 @@ func resolveFullTheme(cfg *config.Config) fyne.Theme {
 	return themes.NewCustomTheme(themes.Presets[0])
 }
 
-func (u *appUI) currentLayer() config.Layer {
-	return u.cfg.Layers[u.layerIndex]
+func (u *appUI) currentScreen() config.Screen {
+	s, ok := u.cfg.ScreenByID(u.current)
+	if !ok {
+		return u.cfg.Screens[0]
+	}
+	return s
 }
 
 // press handles a button press at physical (row, col).
 func (u *appUI) press(row, col int) {
-	b, ok := u.currentLayer().ButtonAt(row, col)
+	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
 		return
 	}
@@ -131,32 +137,22 @@ func (u *appUI) press(row, col int) {
 		u.previewText = u.a.Clipboard().Content()
 		u.preview.SetText(u.previewText)
 	case config.ActionPrev:
-		u.prevLayer()
-	case config.ActionNext:
-		u.nextLayer()
+		if len(u.stack) > 0 {
+			u.current = u.stack[len(u.stack)-1]
+			u.stack = u.stack[:len(u.stack)-1]
+		}
 	case config.ActionHome:
-		u.homeLayer()
+		u.current = u.cfg.Screens[0].ID
+		u.stack = u.stack[:0]
+	case config.ActionNavigate:
+		u.stack = append(u.stack, u.current)
+		u.current = b.Target
 	}
 	u.renderGrid()
 }
 
-func (u *appUI) nextLayer() {
-	u.layerIndex = (u.layerIndex + 1) % len(u.cfg.Layers)
-}
-
-func (u *appUI) prevLayer() {
-	u.layerIndex--
-	if u.layerIndex < 0 {
-		u.layerIndex = len(u.cfg.Layers) - 1
-	}
-}
-
-func (u *appUI) homeLayer() {
-	u.layerIndex = 0
-}
-
 func (u *appUI) renderGrid() {
-	layer := u.currentLayer()
+	s := u.currentScreen()
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
 	th := u.a.Settings().Theme()
@@ -165,7 +161,7 @@ func (u *appUI) renderGrid() {
 	for i := 0; i < totalSlots; i++ {
 		r := i / u.cols
 		c := i % u.cols
-		if b, ok := layer.ButtonAt(r, c); ok {
+		if b, ok := s.ButtonAt(r, c); ok {
 			row := r
 			col := c
 			btn := widget.NewButton(b.Label, func() { u.press(row, col) })
@@ -307,7 +303,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 
 		f, err := os.Create(u.configPath)
 		if err != nil {
-			dialog.ShowError(fmt.Errorf("salvar: %w", err), u.win)
+			dialog.ShowError(fmt.Errorf("save: %w", err), u.win)
 			return
 		}
 		defer func() { _ = f.Close() }()
@@ -351,7 +347,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}
 		tabs.Refresh()
 
-		u.layerIndex = 0
+		u.current = u.cfg.Screens[0].ID
+		u.stack = u.stack[:0]
 		u.renderGrid()
 	}
 

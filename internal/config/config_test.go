@@ -23,45 +23,47 @@ protocol   = "elgato"
 columns = 4
 rows    = 3
 
-[[layers]]
+[[screens]]
+id = "root"
 name = "Início"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
 label = "RX"
-action = "text"
-content = "Tórax normal."
+action = "navigate"
+target = "rx_torax"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 1
 col = 0
-label = "Próx"
-action = "next"
+label = "Voltar"
+action = "prev"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 2
 col = 0
 label = "Home"
 action = "home"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 2
 col = 3
 label = "Copy"
 action = "copy"
 
-[[layers]]
+[[screens]]
+id = "rx_torax"
 name = "RX Tórax"
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
 label = "Normal"
 action = "text"
 content = "Radiografia de tórax normal."
 
-[[layers.buttons]]
+[[screens.buttons]]
 row = 1
 col = 0
 label = "Voltar"
@@ -85,29 +87,22 @@ func TestLoadOK(t *testing.T) {
 	if cfg.App.Device.Protocol != ProtocolElgato {
 		t.Fatalf("protocol = %q, want %q", cfg.App.Device.Protocol, ProtocolElgato)
 	}
-	if cfg.App.Device.VendorID != 0x0fd9 {
-		t.Fatalf("vendor_id = %#x, want 0x0fd9", cfg.App.Device.VendorID)
+	if len(cfg.Screens) != 2 {
+		t.Fatalf("screens = %d, want 2", len(cfg.Screens))
 	}
-	if len(cfg.Layers) != 2 {
-		t.Fatalf("layers = %d, want 2", len(cfg.Layers))
+	root, ok := cfg.ScreenByID("root")
+	if !ok {
+		t.Fatal("root screen not found")
 	}
-	if cfg.Layers[0].Name != "Início" {
-		t.Fatalf("layers[0].name = %q, want Início", cfg.Layers[0].Name)
+	if root.Name != "Início" {
+		t.Fatalf("root name = %q, want Início", root.Name)
 	}
-
-	// ButtonAt lookup.
-	b, ok := cfg.Layers[0].ButtonAt(0, 0)
+	b, ok := root.ButtonAt(0, 0)
 	if !ok {
 		t.Fatal("ButtonAt(0,0) not found")
 	}
-	if b.Action != ActionText || b.Content != "Tórax normal." {
+	if b.Action != ActionNavigate || b.Target != "rx_torax" {
 		t.Fatalf("button = %+v", b)
-	}
-
-	// Missing button.
-	_, ok = cfg.Layers[0].ButtonAt(3, 3)
-	if ok {
-		t.Fatal("ButtonAt(3,3) should not exist")
 	}
 }
 
@@ -118,7 +113,8 @@ func TestLoadInvalidProtocol(t *testing.T) {
 vendor_id = 1
 product_id = 2
 protocol = "bogus"
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
@@ -134,9 +130,10 @@ func TestLoadTextRequiresContent(t *testing.T) {
 vendor_id = 1
 product_id = 2
 protocol = "elgato"
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
 label = "X"
@@ -156,9 +153,10 @@ func TestLoadActionMustNotHaveContent(t *testing.T) {
 vendor_id = 1
 product_id = 2
 protocol = "elgato"
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
 label = "X"
@@ -178,13 +176,14 @@ func TestLoadInvalidAction(t *testing.T) {
 vendor_id = 1
 product_id = 2
 protocol = "elgato"
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 0
 label = "X"
-action = "navigate"
+action = "next"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
@@ -196,17 +195,20 @@ func TestLoadRowOutOfRange(t *testing.T) {
 	body := `
 [app]
 [app.device]
-vendor_id = 1; product_id = 2; protocol = "elgato"
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
 [app.layout]
 columns = 4
 rows = 3
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
-[[layers.buttons]]
+[[screens.buttons]]
 row = 5
 col = 0
 label = "X"
-action = "next"
+action = "prev"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
@@ -218,17 +220,20 @@ func TestLoadColOutOfRange(t *testing.T) {
 	body := `
 [app]
 [app.device]
-vendor_id = 1; product_id = 2; protocol = "elgato"
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
 [app.layout]
 columns = 4
 rows = 3
-[[layers]]
+[[screens]]
+id = "root"
 name = "x"
-[[layers.buttons]]
+[[screens.buttons]]
 row = 0
 col = 7
 label = "X"
-action = "next"
+action = "prev"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
@@ -236,29 +241,99 @@ action = "next"
 	}
 }
 
-func TestLoadNoLayers(t *testing.T) {
+func TestLoadNoScreens(t *testing.T) {
 	body := `
 [app]
 [app.device]
-vendor_id = 1; product_id = 2; protocol = "elgato"
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
-		t.Fatal("expected error for zero layers")
+		t.Fatal("expected error for zero screens")
 	}
 }
 
-func TestLoadEmptyLayerName(t *testing.T) {
+func TestLoadEmptyScreenID(t *testing.T) {
 	body := `
 [app]
 [app.device]
-vendor_id = 1; product_id = 2; protocol = "elgato"
-[[layers]]
-name = ""
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
+[[screens]]
+id = ""
+name = "x"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
-		t.Fatal("expected error for empty layer name")
+		t.Fatal("expected error for empty screen id")
+	}
+}
+
+func TestLoadNavigateRequiresTarget(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "navigate"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for navigate without target")
+	}
+}
+
+func TestLoadNavigateUnknownTarget(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "navigate"
+target = "missing"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for navigate to unknown target")
+	}
+}
+
+func TestLoadDuplicateScreenID(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "elgato"
+[[screens]]
+id = "root"
+name = "x"
+[[screens]]
+id = "root"
+name = "y"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for duplicate screen id")
 	}
 }
 
@@ -278,23 +353,20 @@ func TestRoundtrip(t *testing.T) {
 	if err := cfg2.validate(); err != nil {
 		t.Fatalf("validate roundtripped: %v", err)
 	}
-	if len(cfg2.Layers) != len(cfg.Layers) {
-		t.Fatalf("layer count: %d vs %d", len(cfg2.Layers), len(cfg.Layers))
-	}
-	if cfg2.Layers[0].Name != cfg.Layers[0].Name {
-		t.Fatalf("name mismatch: %q vs %q", cfg2.Layers[0].Name, cfg.Layers[0].Name)
+	if len(cfg2.Screens) != len(cfg.Screens) {
+		t.Fatalf("screen count: %d vs %d", len(cfg2.Screens), len(cfg.Screens))
 	}
 }
 
 func TestButtonAt(t *testing.T) {
-	layer := Layer{Name: "test", Buttons: []Button{
+	s := Screen{ID: "test", Name: "test", Buttons: []Button{
 		{Row: 0, Col: 0, Label: "A", Action: ActionText, Content: "hello"},
 		{Row: 2, Col: 3, Label: "B", Action: ActionCopy},
 	}}
-	if b, ok := layer.ButtonAt(0, 0); !ok || b.Content != "hello" {
+	if b, ok := s.ButtonAt(0, 0); !ok || b.Content != "hello" {
 		t.Fatalf("ButtonAt(0,0) = %v, %v", b, ok)
 	}
-	if _, ok := layer.ButtonAt(1, 1); ok {
+	if _, ok := s.ButtonAt(1, 1); ok {
 		t.Fatal("ButtonAt(1,1) should not exist")
 	}
 }
