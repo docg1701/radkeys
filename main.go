@@ -1,12 +1,15 @@
-// Command radkeys loads radkeys.config.toml, opens the configured USB HID
-// custom device, and runs the RadKeys UI. Without a device it falls back to
-// the in-process mock (the UI is still drivable by mouse clicks).
 package main
 
 import (
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/hid"
@@ -20,12 +23,12 @@ func main() {
 	ensureConfig(path)
 	cfg, err := config.Load(path)
 	if err != nil {
-		log.Fatalf("radkeys: %v", err)
+		showConfigError(path, err)
+		return
 	}
 
 	reader, err := hid.Open(cfg.App.Device)
 	if err != nil {
-		// No hardware: use the mock; the UI still works via mouse clicks.
 		log.Printf("radkeys: %v; usando mock (clique nos botões da UI)", err)
 		reader = hid.NewMock()
 	}
@@ -35,8 +38,33 @@ func main() {
 	}
 }
 
-// configPath resolves the config file: $RADKEYS_CONFIG, then the executable
-// directory, then the current working directory.
+func showConfigError(configPath string, err error) {
+	a := app.New()
+	w := a.NewWindow("RadKeys — Erro de Configuração")
+	w.Resize(fyne.NewSize(700, 400))
+
+	msg := widget.NewLabel(err.Error())
+	msg.Wrapping = fyne.TextWrapWord
+
+	editBtn := widget.NewButton("Abrir arquivo para editar", func() {
+		_ = exec.Command("xdg-open", configPath).Start()
+	})
+	editBtn.Importance = widget.HighImportance
+
+	okBtn := widget.NewButton("Fechar", func() { w.Close() })
+
+	content := container.NewVBox(
+		widget.NewLabel("O arquivo de configuração contém um erro:\n"),
+		msg,
+		widget.NewLabel("\nCorrija o erro acima e reinicie o RadKeys."),
+		editBtn,
+		okBtn,
+	)
+
+	w.SetContent(content)
+	w.ShowAndRun()
+}
+
 func configPath() string {
 	if p := os.Getenv("RADKEYS_CONFIG"); p != "" {
 		return p
@@ -50,7 +78,6 @@ func configPath() string {
 	return configFileName
 }
 
-// ensureConfig writes a minimal template if the config file does not exist.
 func ensureConfig(path string) {
 	if _, err := os.Stat(path); err == nil {
 		return

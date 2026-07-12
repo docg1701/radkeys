@@ -84,14 +84,15 @@ type Button struct {
 }
 
 // Load reads, parses and validates the config file at path.
+// Parse errors are wrapped with context so the user can fix the file.
 func Load(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("config: read %s: %w", path, err)
+		return nil, fmt.Errorf("não foi possível ler %s: %w", path, err)
 	}
 	var c Config
 	if err := toml.Unmarshal(b, &c); err != nil {
-		return nil, fmt.Errorf("config: parse %s: %w", path, err)
+		return nil, fmt.Errorf("erro de sintaxe em %s:\n%w", path, err)
 	}
 	if err := c.validate(); err != nil {
 		return nil, err
@@ -101,13 +102,13 @@ func Load(path string) (*Config, error) {
 
 func (c *Config) validate() error {
 	if c.App.Device.Protocol != ProtocolElgato && c.App.Device.Protocol != ProtocolDIY {
-		return fmt.Errorf("config: device.protocol must be %q or %q, got %q",
+		return fmt.Errorf(
+			"[app.device] protocol deve ser %q ou %q, não %q",
 			ProtocolElgato, ProtocolDIY, c.App.Device.Protocol)
 	}
 	if c.App.Language == "" {
 		c.App.Language = "en"
 	}
-	// Clamp layout to valid range.
 	if c.App.Layout.Columns <= 0 || c.App.Layout.Columns > 6 {
 		c.App.Layout.Columns = 4
 	}
@@ -115,7 +116,7 @@ func (c *Config) validate() error {
 		c.App.Layout.Rows = 5
 	}
 	if len(c.Layers) == 0 {
-		return fmt.Errorf("config: at least one layer is required")
+		return fmt.Errorf("nenhuma camada definida — crie ao menos uma [[layers]]")
 	}
 
 	rows := c.App.Layout.Rows
@@ -123,28 +124,33 @@ func (c *Config) validate() error {
 
 	for i, l := range c.Layers {
 		if l.Name == "" {
-			return fmt.Errorf("config: layers[%d].name is empty", i)
+			return fmt.Errorf("camada %d está sem nome (campo 'name')", i+1)
 		}
 		for j, b := range l.Buttons {
 			if b.Row < 0 || b.Row >= rows {
-				return fmt.Errorf("config: layer %q buttons[%d] row %d out of range [0,%d)",
-					l.Name, j, b.Row, rows)
+				return fmt.Errorf(
+					"camada %q, botão %d: row=%d fora do grid (máximo %d linhas)",
+					l.Name, j+1, b.Row, rows)
 			}
 			if b.Col < 0 || b.Col >= cols {
-				return fmt.Errorf("config: layer %q buttons[%d] col %d out of range [0,%d)",
-					l.Name, j, b.Col, cols)
+				return fmt.Errorf(
+					"camada %q, botão %d: col=%d fora do grid (máximo %d colunas)",
+					l.Name, j+1, b.Col, cols)
 			}
 			if !ValidActions[b.Action] {
-				return fmt.Errorf("config: layer %q buttons[%d] action %q invalid",
-					l.Name, j, b.Action)
+				return fmt.Errorf(
+					"camada %q, botão %q: ação %q inválida (use: text, copy, paste, prev, next, home)",
+					l.Name, b.Label, b.Action)
 			}
 			if b.Action == ActionText && b.Content == "" {
-				return fmt.Errorf("config: layer %q buttons[%d] text requires content",
-					l.Name, j)
+				return fmt.Errorf(
+					"camada %q, botão %q: ação 'text' exige o campo 'content' com o texto",
+					l.Name, b.Label)
 			}
 			if b.Action != ActionText && b.Content != "" {
-				return fmt.Errorf("config: layer %q buttons[%d] action %q must not have content",
-					l.Name, j, b.Action)
+				return fmt.Errorf(
+					"camada %q, botão %q: ação %q não aceita 'content' (só 'text' aceita)",
+					l.Name, b.Label, b.Action)
 			}
 		}
 	}

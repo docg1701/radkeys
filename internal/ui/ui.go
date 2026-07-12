@@ -220,8 +220,8 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	themeIDs := make([]string, len(themes.Presets))
 	themeNames := make([]string, len(themes.Presets))
 	for i, p := range themes.Presets {
-		themeIDs[i] = p.ID
-		themeNames[i] = i18n.T("theme." + p.ID)
+		themeIDs[i] = p.ID()
+		themeNames[i] = i18n.T("theme." + p.ID())
 	}
 	themeSel := widget.NewSelect(themeNames, nil)
 	for i, id := range themeIDs {

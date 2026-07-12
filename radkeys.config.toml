@@ -1,184 +1,221 @@
-[app]
-name = "RadKeys"
-radiologist = "Dr. Galvani"
-language = "en"
-version = "0.3.0"
+# =============================================================================
+# RadKeys — Arquivo de Configuração (TOML)
+# =============================================================================
+#
+# Este arquivo define tudo: nome do radiologista, idioma, tema, dispositivo USB
+# e as camadas de botões com frases para laudos.
+#
+# Regras básicas:
+#   - Cada [[layers]] é uma categoria de laudos (RX Tórax, TC, RM, etc.)
+#   - Dentro de cada camada, cada [[layers.buttons]] é um botão na posição
+#     (row, col) do grid físico.
+#   - row=0, col=0 é o canto superior esquerdo. O grid é definido por
+#     columns × rows (máximo 6×6 = 36 botões).
+#   - As ações disponíveis são: text, copy, paste, prev, next, home.
+#   - Ações prev/next/home navegam entre camadas na ordem deste arquivo.
+#
+# Edite este arquivo com qualquer editor de texto e reinicie o RadKeys.
+# =============================================================================
 
+[app]
+# ── Identificação ─────────────────────────────────────────────────────────
+name = "RadKeys"               # nome do app (aparece na janela)
+radiologist = "Dr. Galvani"    # seu nome — aparece no título da janela
+language = "en"                # idioma da interface: en, pt-BR, es, fr, de, it
+version = "0.3.0"             # versão do RadKeys — NÃO EDITE
+
+# ── Dispositivo USB ───────────────────────────────────────────────────────
 [app.device]
+# vendor_id e product_id são os identificadores do hardware (Pro Micro, RP2040).
+# Use 0x1234 / 0xABCD para o dispositivo DIY RadKeys.
+# Use 0x0fd9 / 0x0060-0x0080 para Stream Deck original/clone.
 vendor_id = 0x1234
 product_id = 0xABCD
+
+# protocol: "radkeys-diy" para o teclado DIY, "elgato" para Stream Deck
 protocol = "radkeys-diy"
 
+# ── Grid ──────────────────────────────────────────────────────────────────
 [app.layout]
-columns = 6
-rows = 6
+columns = 6   # número de colunas do grid físico (1 a 6)
+rows = 6      # número de linhas do grid físico (1 a 6)
 
+# ── Tema ──────────────────────────────────────────────────────────────────
 [app.theme]
-preset = "light_gray"
+# Temas disponíveis:
+#   system, dracula, solarized_dark, monokai, gruvbox_dark, nord, one_dark,
+#   tokyo_night, catppuccin_mocha, solarized_light, gruvbox_light,
+#   light_gray, dark_gray
+preset = "dracula"
 
+# Ícone personalizado (opcional — deixe vazio para usar o padrão)
+# icon = "/caminho/para/icone.png"
+
+# =============================================================================
+# CAMADAS
+# =============================================================================
+# Cada [[layers]] é uma tela com nome e botões. A ordem importa:
+# prev/next navegam sequencialmente. A primeira camada é a tela inicial (home).
+#
+# Ações disponíveis:
+#   text  — carrega o texto no preview (exige content)
+#   copy  — copia o texto do preview para a área de transferência
+#   paste — cola da área de transferência para o preview
+#   prev  — vai para a camada anterior (circular)
+#   next  — vai para a próxima camada (circular)
+#   home  — vai para a primeira camada
+# =============================================================================
+
+# ── Camada 1: RX Tórax ────────────────────────────────────────────────────
 [[layers]]
 name = "RX Tórax"
 
-[[layers.buttons]]
-row = 0
-col = 0
-label = "Normal"
-action = "text"
-content = "Radiografia de tórax em incidências PA e perfil, realizadas em aparelho digital.\nArcada costal intacta, campos pulmonares livres, seios costofrênicos agudos.\nNão há evidência de derrame pleural, pneumotórax ou consolidação.\n"
+  # Botão na posição (0,0): texto do laudo
+  [[layers.buttons]]
+  row = 0          # linha (0 = primeira)
+  col = 0          # coluna (0 = esquerda)
+  label = "Normal"
+  action = "text"
+  content = """
+  Radiografia de tórax em incidências PA e perfil.
+  Arcada costal intacta, campos pulmonares livres,
+  seios costofrênicos agudos. Não há evidência de
+  derrame pleural, pneumotórax ou consolidação.
+  """
 
-[[layers.buttons]]
-row = 0
-col = 1
-label = "Derrame D"
-action = "text"
-content = "Radiografia de tórax demonstrando opacidade basal direita com obliteração\ndo seio costofrênico, sugestiva de derrame pleural.\nAcompanhamento/ultrassonografia de tórax recomendado.\n"
+  # Botão na posição (0,1)
+  [[layers.buttons]]
+  row = 0
+  col = 1
+  label = "Derrame D"
+  action = "text"
+  content = """
+  Opacidade basal direita com obliteração do seio
+  costofrênico, sugestiva de derrame pleural.
+  """
 
-[[layers.buttons]]
-row = 0
-col = 2
-label = "Derrame E"
-action = "text"
-content = "Radiografia de tórax demonstrando opacidade basal esquerda com obliteração\ndo seio costofrênico, sugestiva de derrame pleural.\nAcompanhamento/ultrassonografia de tórax recomendado.\n"
+  # Botão na posição (0,2)
+  [[layers.buttons]]
+  row = 0
+  col = 2
+  label = "Derrame E"
+  action = "text"
+  content = """
+  Opacidade basal esquerda com obliteração do seio
+  costofrênico, sugestiva de derrame pleural.
+  """
 
-[[layers.buttons]]
-row = 0
-col = 3
-label = "Pneumotórax"
-action = "text"
-content = "Radiografia de tórax evidenciando pneumotórax à direita, com retração pulmonar.\nAvaliação clínica conjunta recomendada.\n"
+  # Botão na posição (0,3)
+  [[layers.buttons]]
+  row = 0
+  col = 3
+  label = "Pneumotórax"
+  action = "text"
+  content = """
+  Pneumotórax à direita com retração pulmonar.
+  Avaliação clínica conjunta recomendada.
+  """
 
-[[layers.buttons]]
-row = 5
-col = 0
-label = "Voltar"
-action = "prev"
+  # ── Botões de navegação (linha 5 = última linha do grid 6×6) ──
 
-[[layers.buttons]]
-row = 5
-col = 1
-label = "Home"
-action = "home"
+  [[layers.buttons]]
+  row = 5
+  col = 0
+  label = "Voltar"
+  action = "prev"
 
-[[layers.buttons]]
-row = 5
-col = 3
-label = "Copy"
-action = "copy"
+  [[layers.buttons]]
+  row = 5
+  col = 1
+  label = "Início"
+  action = "home"
 
-[[layers.buttons]]
-row = 5
-col = 4
-label = "Paste"
-action = "paste"
+  [[layers.buttons]]
+  row = 5
+  col = 3
+  label = "Copiar"
+  action = "copy"
 
-[[layers.buttons]]
-row = 5
-col = 5
-label = "Próx"
-action = "next"
+  [[layers.buttons]]
+  row = 5
+  col = 4
+  label = "Colar"
+  action = "paste"
 
+  [[layers.buttons]]
+  row = 5
+  col = 5
+  label = "Próx"
+  action = "next"
+
+# ── Camada 2: RX Abdome ───────────────────────────────────────────────────
 [[layers]]
 name = "RX Abdome"
 
-[[layers.buttons]]
-row = 0
-col = 0
-label = "Normal"
-action = "text"
-content = "Radiografia simples de abdome em decúbito e em pé.\nDistribuição normal de conteúdo aéreo. Não se observam níveis hidroaéreos\nnem calcificações patológicas. Posição e morfologia das alças preservadas.\n"
+  [[layers.buttons]]
+  row = 0
+  col = 0
+  label = "Normal"
+  action = "text"
+  content = """
+  Radiografia simples de abdome em decúbito e em pé.
+  Distribuição normal de conteúdo aéreo. Não se observam
+  níveis hidroaéreos nem calcificações patológicas.
+  """
 
-[[layers.buttons]]
-row = 5
-col = 0
-label = "Voltar"
-action = "prev"
+  [[layers.buttons]]
+  row = 5
+  col = 0; label = "Voltar"; action = "prev"
+  [[layers.buttons]]
+  row = 5
+  col = 1; label = "Início"; action = "home"
+  [[layers.buttons]]
+  row = 5
+  col = 3; label = "Copiar"; action = "copy"
+  [[layers.buttons]]
+  row = 5
+  col = 4; label = "Colar"; action = "paste"
+  [[layers.buttons]]
+  row = 5
+  col = 5; label = "Próx";  action = "next"
 
-[[layers.buttons]]
-row = 5
-col = 1
-label = "Home"
-action = "home"
-
-[[layers.buttons]]
-row = 5
-col = 3
-label = "Copy"
-action = "copy"
-
-[[layers.buttons]]
-row = 5
-col = 4
-label = "Paste"
-action = "paste"
-
-[[layers.buttons]]
-row = 5
-col = 5
-label = "Próx"
-action = "next"
-
+# ── Camada 3: TC ──────────────────────────────────────────────────────────
 [[layers]]
 name = "TC"
 
-[[layers.buttons]]
-row = 5
-col = 0
-label = "Voltar"
-action = "prev"
+  # Esta camada não tem frases ainda — só navegação.
+  [[layers.buttons]]
+  row = 5
+  col = 0; label = "Voltar"; action = "prev"
+  [[layers.buttons]]
+  row = 5
+  col = 1; label = "Início"; action = "home"
+  [[layers.buttons]]
+  row = 5
+  col = 3; label = "Copiar"; action = "copy"
+  [[layers.buttons]]
+  row = 5
+  col = 4; label = "Colar"; action = "paste"
+  [[layers.buttons]]
+  row = 5
+  col = 5; label = "Próx";  action = "next"
 
-[[layers.buttons]]
-row = 5
-col = 1
-label = "Home"
-action = "home"
-
-[[layers.buttons]]
-row = 5
-col = 3
-label = "Copy"
-action = "copy"
-
-[[layers.buttons]]
-row = 5
-col = 4
-label = "Paste"
-action = "paste"
-
-[[layers.buttons]]
-row = 5
-col = 5
-label = "Próx"
-action = "next"
-
+# ── Camada 4: RM ──────────────────────────────────────────────────────────
 [[layers]]
 name = "RM"
 
-[[layers.buttons]]
-row = 5
-col = 0
-label = "Voltar"
-action = "prev"
-
-[[layers.buttons]]
-row = 5
-col = 1
-label = "Home"
-action = "home"
-
-[[layers.buttons]]
-row = 5
-col = 3
-label = "Copy"
-action = "copy"
-
-[[layers.buttons]]
-row = 5
-col = 4
-label = "Paste"
-action = "paste"
-
-[[layers.buttons]]
-row = 5
-col = 5
-label = "Próx"
-action = "next"
+  [[layers.buttons]]
+  row = 5
+  col = 0; label = "Voltar"; action = "prev"
+  [[layers.buttons]]
+  row = 5
+  col = 1; label = "Início"; action = "home"
+  [[layers.buttons]]
+  row = 5
+  col = 3; label = "Copiar"; action = "copy"
+  [[layers.buttons]]
+  row = 5
+  col = 4; label = "Colar"; action = "paste"
+  [[layers.buttons]]
+  row = 5
+  col = 5; label = "Próx";  action = "next"
