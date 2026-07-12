@@ -7,7 +7,7 @@
 ```
 1. Desenvolver
 2. gofmt -w . && go vet ./... && golangci-lint run ./... && go test ./...
-3. Bump version in radkeys.config.toml ([app] version) — ONLY HERE. Never hardcode version anywhere else.
+3. Bump version in main.go (var Version = "X.Y.Z"). NEVER hardcode version in config or other Go files.
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
 5. Push to main
 6. Build all release binaries LOCALLY to dist/:
@@ -66,22 +66,22 @@ go mod tidy
 - Keyboard HID (F13-F24) input — rejected by product.
 - `RequestAlwaysOnTop()` without verifying Fyne version (only available in ≥v2.8.0, not released yet).
 - Hardcoded UI strings — use `i18n.T()`.
-- Hardcoded version numbers in Go source, templates, or test fixtures: the **only** source of truth is `[app] version` in `radkeys.config.toml`. Test fixtures use `"0.0.0-test"`.
+- Hardcoded version numbers in Go source or config files: version is set via `var Version` in `main.go` and injected at build time (`-ldflags "-X main.Version=X.Y.Z"`). Test fixtures use `"0.0.0-test"`.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
 - Cross-compile in CI — agent does it locally.
 - End the turn before CI release is published and all binaries are uploaded.
 - End the turn before the release has Linux + Windows binaries.
 - Build ou upload de binário macOS — não é nossa responsabilidade.
-- Navegação por grafo com `target` / `navigate` — usar `prev`/`next` sequencial.
-- `[app.fixed_buttons]` — removido. Copy/paste/prev/next/home são ações normais.
-- Firmware com bitmap de tamanho fixo — usar protocolo `(row, col)` 2 bytes.
+- Screens are connected via `navigate` with `target`. Navigation is stack-based (`prev` goes back, `home` goes to root).
+- `[app.fixed_buttons]` — removed. `copy`/`paste`/`prev`/`home` are normal actions.
+- Firmware with fixed-size bitmap — use `(row, col)` 2-byte protocol.
 
 ## Release checklist (agent MUST complete)
 
 - [ ] `golangci-lint run ./...` clean
 - [ ] `go test ./...` passes
 - [ ] `go vet ./...` clean
-- [ ] Version bumped in `radkeys.config.toml`
+- [ ] Version bumped in `main.go` (var Version)
 - [ ] `dist/radkeys-linux-amd64` built and uploaded
 - [ ] `dist/radkeys-windows-amd64.exe` built (mingw) and uploaded
 - [ ] `git tag vX.Y.Z` (lightweight) pushed
@@ -106,10 +106,10 @@ radkeys/
 │   ├── hid/                 # HID reader (go-hid + mock)
 │   ├── ui/                  # Fyne UI: preview + grid + settings + about
 │   ├── i18n/                # single Go map (7 languages)
-│   ├── theme/               # presets.go + custom.go
-│   └── assets/              # Ícone embed
-├── firmware/rp2040-zero/    # RP2040-Zero: TinyUSB, protocolo (row, col)
-└── research/                # Notas de investigação
+│   ├── theme/               # theme.go — 13 presets
+│   └── assets/              # embedded icons
+├── firmware/rp2040-zero/    # RP2040-Zero: TinyUSB, (row, col) protocol
+└── research/                # investigation notes
 ```
 
 > `internal/deck/` removed. Navigation is stack-based with screen ids.
@@ -117,8 +117,8 @@ radkeys/
 
 ## Code Style
 
-- **All code, comments, error messages, and identifiers must be written in English.** Never mix Portuguese (or any other language) with code.
-- Go idiomático. Funções 4–20 linhas. Nomes específicos. Early return, max 2 níveis indent.
+- **All code, comments, error messages, and identifiers must be in English.**
+- Idiomatic Go. Functions 4–20 lines. Specific names. Early return, max 2 indent levels.
 
 ```go
 // GOOD: stack-based screen navigation

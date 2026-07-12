@@ -66,7 +66,7 @@ The radiologist never touches the keyboard except to paste.
 
 ```bash
 # Linux
-CGO_ENABLED=1 go build -o radkeys-linux-amd64 .
+CGO_ENABLED=1 go build -tags flatpak -o radkeys-linux-amd64 .
 
 # Windows (on Windows, or cross-compile from Linux with mingw)
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
@@ -111,7 +111,7 @@ everything:
 - Keypad layout (columns × rows)
 - Screens and buttons (phrases organized in a hierarchy)
 
-Edit the file manually — the UI's "Ajustes" tab only changes app settings,
+Edit the file manually — the UI's "Settings" tab only changes app settings,
 not screens/buttons. To add phrases, edit the TOML file directly.
 
 ## Contributing
