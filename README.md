@@ -9,16 +9,17 @@ the clipboard without stealing focus from the RIS/PACS.
 
 ## What it is
 
-A single-binary desktop app for **Linux and Windows**. (macOS: build from
-source — cross-compile is impossible with CGO.) A USB HID custom device
-(Stream Deck or DIY keypad) sends button presses directly to the app via
-hidapi — no keyboard keys, no focus stealing, no modifier interference.
-The app shows a preview on top and a virtual keypad on the bottom; press a
-button → phrase loads → copy → paste into the RIS.
+RadKeys is a companion app for radiologists. You connect a custom keypad
+(6×6 = 36 buttons) via USB, and each button inserts a pre-written report
+template. No keyboard shortcuts, no modifier keys, no focus stealing from
+your RIS/PACS.
 
-Release = **1 executable + 1 config file**. Icon, translations (7 languages),
-and color themes (13 presets, including system default) are all embedded in
-the binary.
+You write your report templates once in a config file. The app shows them
+in a grid that mirrors your physical keypad. Press a physical button → the
+phrase appears on screen → press Copy → paste into the RIS. That's it.
+
+Works on Linux and Windows. One executable, one config file, zero install.
+Everything else (icon, translations, themes) is embedded in the binary.
 
 ## Download
 
@@ -95,7 +96,6 @@ go test ./... -v
 
 | Option | Device | Keys | Cost |
 |--------|--------|------|------|
-| Buy ready | Stream Deck / Elgato-compatible clone | 15 / 32 | $$$ |
 | DIY | RP2040-Zero + push buttons + 3D case | Até 36 | ~R$40-60 |
 
 Firmware: [`firmware/rp2040-zero/`](firmware/rp2040-zero/)
@@ -107,7 +107,7 @@ All settings live in `radkeys.config.toml` (TOML, plaintext, shareable).
 The file is heavily commented so a human or LLM can understand and edit
 everything:
 - Radiologist name, language (7 options), color theme (13 presets)
-- Device VID/PID and protocol (Elgato or DIY)
+- Device VID/PID and protocol 
 - Keypad layout (columns × rows)
 - Screens and buttons (phrases organized in a hierarchy)
 

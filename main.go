@@ -88,9 +88,9 @@ func ensureConfig(path string) {
 name = "RadKeys"
 
 [app.device]
-vendor_id  = 0x0fd9
-product_id = 0x0063
-protocol   = "elgato"
+vendor_id  = 0x1234
+product_id = 0xABCD
+protocol   = "radkeys-diy"
 
 [app.layout]
 columns = 4

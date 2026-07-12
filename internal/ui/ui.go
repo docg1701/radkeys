@@ -251,7 +251,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	pidEnt := widget.NewEntry()
 	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
 	pidEnt.SetMinRowsVisible(1)
-	protoSel := widget.NewSelect([]string{config.ProtocolElgato, config.ProtocolDIY}, nil)
+	protoSel := widget.NewSelect([]string{config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
 	customIconPath := cfg.App.Theme.Icon

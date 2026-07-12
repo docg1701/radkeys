@@ -15,9 +15,9 @@ name = "RadKeys"
 version = "0.0.0-test"
 
 [app.device]
-vendor_id  = 0x0fd9
-product_id = 0x0063
-protocol   = "elgato"
+vendor_id  = 0x1234
+product_id = 0xABCD
+protocol   = "radkeys-diy"
 
 [app.layout]
 columns = 4
@@ -84,8 +84,8 @@ func TestLoadOK(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if cfg.App.Device.Protocol != ProtocolElgato {
-		t.Fatalf("protocol = %q, want %q", cfg.App.Device.Protocol, ProtocolElgato)
+	if cfg.App.Device.Protocol != ProtocolDIY {
+		t.Fatalf("protocol = %q, want %q", cfg.App.Device.Protocol, ProtocolDIY)
 	}
 	if len(cfg.Screens) != 2 {
 		t.Fatalf("screens = %d, want 2", len(cfg.Screens))
@@ -129,7 +129,7 @@ func TestLoadTextRequiresContent(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
@@ -152,7 +152,7 @@ func TestLoadActionMustNotHaveContent(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
@@ -175,7 +175,7 @@ func TestLoadInvalidAction(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
@@ -197,7 +197,7 @@ func TestLoadRowOutOfRange(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [app.layout]
 columns = 4
 rows = 3
@@ -222,7 +222,7 @@ func TestLoadColOutOfRange(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [app.layout]
 columns = 4
 rows = 3
@@ -247,7 +247,7 @@ func TestLoadNoScreens(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 `
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
@@ -261,7 +261,7 @@ func TestLoadEmptyScreenID(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = ""
 name = "x"
@@ -278,7 +278,7 @@ func TestLoadNavigateRequiresTarget(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
@@ -300,7 +300,7 @@ func TestLoadNavigateUnknownTarget(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
@@ -323,7 +323,7 @@ func TestLoadDuplicateScreenID(t *testing.T) {
 [app.device]
 vendor_id = 1
 product_id = 2
-protocol = "elgato"
+protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"

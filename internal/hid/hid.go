@@ -1,12 +1,11 @@
 // Package hid abstracts the USB HID custom device that feeds button presses.
-// The real device (Elgato Stream Deck protocol, or a DIY RadKeys device) is
-// read via hidapi when CGO is enabled; a MockReader is used for development.
+// The real device (RadKeys DIY keypad with RP2040-Zero) is read via hidapi
+// when CGO is enabled; a MockReader is used for development.
 package hid
 
 import "sync"
 
 // Event reports a change in a button's pressed state at (row, col).
-// For Elgato protocol devices, Row is always 0 and Col is the button index.
 type Event struct {
 	Row     int
 	Col     int

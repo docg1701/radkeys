@@ -22,8 +22,6 @@ func Open(dev config.Device) (Reader, error) {
 		return nil, fmt.Errorf("hid: open %04x:%04x: %w", dev.VendorID, dev.ProductID, err)
 	}
 	switch dev.Protocol {
-	case config.ProtocolElgato:
-		return &elgatoReader{baseReader: newBase(d), prev: make([]byte, 64)}, nil
 	case config.ProtocolDIY:
 		return &diyReader{baseReader: newBase(d)}, nil
 	default:
@@ -61,59 +59,6 @@ func (b *baseReader) emit(e Event) {
 	default:
 	}
 }
-
-// elgatoReader implements the Elgato Stream Deck input protocol.
-// Input report: Report ID 0x01, Command 0x00, payload = 1 byte per button
-// (0x00 released, 0x01 pressed). Each button index maps to Col; Row is always 0.
-type elgatoReader struct {
-	baseReader
-	prev []byte
-}
-
-func (e *elgatoReader) Open() error {
-	go e.loop()
-	return nil
-}
-
-func (e *elgatoReader) loop() {
-	defer close(e.done)
-	buf := make([]byte, 512)
-	for {
-		select {
-		case <-e.stop:
-			return
-		default:
-		}
-		n, err := e.dev.ReadWithTimeout(buf, pollTimeout)
-		if err != nil {
-			if err == hid.ErrTimeout {
-				continue
-			}
-			return
-		}
-		if n < 4 || buf[0] != 0x01 || buf[1] != 0x00 {
-			continue
-		}
-		payloadLen := int(buf[2]) | int(buf[3])<<8
-		if n < 4+payloadLen {
-			continue
-		}
-		states := buf[4 : 4+payloadLen]
-		for i, st := range states {
-			if i >= len(e.prev) {
-				break
-			}
-			if st == 0x01 && e.prev[i] == 0 {
-				e.emit(Event{Row: 0, Col: i, Pressed: true})
-			}
-			e.prev[i] = st
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
-// DIY reader: protocolo (row, col) — 2 bytes
-// ---------------------------------------------------------------------------
 
 const diyReportLen = 2
 

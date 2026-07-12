@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	ProtocolElgato = "elgato"
-	ProtocolDIY    = "radkeys-diy"
+	ProtocolDIY = "radkeys-diy"
 )
 
 const (
@@ -102,10 +101,10 @@ func Load(path string) (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if c.App.Device.Protocol != ProtocolElgato && c.App.Device.Protocol != ProtocolDIY {
+	if c.App.Device.Protocol != ProtocolDIY {
 		return fmt.Errorf(
-			"[app.device] protocol must be %q or %q, got %q",
-			ProtocolElgato, ProtocolDIY, c.App.Device.Protocol)
+			"[app.device] protocol must be %q, got %q",
+			ProtocolDIY, c.App.Device.Protocol)
 	}
 	if c.App.Language == "" {
 		c.App.Language = "en"
