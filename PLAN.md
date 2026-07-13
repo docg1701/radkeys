@@ -325,6 +325,24 @@
     invalid buttons are highlighted on the grid (duplicate position, bad
     navigate target) with a tooltip stating the problem in plain language.
 
+  **Grid format + non-destructive resize (configuration hierarchy):**
+  - The grid format (columns × rows → button count) is intuitive to adjust:
+    a bounded stepper/slider (1–6 each) in the App-settings view.
+  - **Configuration hierarchy:** the user sets the grid format (and the other
+    app settings — device, theme, language, radiologist) FIRST; button-grid
+    editing is the next step. On first run (empty/default config) a quick setup
+    sets the grid format before any button editing. (Ordered sections / a
+    first-run wizard — not a rigid lock; keep it simple.)
+  - **Non-destructive resize (least destructive, preserve maximum data):** when
+    the grid shrinks, buttons that no longer fit are NOT deleted — they move to
+    a **parked/overflow pool** for that screen (preserved in the TOML as
+    `[[screens.parked_buttons]]`, inactive; the RadKeys app ignores them and
+    only loads `buttons`). The editor lists parked buttons with a way to place
+    them back when the grid grows (auto-fill empty cells, or click-to-place).
+    Growing the grid never loses data; shrinking never deletes a configured
+    button. This needs a small `internal/config` addition
+    (`Screen.ParkedButtons []Button`) that the app ignores on load.
+
   **KISS / no over-engineering:**
   - No drag-drop (Fyne lacks native list reordering — research gap
     /tmp/radkeys-012/research-fyne-forms.md). Reorder layers with up/down
