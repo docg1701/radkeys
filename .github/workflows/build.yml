@@ -54,7 +54,7 @@ jobs:
       - name: Build release binary
         run: |
           mkdir -p /tmp/assets
-          CGO_ENABLED=1 go build -o /tmp/assets/radkeys-linux-amd64 .
+          CGO_ENABLED=1 go build -tags flatpak -o /tmp/assets/radkeys-linux-amd64 .
           cp radkeys.config.toml /tmp/assets/radkeys.config.toml
 
       - name: Build release notes
