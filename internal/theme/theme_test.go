@@ -1,6 +1,7 @@
 package theme
 
 import (
+	"image/color"
 	"testing"
 
 	"fyne.io/fyne/v2"
@@ -115,5 +116,27 @@ func TestAllPresetsHaveValidThemes(t *testing.T) {
 		if bg := th.Color(theme.ColorNameBackground, theme.VariantDark); bg == nil {
 			t.Fatalf("preset %q background is nil", p.ID())
 		}
+	}
+}
+
+// TestShiftNegativeFactorDarkensNotClampsToBlack is a regression test for the
+// pressed-color bug: uint8(255 * -0.08) wrapped to 236, satSub saturated to 0,
+// so light-theme buttons flashed black when pressed.
+func TestShiftNegativeFactorDarkensNotClampsToBlack(t *testing.T) {
+	light := color.NRGBA{R: 0xc0, G: 0xc0, B: 0xc0, A: 0xff}
+	got := shift(light, -0.08)
+	if got.R == 0 && got.G == 0 && got.B == 0 {
+		t.Fatalf("shift(light, -0.08) clamped to black %v; want darkened-but-not-zero", got)
+	}
+	if got.R >= light.R || got.G >= light.G || got.B >= light.B {
+		t.Fatalf("shift(light, -0.08) = %v did not darken %v", got, light)
+	}
+}
+
+func TestShiftPositiveFactorLightens(t *testing.T) {
+	dark := color.NRGBA{R: 0x44, G: 0x47, B: 0x5a, A: 0xff}
+	got := shift(dark, 0.08)
+	if got.R <= dark.R || got.G <= dark.G || got.B <= dark.B {
+		t.Fatalf("shift(dark, 0.08) = %v did not lighten %v", got, dark)
 	}
 }

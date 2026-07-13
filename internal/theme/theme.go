@@ -5,6 +5,7 @@ package theme
 
 import (
 	"image/color"
+	"math"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
@@ -150,7 +151,9 @@ func contrastOf(c color.NRGBA) color.NRGBA {
 }
 
 func shift(c color.NRGBA, factor float64) color.NRGBA {
-	d := uint8(255 * factor)
+	// Use the absolute magnitude so a negative factor darkens instead of
+	// wrapping uint8(-20) to 236 and saturating to black on light themes.
+	d := uint8(255 * math.Abs(factor))
 	if factor >= 0 {
 		return color.NRGBA{satAdd(c.R, d), satAdd(c.G, d), satAdd(c.B, d), c.A}
 	}
