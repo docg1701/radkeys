@@ -34,16 +34,25 @@ func Open(dev config.Device) (Reader, error) {
 
 const pollTimeout = 50 * time.Millisecond
 
-// baseReader carries the hidapi handle and the event/stop channels.
-type baseReader struct {
-	dev  *hid.Device
-	ch   chan Event
-	stop chan struct{}
-	done chan struct{}
-	once sync.Once
+// hidDevice is the minimal surface of *hid.Device that the reader uses.
+// It exists only to allow loop() to be exercised with a fake device in tests.
+type hidDevice interface {
+	ReadWithTimeout(p []byte, timeout time.Duration) (int, error)
+	Close() error
 }
 
-func newBase(dev *hid.Device) baseReader {
+// baseReader carries the hidapi handle and the event/stop channels.
+type baseReader struct {
+	dev         hidDevice
+	ch          chan Event
+	stop        chan struct{}
+	done        chan struct{}
+	once        sync.Once
+	dropCount   int
+	lastDropLog time.Time
+}
+
+func newBase(dev hidDevice) baseReader {
 	return baseReader{dev: dev, ch: make(chan Event, 64), stop: make(chan struct{}), done: make(chan struct{})}
 }
 
@@ -62,11 +71,19 @@ func (b *baseReader) Close() error {
 	return err
 }
 
-// emit sends an event. Non-blocking — drops if channel is full (shouldn't happen).
+// emit sends an event. Non-blocking: if the consumer is behind and the
+// channel is full, the event is dropped and counted for logging. Blocking
+// the HID read loop is not safe because a stuck UI would freeze the device.
 func (b *baseReader) emit(e Event) {
 	select {
 	case b.ch <- e:
 	default:
+		b.dropCount++
+		if b.lastDropLog.IsZero() || time.Since(b.lastDropLog) > 5*time.Second {
+			log.Printf("radkeys: hid event dropped: channel full; %d event(s) lost since last log", b.dropCount)
+			b.dropCount = 0
+			b.lastDropLog = time.Now()
+		}
 	}
 }
 
