@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -10,10 +11,12 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/hid"
+	"github.com/docg1701/radkeys/internal/i18n"
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
@@ -23,7 +26,9 @@ const configFileName = "radkeys.config.toml"
 
 func main() {
 	path := configPath()
-	ensureConfig(path)
+	if err := ensureConfig(path); err != nil {
+		log.Fatalf("radkeys: %v", err)
+	}
 	cfg, err := config.Load(path)
 	if err != nil {
 		showConfigError(path, err)
@@ -31,37 +36,39 @@ func main() {
 	}
 
 	reader, err := hid.Open(cfg.App.Device)
+	isMock := false
 	if err != nil {
 		log.Printf("radkeys: %v; using mock (click UI buttons)", err)
 		reader = hid.NewMock()
+		isMock = true
 	}
 
-	if err := ui.Run(cfg, path, reader, Version); err != nil {
+	if err := ui.Run(cfg, path, reader, Version, isMock); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
 }
 
 func showConfigError(configPath string, err error) {
 	a := app.New()
-	w := a.NewWindow("RadKeys — Config Error")
+	w := a.NewWindow(i18n.T("error.config_title"))
 	w.Resize(fyne.NewSize(700, 400))
 
 	msg := widget.NewLabel(err.Error())
 	msg.Wrapping = fyne.TextWrapWord
 
-	editBtn := widget.NewButton("Open file to edit", func() {
+	editBtn := widget.NewButton(i18n.T("error.open_file"), func() {
 		if err := openConfigEditor(configPath); err != nil {
-			log.Printf("radkeys: cannot open config: %v", err)
+			dialog.ShowError(err, w)
 		}
 	})
 	editBtn.Importance = widget.HighImportance
 
-	okBtn := widget.NewButton("Close", func() { w.Close() })
+	okBtn := widget.NewButton(i18n.T("button.close"), func() { w.Close() })
 
 	content := container.NewVBox(
-		widget.NewLabel("The configuration file contains an error:\n"),
+		widget.NewLabel(i18n.T("error.config_message")+"\n"),
 		msg,
-		widget.NewLabel("\nFix the error above and restart RadKeys."),
+		widget.NewLabel("\n"+i18n.T("error.config_fix")),
 		editBtn,
 		okBtn,
 	)
@@ -83,9 +90,9 @@ func configPath() string {
 	return configFileName
 }
 
-func ensureConfig(path string) {
+func ensureConfig(path string) error {
 	if _, err := os.Stat(path); err == nil {
-		return
+		return nil
 	}
 	const tmpl = `[app]
 name = "RadKeys"
@@ -113,7 +120,10 @@ label = "Example"
 action = "text"
 content = "Example phrase."
 `
-	_ = os.WriteFile(path, []byte(tmpl), 0o600)
+	if err := os.WriteFile(path, []byte(tmpl), 0o600); err != nil {
+		return fmt.Errorf("cannot create default config %s: %w", path, err)
+	}
+	return nil
 }
 
 // openConfigEditor opens the config file in the platform's default editor.

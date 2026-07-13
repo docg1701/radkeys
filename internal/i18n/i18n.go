@@ -5,6 +5,8 @@
 package i18n
 
 import (
+	"log"
+
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -183,6 +185,10 @@ var messages = map[string]map[string]string{
 		"en": "Home", "pt-BR": "Início", "pt-PT": "Início",
 		"es": "Inicio", "fr": "Accueil", "de": "Start", "it": "Home",
 	},
+	"button.close": {
+		"en": "Close", "pt-BR": "Fechar", "pt-PT": "Fechar",
+		"es": "Cerrar", "fr": "Fermer", "de": "Schließen", "it": "Chiudi",
+	},
 	"paste.via_keypad_hint": {
 		"en":    "Use the physical keypad for Paste — clicking here would paste into RadKeys itself.",
 		"pt-BR": "Use o teclado físico para Paste — clicar aqui colaria no próprio RadKeys.",
@@ -191,6 +197,79 @@ var messages = map[string]map[string]string{
 		"fr":    "Utilisez le clavier physique pour Paste — cliquer ici collerait dans RadKeys lui-même.",
 		"de":    "Physisches Keypad für Paste nutzen — Klicken hier würde in RadKeys selbst einfügen.",
 		"it":    "Usa il keypad fisico per Paste — cliccare qui incollerebbe in RadKeys stesso.",
+	},
+
+	// ── Status messages ───────────────────────────────────
+	"status.mock_mode": {
+		"en":    "No HID device found — running in mock mode (use on-screen buttons).",
+		"pt-BR": "Dispositivo HID não encontrado — executando em modo mock (use os botões na tela).",
+		"pt-PT": "Dispositivo HID não encontrado — a executar em modo mock (use os botões no ecrã).",
+		"es":    "Dispositivo HID no encontrado — ejecutando en modo mock (use los botones en pantalla).",
+		"fr":    "Aucun périphérique HID trouvé — mode mock actif (utilisez les boutons à l'écran).",
+		"de":    "Kein HID-Gerät gefunden — Mock-Modus aktiv (Verwenden Sie die Bildschirmschaltflächen).",
+		"it":    "Nessun dispositivo HID trovato — modalità mock attiva (usa i pulsanti a schermo).",
+	},
+	"status.paste_failed": {
+		"en":    "Paste failed: %s",
+		"pt-BR": "Falha ao colar: %s",
+		"pt-PT": "Falha ao colar: %s",
+		"es":    "Error al pegar: %s",
+		"fr":    "Échec du collage : %s",
+		"de":    "Einfügen fehlgeschlagen: %s",
+		"it":    "Incolla non riuscito: %s",
+	},
+	"status.out_of_grid": {
+		"en":    "Device event out of grid bounds (row=%d, col=%d) for %dx%d.",
+		"pt-BR": "Evento do dispositivo fora dos limites da grade (linha=%d, coluna=%d) para %dx%d.",
+		"pt-PT": "Evento do dispositivo fora dos limites da grelha (linha=%d, coluna=%d) para %dx%d.",
+		"es":    "Evento del dispositivo fuera de los límites de la cuadrícula (fila=%d, columna=%d) para %dx%d.",
+		"fr":    "Événement périphérique hors limites de la grille (ligne=%d, colonne=%d) pour %dx%d.",
+		"de":    "Geräteereignis außerhalb des Rasters (Zeile=%d, Spalte=%d) für %dx%d.",
+		"it":    "Evento dispositivo fuori dalla griglia (riga=%d, colonna=%d) per %dx%d.",
+	},
+	"status.hid_read_failed": {
+		"en":    "HID read failed. Hardware may be disconnected.",
+		"pt-BR": "Falha na leitura HID. O hardware pode estar desconectado.",
+		"pt-PT": "Falha na leitura HID. O hardware pode estar desligado.",
+		"es":    "Error de lectura HID. El hardware puede estar desconectado.",
+		"fr":    "Échec de lecture HID. Le matériel est peut-être déconnecté.",
+		"de":    "HID-Lesefehler. Hardware möglicherweise getrennt.",
+		"it":    "Lettura HID fallita. L'hardware potrebbe essere disconnesso.",
+	},
+
+	// ── Config error dialog ───────────────────────────────
+	"error.config_title": {
+		"en": "RadKeys — Config Error", "pt-BR": "RadKeys — Erro de Configuração",
+		"pt-PT": "RadKeys — Erro de Configuração", "es": "RadKeys — Error de Configuración",
+		"fr": "RadKeys — Erreur de configuration", "de": "RadKeys — Konfigurationsfehler",
+		"it": "RadKeys — Errore di Configurazione",
+	},
+	"error.config_message": {
+		"en":    "The configuration file contains an error:",
+		"pt-BR": "O arquivo de configuração contém um erro:",
+		"pt-PT": "O ficheiro de configuração contém um erro:",
+		"es":    "El archivo de configuración contiene un error:",
+		"fr":    "Le fichier de configuration contient une erreur :",
+		"de":    "Die Konfigurationsdatei enthält einen Fehler:",
+		"it":    "Il file di configurazione contiene un errore:",
+	},
+	"error.config_fix": {
+		"en":    "Fix the error above and restart RadKeys.",
+		"pt-BR": "Corrija o erro acima e reinicie o RadKeys.",
+		"pt-PT": "Corrija o erro acima e reinicie o RadKeys.",
+		"es":    "Corrija el error anterior y reinicie RadKeys.",
+		"fr":    "Corrigez l'erreur ci-dessus et redémarrez RadKeys.",
+		"de":    "Beheben Sie den obigen Fehler und starten Sie RadKeys neu.",
+		"it":    "Correggi l'errore sopra e riavvia RadKeys.",
+	},
+	"error.open_file": {
+		"en":    "Open file to edit",
+		"pt-BR": "Abrir arquivo para editar",
+		"pt-PT": "Abrir ficheiro para editar",
+		"es":    "Abrir archivo para editar",
+		"fr":    "Ouvrir le fichier pour modifier",
+		"de":    "Datei zum Bearbeiten öffnen",
+		"it":    "Apri file per modificare",
 	},
 
 	// ── About ─────────────────────────────────────────────
@@ -247,10 +326,12 @@ func init() {
 
 	for id, langs := range messages {
 		for lang, text := range langs {
-			_ = bundle.AddMessages(language.Make(lang), &i18n.Message{
+			if err := bundle.AddMessages(language.Make(lang), &i18n.Message{
 				ID:    id,
 				Other: text,
-			})
+			}); err != nil {
+				log.Printf("radkeys: i18n register %s/%s: %v", lang, id, err)
+			}
 		}
 	}
 

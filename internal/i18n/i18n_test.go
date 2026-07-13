@@ -29,6 +29,9 @@ func TestCommonKeysPresent(t *testing.T) {
 		"settings.save", "settings.browse",
 		"button.copy", "button.paste", "button.back", "button.home",
 		"preview.placeholder",
+		"status.mock_mode", "status.paste_failed", "status.out_of_grid", "status.hid_read_failed",
+		"error.config_title", "error.config_message", "error.config_fix", "error.open_file",
+		"button.close",
 	}
 	for _, key := range keys {
 		for _, lang := range Supported {

@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -27,7 +29,7 @@ import (
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
-func Run(cfg *config.Config, configPath string, reader hid.Reader, version string) error {
+func Run(cfg *config.Config, configPath string, reader hid.Reader, version string, mock bool) error {
 	a := app.New()
 
 	customTheme := resolveFullTheme(cfg)
@@ -56,6 +58,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		cols:       cols,
 		rows:       rows,
 		version:    version,
+		mock:       mock,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
 		current:    cfg.Screens[0].ID,
 	}
@@ -73,8 +76,16 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
 		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
 	)
-	w.SetContent(tabs)
+	u.tabs = tabs
+	u.status = widget.NewLabel("")
+	u.status.Hide()
+	content := container.NewBorder(u.status, nil, nil, nil, tabs)
+	w.SetContent(content)
 	u.renderGrid()
+
+	if u.mock {
+		u.setStatus(i18n.T("status.mock_mode"))
+	}
 
 	// Fyne detects the OS theme variant asynchronously, so the initial render
 	// may use the wrong variant (e.g. dark on a light OS). Re-apply the theme
@@ -95,7 +106,12 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		return fmt.Errorf("hid: open: %w", err)
 	}
 	go u.pollHID()
-	w.SetOnClosed(func() { _ = reader.Close() })
+	w.SetOnClosed(func() {
+		u.closing.Store(true)
+		if err := reader.Close(); err != nil {
+			log.Printf("radkeys: reader close failed: %v", err)
+		}
+	})
 	w.ShowAndRun()
 	return nil
 }
@@ -112,6 +128,11 @@ type appUI struct {
 	preview     *widget.Label
 	previewText string
 	version     string
+	mock        bool
+	closing     atomic.Bool
+	status      *widget.Label
+	flashTimer  *time.Timer
+	tabs        *container.AppTabs
 	cols        int
 	rows        int
 	keypad      *fyne.Container
@@ -150,6 +171,7 @@ func (u *appUI) press(row, col int, fromUI bool) {
 	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
 		if row < 0 || row >= u.rows || col < 0 || col >= u.cols {
+			u.flashStatus(fmt.Sprintf(i18n.T("status.out_of_grid"), row, col, u.rows, u.cols))
 			log.Printf("radkeys: device event out of grid bounds (row=%d, col=%d) for %dx%d", row, col, u.rows, u.cols)
 		}
 		return
@@ -169,6 +191,7 @@ func (u *appUI) press(row, col int, fromUI bool) {
 			return
 		}
 		if err := keystroke.SendCtrlV(); err != nil {
+			u.flashStatus(fmt.Sprintf(i18n.T("status.paste_failed"), err))
 			log.Printf("radkeys: paste failed: %v", err)
 		}
 	case config.ActionPrev:
@@ -237,6 +260,42 @@ func (u *appUI) pollHID() {
 		row, col := ev.Row, ev.Col
 		fyne.Do(func() { u.press(row, col, false) })
 	}
+	if !u.closing.Load() {
+		u.flashStatus(i18n.T("status.hid_read_failed"))
+	}
+}
+
+// setStatus shows a persistent status message at the top of the window.
+func (u *appUI) setStatus(msg string) {
+	fyne.Do(func() {
+		u.status.Text = msg
+		u.status.Show()
+		u.status.Refresh()
+	})
+}
+
+// flashStatus shows a status message for 5 seconds, then hides it.
+// The body runs on the UI goroutine via fyne.Do so u.flashTimer is
+// never accessed concurrently; the timer callback bails out if the
+// window is closing so we never touch the UI after shutdown.
+func (u *appUI) flashStatus(msg string) {
+	fyne.Do(func() {
+		if u.flashTimer != nil {
+			u.flashTimer.Stop()
+		}
+		u.status.Text = msg
+		u.status.Show()
+		u.status.Refresh()
+		u.flashTimer = time.AfterFunc(5*time.Second, func() {
+			if u.closing.Load() {
+				return
+			}
+			fyne.Do(func() {
+				u.status.Hide()
+				u.status.Text = ""
+			})
+		})
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -358,7 +417,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}
 
 		// Refresh tab labels and content.
-		tabs := u.win.Content().(*container.AppTabs)
+		tabs := u.tabs
 		tabs.Items[0].Text = i18n.T("tab.shortcuts")
 		tabs.Items[1].Text = i18n.T("tab.settings")
 		tabs.Items[2].Text = i18n.T("tab.about")
