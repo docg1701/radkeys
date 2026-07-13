@@ -49,10 +49,7 @@ func (e *Editor) emptyCell(row, col int) fyne.CanvasObject {
 
 // onEmptyCellClicked adds or moves a button to (row, col).
 func (e *Editor) onEmptyCellClicked(row, col int) {
-	if e.selected != nil && e.selected.screen == e.current {
-		e.moveButton(row, col)
-		return
-	}
+	e.clearSelection()
 	e.addButton(row, col)
 }
 

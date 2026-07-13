@@ -510,6 +510,12 @@ var messages = map[string]map[string]string{
 		"de":    "Ungespeicherte Änderungen verwerfen?",
 		"it":    "Scartare le modifiche non salvate?",
 	},
+	"editor.confirm_discard_title": {
+		"en": "Unsaved Changes", "pt-BR": "Alterações Não Salvas",
+		"pt-PT": "Alterações Não Guardadas", "es": "Cambios Sin Guardar",
+		"fr": "Modifications non enregistrées", "de": "Nicht gespeicherte Änderungen",
+		"it": "Modifiche Non Salvate",
+	},
 	"editor.problems_title": {
 		"en": "Problems", "pt-BR": "Problemas", "pt-PT": "Problemas", "es": "Problemas",
 		"fr": "Problèmes", "de": "Probleme", "it": "Problemi",

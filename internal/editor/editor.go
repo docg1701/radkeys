@@ -11,6 +11,7 @@ import (
 
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/i18n"
+	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
 // cellKey identifies one button cell by screen index and (row, col).
@@ -27,10 +28,8 @@ type Editor struct {
 	dirty    bool
 	current  int
 	selected *cellKey
-	showHelp bool
 	app      fyne.App
 	win      fyne.Window
-	navStack []int
 
 	tabs        *container.AppTabs
 	gridBox     fyne.CanvasObject
@@ -90,8 +89,15 @@ func (e *Editor) buildButtonsTab() fyne.CanvasObject {
 	e.inspector = e.buildInspector()
 	e.problemsBox = e.buildProblems()
 	e.gridBox = e.buildGrid()
-	top := container.NewVBox(e.layerBar, e.inspector, e.problemsBox)
-	return container.NewBorder(top, nil, nil, nil, container.NewVScroll(e.gridBox))
+
+	inspectorPanel := container.NewVScroll(
+		container.NewVBox(e.inspector, e.problemsBox),
+	)
+	gridPanel := container.NewVScroll(e.gridBox)
+	split := container.NewHSplit(gridPanel, inspectorPanel)
+	split.Offset = 0.60
+
+	return container.NewBorder(e.layerBar, nil, nil, nil, split)
 }
 
 // refresh updates all mutable UI surfaces and the window title.
@@ -209,24 +215,6 @@ func (e *Editor) removeButton(row, col int) {
 }
 
 // moveButton moves the selected button to (row, col) on the current screen.
-func (e *Editor) moveButton(toRow, toCol int) {
-	if e.selected == nil || e.selected.screen != e.current {
-		return
-	}
-	idx, ok := e.findButton(e.current, e.selected.row, e.selected.col)
-	if !ok {
-		return
-	}
-	if _, occupied := e.findButton(e.current, toRow, toCol); occupied {
-		return
-	}
-	btns := &e.cfg.Screens[e.current].Buttons
-	(*btns)[idx].Row = toRow
-	(*btns)[idx].Col = toCol
-	e.selected = &cellKey{screen: e.current, row: toRow, col: toCol}
-	e.setDirty()
-	e.refresh()
-}
 
 // setButtonLabel updates the selected button's label.
 func (e *Editor) setButtonLabel(label string) {
@@ -308,10 +296,13 @@ func (e *Editor) setAppLanguage(lang string) {
 	e.rebuildTabs()
 }
 
-// setAppTheme stores the selected theme preset for RadKeys.
+// setAppTheme stores the selected theme preset and applies it live.
 func (e *Editor) setAppTheme(id string) {
 	e.cfg.App.Theme.Preset = id
 	e.setDirty()
+	if p, ok := themes.FindPreset(id); ok {
+		e.app.Settings().SetTheme(themes.NewCustomTheme(p))
+	}
 }
 
 // setRadiologist stores the radiologist name.

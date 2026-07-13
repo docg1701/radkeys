@@ -25,17 +25,15 @@ func (e *Editor) buildLayerBar() fyne.CanvasObject {
 		e.switchToLayer(e.layerIndexFromName(choice))
 	}
 
-	back := widget.NewButton(i18n.T("button.back"), e.goBack)
-	back.Importance = widget.LowImportance
 	add := widget.NewButton(i18n.T("editor.add_layer"), e.addLayer)
 	remove := widget.NewButton(i18n.T("editor.remove_layer"), e.askRemoveLayer)
 	rename := widget.NewButton(i18n.T("editor.rename_layer"), e.askRenameLayer)
-	up := widget.NewButton(i18n.T("editor.move_up"), e.moveLayerUp)
-	down := widget.NewButton(i18n.T("editor.move_down"), e.moveLayerDown)
 
-	return container.NewHBox(
-		labeled(i18n.T("editor.layer"), sel),
-		back, add, remove, rename, up, down,
+	return container.NewBorder(
+		nil, nil,
+		widget.NewLabel(i18n.T("editor.layer")),
+		container.NewHBox(add, remove, rename),
+		sel,
 	)
 }
 
@@ -69,7 +67,7 @@ func (e *Editor) layerIndexFromName(name string) int {
 	return e.current
 }
 
-// switchToLayer changes the current layer without touching the nav stack.
+// switchToLayer changes the current layer.
 func (e *Editor) switchToLayer(idx int) {
 	if idx < 0 || idx >= len(e.cfg.Screens) || idx == e.current {
 		return
@@ -115,18 +113,24 @@ func (e *Editor) hasLayerID(id string) bool {
 // askRemoveLayer confirms before deleting the current layer.
 func (e *Editor) askRemoveLayer() {
 	if len(e.cfg.Screens) <= 1 {
-		dialog.ShowInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_last_screen"), e.win)
+		d := dialog.NewInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_last_screen"), e.win)
+		d.Resize(fyne.NewSize(500, 200))
+		d.Show()
 		return
 	}
 	if e.isLayerTargeted(e.cfg.Screens[e.current].ID) {
-		dialog.ShowInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_targeted_screen"), e.win)
+		d := dialog.NewInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_targeted_screen"), e.win)
+		d.Resize(fyne.NewSize(500, 200))
+		d.Show()
 		return
 	}
-	dialog.ShowConfirm(i18n.T("editor.remove_layer"), i18n.T("editor.confirm_remove_screen"), func(ok bool) {
+	d := dialog.NewConfirm(i18n.T("editor.remove_layer"), i18n.T("editor.confirm_remove_screen"), func(ok bool) {
 		if ok {
 			e.removeLayer()
 		}
 	}, e.win)
+	d.Resize(fyne.NewSize(450, 180))
+	d.Show()
 }
 
 // isLayerTargeted reports whether any navigate button targets the given screen id.
@@ -150,7 +154,6 @@ func (e *Editor) removeLayer() {
 	if e.current >= len(e.cfg.Screens) {
 		e.current = len(e.cfg.Screens) - 1
 	}
-	e.navStack = nil
 	e.clearSelection()
 	e.setDirty()
 	e.refresh()
@@ -162,21 +165,25 @@ func (e *Editor) askRenameLayer() {
 	if s == nil {
 		return
 	}
-	idEnt := widget.NewEntry()
-	idEnt.SetText(s.ID)
-	idEnt.Disable()
 	name := widget.NewEntry()
 	name.SetText(s.Name)
-	dialog.ShowForm(i18n.T("editor.rename_layer"), i18n.T("editor.save"), i18n.T("editor.cancel"),
+	name.SetPlaceHolder(i18n.T("editor.layer_name"))
+	form := dialog.NewForm(
+		i18n.T("editor.rename_layer"),
+		i18n.T("editor.save"),
+		i18n.T("editor.cancel"),
 		[]*widget.FormItem{
-			{Text: i18n.T("editor.layer_id"), Widget: idEnt},
-			{Text: i18n.T("editor.layer_name"), Widget: name},
+			{Text: i18n.T("editor.layer_name"), Widget: name, HintText: s.ID},
 		},
 		func(ok bool) {
 			if ok {
 				e.renameLayer(name.Text)
 			}
-		}, e.win)
+		},
+		e.win,
+	)
+	form.Resize(fyne.NewSize(500, 220))
+	form.Show()
 }
 
 // renameLayer changes the current screen's name.
@@ -186,34 +193,6 @@ func (e *Editor) renameLayer(name string) {
 		return
 	}
 	s.Name = name
-	e.setDirty()
-	e.refresh()
-}
-
-// moveLayerUp swaps the current screen with the previous one.
-func (e *Editor) moveLayerUp() {
-	if e.current <= 0 {
-		return
-	}
-	e.swapLayers(e.current, e.current-1)
-}
-
-// moveLayerDown swaps the current screen with the next one.
-func (e *Editor) moveLayerDown() {
-	if e.current >= len(e.cfg.Screens)-1 {
-		return
-	}
-	e.swapLayers(e.current, e.current+1)
-}
-
-// swapLayers exchanges two screens and updates the current index.
-func (e *Editor) swapLayers(i, j int) {
-	e.cfg.Screens[i], e.cfg.Screens[j] = e.cfg.Screens[j], e.cfg.Screens[i]
-	if e.current == i {
-		e.current = j
-	} else if e.current == j {
-		e.current = i
-	}
 	e.setDirty()
 	e.refresh()
 }

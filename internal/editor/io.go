@@ -15,7 +15,7 @@ import (
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
-// buildMenu creates the File and Help menus.
+// buildMenu creates the File menu.
 func (e *Editor) buildMenu() *fyne.MainMenu {
 	file := fyne.NewMenu(i18n.T("editor.file_menu"),
 		fyne.NewMenuItem(i18n.T("editor.new"), e.newConfig),
@@ -25,10 +25,7 @@ func (e *Editor) buildMenu() *fyne.MainMenu {
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem(i18n.T("button.close"), e.onCloseIntercept),
 	)
-	help := fyne.NewMenu(i18n.T("editor.help_label"),
-		fyne.NewMenuItem(i18n.T("editor.about_model"), e.showModelInfo),
-	)
-	return fyne.NewMainMenu(file, help)
+	return fyne.NewMainMenu(file)
 }
 
 // onCloseIntercept asks for confirmation when there are unsaved changes.
@@ -37,11 +34,27 @@ func (e *Editor) onCloseIntercept() {
 		e.win.Close()
 		return
 	}
-	dialog.ShowConfirm(i18n.T("editor.unsaved_title"), i18n.T("editor.confirm_discard"), func(ok bool) {
-		if ok {
-			e.win.Close()
-		}
-	}, e.win)
+	e.confirmDiscard(func() { e.win.Close() })
+}
+
+// confirmDiscard asks before discarding unsaved changes; runs onDiscard on "Discard".
+func (e *Editor) confirmDiscard(onDiscard func()) {
+	msg := widget.NewLabel(i18n.T("editor.confirm_discard"))
+	msg.Wrapping = fyne.TextWrapWord
+	d := dialog.NewCustomConfirm(
+		i18n.T("editor.confirm_discard_title"),
+		i18n.T("editor.discard"),
+		i18n.T("editor.cancel"),
+		msg,
+		func(ok bool) {
+			if ok {
+				onDiscard()
+			}
+		},
+		e.win,
+	)
+	d.Resize(fyne.NewSize(480, 180))
+	d.Show()
 }
 
 // newConfig starts a fresh default config.
@@ -51,7 +64,6 @@ func (e *Editor) newConfig() {
 		e.path = ""
 		e.current = 0
 		e.selected = nil
-		e.navStack = nil
 		e.clearDirty()
 		e.rebuildTabs()
 	})
@@ -63,11 +75,7 @@ func (e *Editor) confirmDiscardAsync(onOK func()) {
 		onOK()
 		return
 	}
-	dialog.ShowConfirm(i18n.T("editor.unsaved_title"), i18n.T("editor.confirm_discard"), func(ok bool) {
-		if ok {
-			onOK()
-		}
-	}, e.win)
+	e.confirmDiscard(onOK)
 }
 
 // openConfig loads an existing TOML file.
@@ -95,7 +103,6 @@ func (e *Editor) onFileOpened(rc fyne.URIReadCloser, err error) {
 	e.path = path
 	e.current = 0
 	e.selected = nil
-	e.navStack = nil
 	e.app.Preferences().SetString("lastFile", path)
 	i18n.SetLanguage(e.cfg.App.Language)
 	e.clearDirty()
@@ -151,14 +158,9 @@ func (e *Editor) saveConfigAs() {
 func (e *Editor) showSaveBlocked() {
 	body := widget.NewLabel(i18n.T("editor.save_blocked_message"))
 	body.Wrapping = fyne.TextWrapWord
-	dialog.ShowCustom(i18n.T("editor.save_blocked_title"), i18n.T("editor.cancel"), body, e.win)
-}
-
-// showModelInfo displays the RadKeys model explanation dialog.
-func (e *Editor) showModelInfo() {
-	body := widget.NewLabel(i18n.T("editor.model_intro"))
-	body.Wrapping = fyne.TextWrapWord
-	dialog.ShowInformation(i18n.T("editor.about_model"), i18n.T("editor.model_intro"), e.win)
+	d := dialog.NewCustom(i18n.T("editor.save_blocked_title"), i18n.T("editor.cancel"), body, e.win)
+	d.Resize(fyne.NewSize(500, 200))
+	d.Show()
 }
 
 // defaultConfig returns a blank starter config with one empty screen.

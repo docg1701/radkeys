@@ -9,7 +9,7 @@ import (
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
-// buildInspector creates the top property bar for the selected button.
+// buildInspector creates the property inspector for the selected button.
 func (e *Editor) buildInspector() fyne.CanvasObject {
 	b, ok := e.selectedButton()
 	if !ok {
@@ -18,11 +18,30 @@ func (e *Editor) buildInspector() fyne.CanvasObject {
 			widget.NewLabel(i18n.T("editor.click_to_add")),
 		)
 	}
+
+	var specific fyne.CanvasObject
+	switch b.Action {
+	case config.ActionText:
+		specific = e.contentField(b)
+	case config.ActionNavigate:
+		specific = e.targetField(b)
+	default:
+		specific = container.NewHBox()
+	}
+
+	removeBtn := widget.NewButton(i18n.T("editor.remove"), func() {
+		if e.selected == nil {
+			return
+		}
+		e.removeButton(e.selected.row, e.selected.col)
+	})
+	removeBtn.Importance = widget.DangerImportance
+
 	return container.NewVBox(
-		container.NewHBox(e.labelField(b), e.actionField(b)),
-		e.actionSpecificFields(b),
-		e.removeButtonField(),
-		e.helpLabels(),
+		e.labelField(b),
+		e.actionField(b),
+		specific,
+		container.NewHBox(removeBtn),
 	)
 }
 
@@ -51,27 +70,17 @@ func (e *Editor) actionField(b config.Button) fyne.CanvasObject {
 	return labeled(i18n.T("editor.action"), sel)
 }
 
-// actionSpecificFields shows content or target inputs for the selected action.
-func (e *Editor) actionSpecificFields(b config.Button) fyne.CanvasObject {
-	switch b.Action {
-	case config.ActionText:
-		return e.contentField(b)
-	case config.ActionNavigate:
-		return e.targetField(b)
-	}
-	return container.NewHBox()
-}
-
 // contentField edits multi-line report text.
 func (e *Editor) contentField(b config.Button) fyne.CanvasObject {
 	ent := widget.NewMultiLineEntry()
 	ent.SetText(b.Content)
 	ent.OnChanged = e.setButtonContent
 	ent.Wrapping = fyne.TextWrapWord
+	ent.SetMinRowsVisible(12)
 	return labeled(i18n.T("editor.content"), ent)
 }
 
-// targetField edits the navigate target with a preview-jump button.
+// targetField edits the navigate target.
 func (e *Editor) targetField(b config.Button) fyne.CanvasObject {
 	names := e.targetOptions()
 	sel := widget.NewSelect(names, nil)
@@ -79,39 +88,7 @@ func (e *Editor) targetField(b config.Button) fyne.CanvasObject {
 	sel.OnChanged = func(choice string) {
 		e.setButtonTarget(e.targetFromName(choice))
 	}
-	jump := widget.NewButton(i18n.T("editor.preview_jump"), func() {
-		e.jumpToTarget(b.Target)
-	})
-	jump.Importance = widget.LowImportance
-	return container.NewHBox(
-		labeled(i18n.T("editor.target"), sel),
-		jump,
-	)
-}
-
-// removeButtonField shows the Remove button for the selected button.
-func (e *Editor) removeButtonField() fyne.CanvasObject {
-	btn := widget.NewButton(i18n.T("editor.remove"), func() {
-		if e.selected == nil {
-			return
-		}
-		e.removeButton(e.selected.row, e.selected.col)
-	})
-	btn.Importance = widget.DangerImportance
-	return btn
-}
-
-// helpLabels shows inline help text when the help toggle is on.
-func (e *Editor) helpLabels() fyne.CanvasObject {
-	if !e.showHelp {
-		return container.NewHBox()
-	}
-	return container.NewVBox(
-		helpLine(i18n.T("editor.help.label")),
-		helpLine(i18n.T("editor.help.action")),
-		helpLine(i18n.T("editor.help.target")),
-		helpLine(i18n.T("editor.help.content")),
-	)
+	return labeled(i18n.T("editor.target"), sel)
 }
 
 // actionOptions returns the human-readable labels for all 12 actions.
@@ -209,44 +186,7 @@ func (e *Editor) targetFromName(name string) string {
 	return ""
 }
 
-// jumpToTarget navigates to the target screen and pushes the current screen.
-func (e *Editor) jumpToTarget(id string) {
-	for i, s := range e.cfg.Screens {
-		if s.ID == id {
-			e.navigateTo(i)
-			return
-		}
-	}
-}
-
-// navigateTo switches to a screen and records the previous screen.
-func (e *Editor) navigateTo(idx int) {
-	e.navStack = append(e.navStack, e.current)
-	e.current = idx
-	e.clearSelection()
-	e.refresh()
-}
-
-// goBack returns to the previous screen in the navigation stack.
-func (e *Editor) goBack() {
-	if len(e.navStack) == 0 {
-		return
-	}
-	prev := e.navStack[len(e.navStack)-1]
-	e.navStack = e.navStack[:len(e.navStack)-1]
-	e.current = prev
-	e.clearSelection()
-	e.refresh()
-}
-
 // labeled wraps an input under a label.
 func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(widget.NewLabel(label), input)
-}
-
-// helpLine creates a small italic help label.
-func helpLine(text string) fyne.CanvasObject {
-	lbl := widget.NewLabel(text)
-	lbl.TextStyle = fyne.TextStyle{Italic: true}
-	return lbl
 }

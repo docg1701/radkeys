@@ -38,7 +38,7 @@ func main() {
 	dev, err := hid.Open(cfg.App.Device)
 	isMock := false
 	if err != nil {
-		log.Printf("radkeys: %v; using mock (click UI buttons)", err)
+		log.Printf("radkeys: %v", err)
 		dev = hid.NewMock()
 		isMock = true
 	}

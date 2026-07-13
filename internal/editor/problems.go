@@ -11,18 +11,24 @@ import (
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
-// buildProblems creates the validation strip below the grid.
+// buildProblems creates the validation strip below the inspector.
 func (e *Editor) buildProblems() fyne.CanvasObject {
 	issues := e.buttonIssues()
 	if len(issues) == 0 {
-		lbl := widget.NewLabel(i18n.T("editor.no_problems"))
-		return container.NewHBox(lbl)
+		return container.NewVBox()
 	}
-	box := container.NewVBox(widget.NewLabel(i18n.T("editor.problems_title") + ":"))
+	items := make([]fyne.CanvasObject, 0, len(issues))
 	for _, issue := range issues {
-		box.Objects = append(box.Objects, widget.NewLabel(e.issueMessage(issue)))
+		items = append(items, helpLine(e.issueMessage(issue)))
 	}
-	return box
+	return container.NewVBox(items...)
+}
+
+// helpLine creates an italic helper label.
+func helpLine(text string) fyne.CanvasObject {
+	lbl := widget.NewLabel(text)
+	lbl.TextStyle = fyne.TextStyle{Italic: true}
+	return lbl
 }
 
 // refreshProblems rebuilds the validation strip.

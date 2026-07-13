@@ -19,7 +19,6 @@ func (e *Editor) buildAppSettings() fyne.CanvasObject {
 		e.buildAppearanceGroup(),
 		e.buildGridGroup(),
 		e.buildDeviceGroup(),
-		e.buildHelpToggle(),
 	)
 	return container.NewVScroll(container.NewPadded(e.appSettings))
 }
@@ -53,7 +52,6 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 			labeled(i18n.T("settings.language"), lang),
 			labeled(i18n.T("settings.theme"), theme),
 		),
-		e.appHelpLines("editor.help.layer", "editor.help.grid_format"),
 	)
 }
 
@@ -89,7 +87,6 @@ func (e *Editor) buildGridGroup() fyne.CanvasObject {
 			labeled(i18n.T("settings.columns"), cols),
 			labeled(i18n.T("settings.rows"), rows),
 		),
-		e.appHelpLines("editor.help.grid_format"),
 	)
 }
 
@@ -115,17 +112,7 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 			labeled(i18n.T("settings.pid"), pid),
 			labeled(i18n.T("settings.protocol"), proto),
 		),
-		e.appHelpLines("editor.help.device"),
 	)
-}
-
-// buildHelpToggle adds the inline-help checkbox.
-func (e *Editor) buildHelpToggle() fyne.CanvasObject {
-	chk := widget.NewCheck(i18n.T("editor.help_toggle"), func(on bool) {
-		e.showHelp = on
-		e.rebuildTabs()
-	})
-	return container.NewHBox(chk)
 }
 
 // gridSizes returns the allowed 1–6 values as strings.
@@ -150,16 +137,4 @@ func indexOf(options []string, choice string) int {
 		}
 	}
 	return -1
-}
-
-// appHelpLines returns a VBox of help labels when help is toggled on.
-func (e *Editor) appHelpLines(keys ...string) fyne.CanvasObject {
-	if !e.showHelp {
-		return container.NewVBox()
-	}
-	items := make([]fyne.CanvasObject, 0, len(keys))
-	for _, key := range keys {
-		items = append(items, helpLine(i18n.T(key)))
-	}
-	return container.NewVBox(items...)
 }
