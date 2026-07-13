@@ -198,7 +198,33 @@
 - **Validação:** Galvani testa (firmware antigo avisa, novo fica silencioso).
 - **Pode pular** se o Galvani preferir não ter check.
 
-### Etapa 6 — Release 0.10.0 (feature de firmware)
+### Etapa 6 — Documentação final (tudo atualizado)
+- **O quê:** ao final do desenvolvimento (antes do release 0.10.0), atualizar
+  TODA a documentação do projeto pra refletir a arquitetura nova e o estado
+  real. No mínimo: `README.md` (arquitetura paste-via-firmware-teclado-USB,
+  app=configurador, single-binary, startup-grab aceito, macOS suportado no
+  código sem binário shipado, pacote `keystroke` removido, check one-shot de
+  versão do firmware), `BUILD.md` (montagem do hardware + nota do device
+  composite USB vendor+teclado + flash único de fábrica), `PROTOCOL.md`
+  (referenciado pela Etapa 1 — confirmar coerente com o firmware final),
+  `radkeys.config.toml` (exemplo versionado coerente com os campos/usos
+  atuais), e o próprio `ANALISE.md` (marcar etapas 0-7 como feitas, refletir
+  o reframe "sem hardware protótipo ainda → validação estática/mock só; flash
+  real quando o protótipo ficar pronto; 0.x.x até aprovação no hardware,
+  1.0.0 só depois", e reescrever TODA linguagem stale de GATE/flash nas
+  validações das etapas 1/3/4). Conferir qualquer outro `.md` do repo e
+  atualizar se estiver stale. Nenhum doc pode contradizer o código shipped.
+- **Subagent:** `reviewer` (auditar TODA doc contra o código final — achar
+  stale: arquitetura antiga, GATEs de hardware como se existisse, campos de
+  config defasados, menções ao pacote `keystroke`, etc.) → `worker` (reescrever
+  cada doc stale; identifiers em inglês, i18n onde aplicável).
+- **Validação:** revisão de código da doc (sem contradição com o código
+  shipped), `go test ./...`/build seguem verdes, pai confere o diff de docs
+  antes de commitar. Sem hardware: nada depende de flash.
+- **Por quê:** o release 0.10.0 shipa com doc correta; handoff pra quando o
+  protótipo ficar pronto (semanas) é limpo.
+
+### Etapa 7 — Release 0.10.0 (feature de firmware)
 - **O quê:** bump `0.9.1 → 0.10.0`, build, tag `v0.10.0`, push, CI, upload
   binários Linux+Windows. Release notes: "paste agora via firmware
   (teclado USB); não rouba foco; macOS suportado no código; keystroke package
@@ -212,9 +238,11 @@
 ## Ordem de execução sugerida (com pi-subagents)
 
 1. **Etapa 0** (pai direto): release 0.9.1 do cleanup já pronto.
-2. **Etapa 1** (planner→worker, **Galvani flasha+testa**): firmware composite.
-   → **GATE: só avança depois que o Galvani confirmar o firmware mandando
-   Ctrl+V no hardware.**
+2. **Etapa 1** (planner→worker, **validação estática**): firmware composite.
+   → **Sem hardware protótipo ainda:** validação é estática (descritores HID
+   coerentes, lógica do teclado, handling do comando OUT) + cross-check do
+   `PROTOCOL.md`. Flash real no RP2040-Zero fica pra quando o protótipo ficar
+   pronto (semanas); até lá nada é "testei que funciona no hardware".
 3. **Etapa 2** (worker, mock): device-command writer (paralelo à 1? sim, sem
    conflito — 2 só toca hid, 1 só firmware; mas o protocolo da 1 define os
    bytes que a 2 escreve → fazer 1 antes de 2, ou 1+2 juntos com o planner
@@ -222,14 +250,19 @@
 4. **Etapa 3** (reviewer→worker): rewire paste + deleta keystroke. Depende de
    2 (o writer).
 5. **Etapa 4** (reviewer→worker): invariante de foco. Depende de 3 (paste
-   rewire) pra testar o fluxo real.
-6. **Etapa 5** (opcional): version check.
-7. **Etapa 6** (pai direto, **Galvani valida hardware**): release 0.10.0.
+   rewire) pra testar o fluxo real (mock).
+6. **Etapa 5** (worker): version check one-shot (incluído por decisão Galvani).
+7. **Etapa 6** (reviewer→worker): documentação final — TODA doc atualizada
+   contra o código shipped (reescreve também a linguagem stale de GATE/flash
+   das etapas 1/3/4). Depende de 1-5 prontos.
+8. **Etapa 7** (pai direto): release 0.10.0.
 
-**Dependência crítica:** a Etapa 1 (firmware) é o gate de hardware — tudo
-depende do Galvani flashear e confirmar. As etapas host (2-4) podem ser
-codadas + testadas com mock em paralelo, mas a validação real só acontece com
-o firmware novo no device.
+**Dependência crítica:** sem hardware protótipo ainda, toda validação é
+estática + mock + cross-compile (Linux flatpak, Windows mingw, `GOOS=darwin
+go vet`). 0.x.x incremental até tudo pronto; `1.0.0` só após aprovação no
+hardware protótipo. As etapas host (2-5) podem ser codadas + testadas com
+mock em paralelo à firmware (1), mas o protocolo da 1 define os bytes que a 2
+escreve.
 
 ---
 
