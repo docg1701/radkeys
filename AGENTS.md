@@ -2,6 +2,18 @@
 
 > Instructions for AI coding agents. Follow exactly.
 
+## Project
+
+RadKeys is a radiology shortcut deck: a 6×6 (36-button) USB keypad copies
+pre-written report phrases to the clipboard and pastes them into the RIS/PACS
+without stealing focus. The RP2040-Zero runs a **composite USB firmware**
+(vendor HID for `[row,col]` button events + HID keyboard that sends Ctrl/Cmd+V
+on host command — see `firmware/rp2040-zero/` + `PROTOCOL.md`). The Go+Fyne
+host is a **configurator**: single binary per OS, all config in
+`radkeys.config.toml`, no host-side keystroke injection (the `keystroke`
+package was removed). No hardware prototype yet — validation is static + mock +
+cross-compile; 1.0.0 only after approval on the prototype hardware.
+
 ## Dev cycle (MANDATORY — follow every time)
 
 ```
@@ -107,8 +119,7 @@ radkeys/
 │   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # theme.go — 13 presets
 │   └── assets/              # embedded icons
-├── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard
-└── research/                # investigation notes
+└── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard + PROTOCOL.md
 ```
 
 > `internal/deck/` removed. Navigation is stack-based with screen ids.

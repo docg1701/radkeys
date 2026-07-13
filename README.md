@@ -11,8 +11,8 @@ the clipboard without stealing focus from the RIS/PACS.
 
 RadKeys is a companion app for radiologists. You connect a custom keypad
 (6×6 = 36 buttons) via USB, and each button inserts a pre-written report
-template. No keyboard shortcuts, no modifier keys, no focus stealing from
-your RIS/PACS.
+template. No keyboard shortcuts to memorize and no focus stealing from
+your RIS/PACS — the radiologist just presses a keypad button.
 
 You write your report templates once in a config file. The app shows them
 in a grid that mirrors your physical keypad. Press a physical button → the
@@ -20,6 +20,15 @@ phrase appears on screen → press Copy → paste into the RIS. That's it.
 
 Works on Linux and Windows. One executable, one config file, zero install.
 Everything else (icon, translations, themes) is embedded in the binary.
+
+## Features
+
+- 36 configurable buttons (6×6) organized in navigable screens
+- Paste via the device's USB keyboard — no focus stealing, no host-side software
+- 7 languages, 13 color themes, custom icon
+- Single binary per OS (Linux + Windows; macOS builds from source)
+- Mock mode — run without hardware, the UI works via mouse clicks
+- One-shot firmware version check on connect (warns if outdated)
 
 ## How it works
 
@@ -118,15 +127,15 @@ go test ./... -v
 The device enumerates as a standard composite HID device (vendor + keyboard).
 No host-side software is needed for paste — the device is the USB keyboard.
 
-| Dependency | Linux | Windows |
-|------------|-------|---------|
-| **libudev** (HID access via hidapi) | system library (part of systemd) | bundled with the binary |
+| Dependency | Linux | Windows | macOS |
+|------------|-------|---------|-------|
+| HID access (hidapi) | libudev (system, via systemd) | bundled with the binary | IOKit (system) |
 
 ## Hardware
 
 | Option | Device | Keys | Cost |
 |--------|--------|------|------|
-| DIY | RP2040-Zero + push buttons + 3D case | Até 36 | ~R$40-60 |
+| DIY | RP2040-Zero + push buttons + 3D case | Até 36 | ~R$55-70 |
 
 Firmware: [`firmware/rp2040-zero/`](firmware/rp2040-zero/)
 Guia de montagem: [`BUILD.md`](BUILD.md)
