@@ -35,11 +35,12 @@ func TestHIDPathDoesNotActivateWindow(t *testing.T) {
 		"RequestFocus": true,
 	}
 	hidPath := map[string]bool{
-		"pollHID":     true,
-		"press":       true,
-		"renderGrid":  true,
-		"flashStatus": true,
-		"setStatus":   true,
+		"pollHID":           true,
+		"press":             true,
+		"renderGrid":        true,
+		"flashStatus":       true,
+		"setStatus":         true,
+		"fireDeviceCommand": true,
 	}
 
 	for _, decl := range f.Decls {

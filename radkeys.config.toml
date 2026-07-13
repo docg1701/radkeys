@@ -12,13 +12,19 @@
 #   - The first screen is the home screen.
 #
 # Actions:
-#   text     — loads the content into the preview (requires content)
-#   copy     — copies the preview text to clipboard
-#   paste    — sends Ctrl/Cmd+V to the focused window (the RIS) via the device
-#              keyboard, pasting the clipboard there (RadKeys never steals focus)
-#   prev     — goes back to the previous screen (stack-based)
-#   home     — goes to the first screen (root)
-#   navigate — goes to a specific screen (requires target = screen id)
+#   text        — loads the content into the preview (requires content)
+#   copy        — copies the preview text to clipboard
+#   paste       — sends Ctrl/Cmd+V to the focused window (the RIS) via the device
+#                 keyboard, pasting the clipboard there (RadKeys never steals focus)
+#   prev        — goes back to the previous screen (stack-based)
+#   home        — goes to the first screen (root)
+#   navigate    — goes to a specific screen (requires target = screen id)
+#   select_all  — sends Ctrl/Cmd+A (select all) via the device keyboard
+#   select_line — selects the current line (Home then Shift+End) via the device keyboard
+#   line_start  — sends Home (jump to start of line) via the device keyboard
+#   line_end    — sends End (jump to end of line) via the device keyboard
+#   backspace   — sends Backspace (delete backward) via the device keyboard
+#   delete      — sends Delete Forward via the device keyboard
 #
 # Edit this file with any text editor and restart RadKeys.
 # =============================================================================
@@ -185,6 +191,11 @@ name = "Chest X-Ray"
   action = "home"
   [[screens.buttons]]
   row = 5
+  col = 2
+  label = "Select All"
+  action = "select_all"
+  [[screens.buttons]]
+  row = 5
   col = 3
   label = "Copy"
   action = "copy"
@@ -193,6 +204,11 @@ name = "Chest X-Ray"
   col = 4
   label = "Paste"
   action = "paste"
+  [[screens.buttons]]
+  row = 5
+  col = 5
+  label = "Backspace"
+  action = "backspace"
 
 # ── X-Ray Abdomen ──────────────────────────────────────────────────────────
 [[screens]]

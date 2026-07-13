@@ -28,8 +28,11 @@ func TestCommonKeysPresent(t *testing.T) {
 		"settings.radiologist", "settings.language", "settings.theme",
 		"settings.save", "settings.browse",
 		"button.copy", "button.paste", "button.back", "button.home",
+		"button.select_all", "button.select_line", "button.line_start",
+		"button.line_end", "button.backspace", "button.delete",
+		"device_action.via_keypad_hint",
 		"preview.placeholder",
-		"status.mock_mode", "status.paste_failed", "status.out_of_grid", "status.hid_read_failed",
+		"status.mock_mode", "status.device_command_failed", "status.out_of_grid", "status.hid_read_failed",
 		"error.config_title", "error.config_message", "error.config_fix", "error.open_file",
 		"button.close",
 	}

@@ -52,34 +52,70 @@ func TestMockDeviceEventsClosedAfterClose(t *testing.T) {
 	}
 }
 
-func TestMockDeviceFirePasteRecordsCalls(t *testing.T) {
+func TestMockDeviceFireCommandRecordsCalls(t *testing.T) {
 	m := NewMock()
 	_ = m.Open()
 	defer func() { _ = m.Close() }()
 
-	if err := m.FirePaste(ModifierCtrl); err != nil {
-		t.Fatalf("FirePaste Ctrl: %v", err)
+	if err := m.FireCommand(CmdFirePaste, byte(ModifierCtrl)); err != nil {
+		t.Fatalf("FireCommand paste Ctrl: %v", err)
 	}
-	if err := m.FirePaste(ModifierGUI); err != nil {
-		t.Fatalf("FirePaste GUI: %v", err)
+	if err := m.FireCommand(CmdSelectAll, byte(ModifierGUI)); err != nil {
+		t.Fatalf("FireCommand select_all GUI: %v", err)
 	}
 
-	calls := m.PasteCalls()
+	calls := m.CommandCalls()
 	if len(calls) != 2 {
-		t.Fatalf("PasteCalls len = %d, want 2", len(calls))
+		t.Fatalf("CommandCalls len = %d, want 2", len(calls))
 	}
-	if calls[0] != ModifierCtrl || calls[1] != ModifierGUI {
-		t.Fatalf("PasteCalls = %v, want [Ctrl, GUI]", calls)
+	if calls[0].Cmd != CmdFirePaste || calls[0].Arg != byte(ModifierCtrl) {
+		t.Fatalf("calls[0] = %+v, want CmdFirePaste/Ctrl", calls[0])
+	}
+	if calls[1].Cmd != CmdSelectAll || calls[1].Arg != byte(ModifierGUI) {
+		t.Fatalf("calls[1] = %+v, want CmdSelectAll/GUI", calls[1])
 	}
 }
 
-func TestMockDevicePasteCallsReturnsCopy(t *testing.T) {
+func TestMockDeviceCommandCallsReturnsCopy(t *testing.T) {
 	m := NewMock()
-	_ = m.FirePaste(ModifierCtrl)
-	calls := m.PasteCalls()
-	calls[0] = ModifierGUI
-	if m.PasteCalls()[0] != ModifierCtrl {
-		t.Fatal("PasteCalls should return a copy, not the internal slice")
+	_ = m.FireCommand(CmdBackspace, 0x00)
+	calls := m.CommandCalls()
+	calls[0].Cmd = CmdDelete
+	if m.CommandCalls()[0].Cmd != CmdBackspace {
+		t.Fatal("CommandCalls should return a copy, not the internal slice")
+	}
+}
+
+// TestMockDeviceFireCommandBytes asserts the exact (cmd, arg) bytes recorded for
+// every device-keyboard command, covering both OS modifiers for the
+// OS-dependent commands and 0x00 for the rest.
+func TestMockDeviceFireCommandBytes(t *testing.T) {
+	m := NewMock()
+	cases := []CommandCall{
+		{Cmd: CmdFirePaste, Arg: byte(ModifierCtrl)},
+		{Cmd: CmdFirePaste, Arg: byte(ModifierGUI)},
+		{Cmd: CmdSelectAll, Arg: byte(ModifierCtrl)},
+		{Cmd: CmdSelectAll, Arg: byte(ModifierGUI)},
+		{Cmd: CmdSelectLine, Arg: 0x00},
+		{Cmd: CmdLineStart, Arg: 0x00},
+		{Cmd: CmdLineEnd, Arg: 0x00},
+		{Cmd: CmdBackspace, Arg: 0x00},
+		{Cmd: CmdDelete, Arg: 0x00},
+	}
+	for _, c := range cases {
+		if err := m.FireCommand(c.Cmd, c.Arg); err != nil {
+			t.Fatalf("FireCommand(%v, 0x%02x): %v", c.Cmd, c.Arg, err)
+		}
+	}
+	got := m.CommandCalls()
+	if len(got) != len(cases) {
+		t.Fatalf("CommandCalls len = %d, want %d", len(got), len(cases))
+	}
+	for i, c := range cases {
+		if got[i].Cmd != c.Cmd || got[i].Arg != c.Arg {
+			t.Fatalf("call %d = {Cmd:%v Arg:0x%02x}, want {Cmd:%v Arg:0x%02x}",
+				i, got[i].Cmd, got[i].Arg, c.Cmd, c.Arg)
+		}
 	}
 }
 
@@ -112,16 +148,16 @@ func TestMockDevicePutConcurrentCloseNoPanic(t *testing.T) {
 	}
 }
 
-// TestMockDeviceFirePasteConcurrentCloseNoPanic ensures FirePaste and Close
-// can run concurrently without panicking or racing on the pastes slice.
-func TestMockDeviceFirePasteConcurrentCloseNoPanic(t *testing.T) {
+// TestMockDeviceFireCommandConcurrentCloseNoPanic ensures FireCommand and Close
+// can run concurrently without panicking or racing on the commands slice.
+func TestMockDeviceFireCommandConcurrentCloseNoPanic(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		m := NewMock()
 		_ = m.Open()
 		start := make(chan struct{})
 		var wg sync.WaitGroup
 		wg.Add(2)
-		go func() { defer wg.Done(); <-start; _ = m.FirePaste(ModifierCtrl) }()
+		go func() { defer wg.Done(); <-start; _ = m.FireCommand(CmdFirePaste, byte(ModifierCtrl)) }()
 		go func() { defer wg.Done(); <-start; _ = m.Close() }()
 		close(start)
 		wg.Wait()

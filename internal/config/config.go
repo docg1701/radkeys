@@ -18,22 +18,34 @@ const (
 )
 
 const (
-	ActionText     = "text"
-	ActionCopy     = "copy"
-	ActionPaste    = "paste"
-	ActionPrev     = "prev"
-	ActionHome     = "home"
-	ActionNavigate = "navigate"
+	ActionText       = "text"
+	ActionCopy       = "copy"
+	ActionPaste      = "paste"
+	ActionPrev       = "prev"
+	ActionHome       = "home"
+	ActionNavigate   = "navigate"
+	ActionSelectAll  = "select_all"
+	ActionSelectLine = "select_line"
+	ActionLineStart  = "line_start"
+	ActionLineEnd    = "line_end"
+	ActionBackspace  = "backspace"
+	ActionDelete     = "delete"
 )
 
 // validActions is the set of all supported button actions.
 var validActions = map[string]bool{
-	ActionText:     true,
-	ActionCopy:     true,
-	ActionPaste:    true,
-	ActionPrev:     true,
-	ActionHome:     true,
-	ActionNavigate: true,
+	ActionText:       true,
+	ActionCopy:       true,
+	ActionPaste:      true,
+	ActionPrev:       true,
+	ActionHome:       true,
+	ActionNavigate:   true,
+	ActionSelectAll:  true,
+	ActionSelectLine: true,
+	ActionLineStart:  true,
+	ActionLineEnd:    true,
+	ActionBackspace:  true,
+	ActionDelete:     true,
 }
 
 // Config is the root of radkeys.config.toml.
@@ -183,7 +195,7 @@ func (c *Config) validate() error {
 			occupied[pos] = b.Label
 			if !validActions[b.Action] {
 				return fmt.Errorf(
-					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate)",
+					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)",
 					s.ID, b.Label, b.Action)
 			}
 			if b.Action == ActionNavigate && b.Target == "" {

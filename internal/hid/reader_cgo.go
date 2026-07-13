@@ -76,7 +76,7 @@ func selectVendorPath(infos []*hid.DeviceInfo) (path string, ok bool) {
 const pollTimeout = 50 * time.Millisecond
 
 // hidDevice is the minimal surface of *hid.Device that diyDevice uses.
-// It exists only to allow loop() and FirePaste() to be exercised with a
+// It exists only to allow loop() and FireCommand() to be exercised with a
 // fake device in tests.
 type hidDevice interface {
 	ReadWithTimeout(p []byte, timeout time.Duration) (int, error)
@@ -132,8 +132,7 @@ func (b *deviceBase) emit(e Event) {
 
 const (
 	diyReportLen       = 2
-	cmdFirePaste       = 0x01
-	cmdGetVersion      = 0x02
+	cmdGetVersion      = 0x02 // GET_VERSION: host->device, expects a 2-byte version IN reply (not a keyboard command)
 	reportIDNone       = 0x00
 	versionReadTimeout = 500 * time.Millisecond
 )
@@ -162,13 +161,13 @@ func (d *diyDevice) Version() (byte, byte, error) {
 	return d.versionMajor, d.versionMinor, nil
 }
 
-// FirePaste writes the vendor OUT command [reportID, CMD_FIRE_PASTE, modifier]
-// to the device. The report ID byte (0x00) is consumed by HIDAPI/TinyUSB and
-// not passed to the device callback; the device receives [cmd, arg].
-func (d *diyDevice) FirePaste(mod Modifier) error {
-	out := []byte{reportIDNone, cmdFirePaste, byte(mod)}
+// FireCommand writes the vendor OUT command [reportID, cmd, arg] to the
+// device. The report ID byte (0x00) is consumed by HIDAPI/TinyUSB and not
+// passed to the device callback; the device receives [cmd, arg].
+func (d *diyDevice) FireCommand(cmd Command, arg byte) error {
+	out := []byte{reportIDNone, byte(cmd), arg}
 	if _, err := d.dev.Write(out); err != nil {
-		return fmt.Errorf("hid: fire paste: %w", err)
+		return fmt.Errorf("hid: fire command 0x%02x: %w", byte(cmd), err)
 	}
 	return nil
 }

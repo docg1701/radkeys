@@ -187,11 +187,13 @@ func (u *appUI) currentScreen() config.Screen {
 // HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
 // focus the RadKeys window — the only permitted focus grab is the initial
 // w.ShowAndRun() at startup. ActionText/Copy/Navigate are silent (preview,
-// clipboard, internal state + renderGrid); ActionPaste delegates the keystroke
-// to the device (FirePaste) so the already-focused window (the RIS) receives
-// Ctrl/Cmd+V without RadKeys taking focus. Do not call u.win.Show/ShowAndRun/
-// SetContent/RequestFocus here. The fromUI dialog is the exception
-// (the user clicked RadKeys). Enforced statically by TestHIDPathDoesNotActivateWindow.
+// clipboard, internal state + renderGrid); the device-keyboard actions
+// (paste, select_all, select_line, line_start, line_end, backspace, delete)
+// delegate the keystroke to the device via fireDeviceCommand so the already-
+// focused window (the RIS) receives it without RadKeys taking focus. Do not
+// call u.win.Show/ShowAndRun/SetContent/RequestFocus here. The fromUI dialog
+// is the exception (the user clicked RadKeys). Enforced statically by
+// TestHIDPathDoesNotActivateWindow.
 func (u *appUI) press(row, col int, fromUI bool) {
 	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
@@ -208,17 +210,19 @@ func (u *appUI) press(row, col int, fromUI bool) {
 	case config.ActionCopy:
 		u.a.Clipboard().SetContent(u.previewText)
 	case config.ActionPaste:
-		// Paste is driven by the physical keypad so the RIS keeps focus.
-		// A UI click gives RadKeys focus, so the device's Ctrl/Cmd+V would
-		// paste into RadKeys itself — refuse and explain instead.
-		if fromUI {
-			dialog.ShowInformation(i18n.T("button.paste"), i18n.T("paste.via_keypad_hint"), u.win)
-			return
-		}
-		if err := u.device.FirePaste(hid.ModifierForOS()); err != nil {
-			u.flashStatus(fmt.Sprintf(i18n.T("status.paste_failed"), err))
-			log.Printf("radkeys: paste failed: %v", err)
-		}
+		u.fireDeviceCommand(config.ActionPaste, hid.CmdFirePaste, byte(hid.ModifierForOS()), fromUI)
+	case config.ActionSelectAll:
+		u.fireDeviceCommand(config.ActionSelectAll, hid.CmdSelectAll, byte(hid.ModifierForOS()), fromUI)
+	case config.ActionSelectLine:
+		u.fireDeviceCommand(config.ActionSelectLine, hid.CmdSelectLine, 0x00, fromUI)
+	case config.ActionLineStart:
+		u.fireDeviceCommand(config.ActionLineStart, hid.CmdLineStart, 0x00, fromUI)
+	case config.ActionLineEnd:
+		u.fireDeviceCommand(config.ActionLineEnd, hid.CmdLineEnd, 0x00, fromUI)
+	case config.ActionBackspace:
+		u.fireDeviceCommand(config.ActionBackspace, hid.CmdBackspace, 0x00, fromUI)
+	case config.ActionDelete:
+		u.fireDeviceCommand(config.ActionDelete, hid.CmdDelete, 0x00, fromUI)
 	case config.ActionPrev:
 		if len(u.stack) > 0 {
 			u.current = u.stack[len(u.stack)-1]
@@ -234,6 +238,24 @@ func (u *appUI) press(row, col int, fromUI bool) {
 		}
 	}
 	u.renderGrid()
+}
+
+// fireDeviceCommand sends a device-keyboard command (paste, select_all,
+// select_line, line_start, line_end, backspace, delete) to the firmware's HID
+// keyboard interface. On-screen clicks (fromUI) are refused: clicking RadKeys
+// gives it focus, so the device's keystroke would land in RadKeys itself — show
+// a hint instead. The HID path (fromUI=false) never touches u.win, preserving
+// the focus invariant (see TestHIDPathDoesNotActivateWindow).
+func (u *appUI) fireDeviceCommand(action string, cmd hid.Command, arg byte, fromUI bool) {
+	if fromUI {
+		label := i18n.T("button." + action)
+		dialog.ShowInformation(label, fmt.Sprintf(i18n.T("device_action.via_keypad_hint"), label), u.win)
+		return
+	}
+	if err := u.device.FireCommand(cmd, arg); err != nil {
+		u.flashStatus(fmt.Sprintf(i18n.T("status.device_command_failed"), err))
+		log.Printf("radkeys: %s failed: %v", action, err)
+	}
 }
 
 func (u *appUI) renderGrid() {

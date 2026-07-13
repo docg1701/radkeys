@@ -34,6 +34,28 @@ func ModifierForOS() Modifier {
 	return ModifierCtrl
 }
 
+// Command is a vendor OUT command byte sent to the device keyboard interface.
+// Values match the firmware protocol (see firmware/rp2040-zero/PROTOCOL.md).
+// 0x02 (GET_VERSION) is handled separately: it expects a version IN reply,
+// not a fire-and-forget keyboard command, so it is not a member of this set.
+type Command uint8
+
+const (
+	CmdFirePaste  Command = 0x01
+	CmdSelectAll  Command = 0x03
+	CmdSelectLine Command = 0x04
+	CmdLineStart  Command = 0x05
+	CmdLineEnd    Command = 0x06
+	CmdBackspace  Command = 0x07
+	CmdDelete     Command = 0x08
+)
+
+// CommandCall records a single FireCommand invocation for test assertions.
+type CommandCall struct {
+	Cmd Command
+	Arg byte
+}
+
 // MinFirmwareMajor and MinFirmwareMinor are the minimum firmware version
 // the host requires. The host warns the user once at connect if the device
 // reports a lower version or fails to respond.
@@ -51,7 +73,7 @@ var errFirmwareVersionUnknown = errors.New("hid: firmware version unknown")
 type Device interface {
 	Open() error
 	Events() <-chan Event
-	FirePaste(mod Modifier) error
+	FireCommand(cmd Command, arg byte) error
 	Version() (major, minor byte, err error)
 	Close() error
 }
@@ -84,7 +106,7 @@ type MockDevice struct {
 	closed       bool
 	mu           sync.Mutex
 	once         sync.Once
-	pastes       []Modifier
+	commands     []CommandCall
 	versionMajor byte
 	versionMinor byte
 	versionKnown bool
@@ -126,20 +148,20 @@ func (m *MockDevice) SetFirmwareVersion(major, minor byte) {
 	m.versionKnown = major != 0
 }
 
-// FirePaste records the modifier so tests can assert the call was made.
-func (m *MockDevice) FirePaste(mod Modifier) error {
+// FireCommand records the command so tests can assert the bytes sent.
+func (m *MockDevice) FireCommand(cmd Command, arg byte) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.pastes = append(m.pastes, mod)
+	m.commands = append(m.commands, CommandCall{Cmd: cmd, Arg: arg})
 	return nil
 }
 
-// PasteCalls returns a copy of the modifiers passed to FirePaste.
-func (m *MockDevice) PasteCalls() []Modifier {
+// CommandCalls returns a copy of the commands passed to FireCommand.
+func (m *MockDevice) CommandCalls() []CommandCall {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	out := make([]Modifier, len(m.pastes))
-	copy(out, m.pastes)
+	out := make([]CommandCall, len(m.commands))
+	copy(out, m.commands)
 	return out
 }
 

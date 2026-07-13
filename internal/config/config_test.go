@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -599,5 +600,81 @@ action = "prev"
 	_, err := Load(writeFile(t, "c.toml", body))
 	if err == nil {
 		t.Fatal("expected error for duplicate button position")
+	}
+}
+
+func TestLoadNewActionsAccepted(t *testing.T) {
+	actions := []string{
+		ActionSelectAll, ActionSelectLine, ActionLineStart,
+		ActionLineEnd, ActionBackspace, ActionDelete,
+	}
+	for _, a := range actions {
+		body := fmt.Sprintf(`
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[app.layout]
+columns = 6
+rows = 6
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = %q
+`, a)
+		if _, err := Load(writeFile(t, "c.toml", body)); err != nil {
+			t.Fatalf("action %q: %v", a, err)
+		}
+	}
+}
+
+func TestLoadNewActionRejectsContent(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "backspace"
+content = "nope"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for backspace with content")
+	}
+}
+
+func TestLoadNewActionRejectsTarget(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "delete"
+target = "root"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for delete with target")
 	}
 }

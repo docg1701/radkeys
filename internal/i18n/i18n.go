@@ -189,14 +189,43 @@ var messages = map[string]map[string]string{
 		"en": "Close", "pt-BR": "Fechar", "pt-PT": "Fechar",
 		"es": "Cerrar", "fr": "Fermer", "de": "Schließen", "it": "Chiudi",
 	},
-	"paste.via_keypad_hint": {
-		"en":    "Use the physical keypad for Paste — clicking here would paste into RadKeys itself.",
-		"pt-BR": "Use o teclado físico para Paste — clicar aqui colaria no próprio RadKeys.",
-		"pt-PT": "Use o teclado físico para Paste — clicar aqui colaria no próprio RadKeys.",
-		"es":    "Use el teclado físico para Paste — hacer clic aquí pegaría en el propio RadKeys.",
-		"fr":    "Utilisez le clavier physique pour Paste — cliquer ici collerait dans RadKeys lui-même.",
-		"de":    "Physisches Keypad für Paste nutzen — Klicken hier würde in RadKeys selbst einfügen.",
-		"it":    "Usa il keypad fisico per Paste — cliccare qui incollerebbe in RadKeys stesso.",
+	"button.select_all": {
+		"en": "Select All", "pt-BR": "Selecionar Tudo", "pt-PT": "Selecionar Tudo",
+		"es": "Seleccionar Todo", "fr": "Sélectionner Tout", "de": "Alle auswählen",
+		"it": "Seleziona Tutto",
+	},
+	"button.select_line": {
+		"en": "Select Line", "pt-BR": "Selecionar Linha", "pt-PT": "Selecionar Linha",
+		"es": "Seleccionar Línea", "fr": "Sélectionner Ligne", "de": "Zeile auswählen",
+		"it": "Seleziona Riga",
+	},
+	"button.line_start": {
+		"en": "Line Start", "pt-BR": "Início da Linha", "pt-PT": "Início da Linha",
+		"es": "Inicio de Línea", "fr": "Début de Ligne", "de": "Zeilenanfang",
+		"it": "Inizio Riga",
+	},
+	"button.line_end": {
+		"en": "Line End", "pt-BR": "Fim da Linha", "pt-PT": "Fim da Linha",
+		"es": "Fin de Línea", "fr": "Fin de Ligne", "de": "Zeilenende",
+		"it": "Fine Riga",
+	},
+	"button.backspace": {
+		"en": "Backspace", "pt-BR": "Backspace", "pt-PT": "Backspace",
+		"es": "Retroceso", "fr": "Retour arrière", "de": "Rücktaste",
+		"it": "Backspace",
+	},
+	"button.delete": {
+		"en": "Delete", "pt-BR": "Delete", "pt-PT": "Delete",
+		"es": "Suprimir", "fr": "Supprimer", "de": "Entf", "it": "Canc",
+	},
+	"device_action.via_keypad_hint": {
+		"en":    "Use the physical keypad for %s — clicking here would send the keystroke into RadKeys itself.",
+		"pt-BR": "Use o teclado físico para %s — clicar aqui enviaria a tecla para o próprio RadKeys.",
+		"pt-PT": "Use o teclado físico para %s — clicar aqui enviaria a tecla para o próprio RadKeys.",
+		"es":    "Use el teclado físico para %s — hacer clic aquí enviaría la tecla al propio RadKeys.",
+		"fr":    "Utilisez le clavier physique pour %s — cliquer ici enverrait la touche dans RadKeys lui-même.",
+		"de":    "Physisches Keypad für %s nutzen — Klicken hier würde die Taste in RadKeys selbst senden.",
+		"it":    "Usa il keypad fisico per %s — cliccare qui invierebbe il tasto in RadKeys stesso.",
 	},
 
 	// ── Status messages ───────────────────────────────────
@@ -209,14 +238,14 @@ var messages = map[string]map[string]string{
 		"de":    "Kein HID-Gerät gefunden — Mock-Modus aktiv (Verwenden Sie die Bildschirmschaltflächen).",
 		"it":    "Nessun dispositivo HID trovato — modalità mock attiva (usa i pulsanti a schermo).",
 	},
-	"status.paste_failed": {
-		"en":    "Paste failed: %s",
-		"pt-BR": "Falha ao colar: %s",
-		"pt-PT": "Falha ao colar: %s",
-		"es":    "Error al pegar: %s",
-		"fr":    "Échec du collage : %s",
-		"de":    "Einfügen fehlgeschlagen: %s",
-		"it":    "Incolla non riuscito: %s",
+	"status.device_command_failed": {
+		"en":    "Device command failed: %s",
+		"pt-BR": "Comando do dispositivo falhou: %s",
+		"pt-PT": "Comando do dispositivo falhou: %s",
+		"es":    "Error del comando del dispositivo: %s",
+		"fr":    "Échec de la commande du périphérique : %s",
+		"de":    "Gerätebefehl fehlgeschlagen: %s",
+		"it":    "Comando dispositivo non riuscito: %s",
 	},
 	"status.out_of_grid": {
 		"en":    "Device event out of grid bounds (row=%d, col=%d) for %dx%d.",

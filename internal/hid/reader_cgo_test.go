@@ -193,33 +193,49 @@ func TestEmitLogsWhenChannelFull(t *testing.T) {
 	}
 }
 
-func TestDIYDeviceFirePasteWritesCtrlBytes(t *testing.T) {
+func TestDIYDeviceFireCommandWritesCtrlBytes(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
 	d := &diyDevice{deviceBase: newBase(dev)}
-	if err := d.FirePaste(ModifierCtrl); err != nil {
-		t.Fatalf("FirePaste: %v", err)
+	if err := d.FireCommand(CmdFirePaste, byte(ModifierCtrl)); err != nil {
+		t.Fatalf("FireCommand: %v", err)
 	}
 	writes := dev.written()
 	if len(writes) != 1 {
 		t.Fatalf("writes len = %d, want 1", len(writes))
 	}
-	want := []byte{0x00, 0x01, byte(ModifierCtrl)}
+	want := []byte{0x00, byte(CmdFirePaste), byte(ModifierCtrl)}
 	if !bytes.Equal(writes[0], want) {
 		t.Fatalf("write = %v, want %v", writes[0], want)
 	}
 }
 
-func TestDIYDeviceFirePasteWritesGUIBytes(t *testing.T) {
+func TestDIYDeviceFireCommandWritesGUIBytes(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
 	d := &diyDevice{deviceBase: newBase(dev)}
-	if err := d.FirePaste(ModifierGUI); err != nil {
-		t.Fatalf("FirePaste: %v", err)
+	if err := d.FireCommand(CmdFirePaste, byte(ModifierGUI)); err != nil {
+		t.Fatalf("FireCommand: %v", err)
 	}
 	writes := dev.written()
 	if len(writes) != 1 {
 		t.Fatalf("writes len = %d, want 1", len(writes))
 	}
-	want := []byte{0x00, 0x01, byte(ModifierGUI)}
+	want := []byte{0x00, byte(CmdFirePaste), byte(ModifierGUI)}
+	if !bytes.Equal(writes[0], want) {
+		t.Fatalf("write = %v, want %v", writes[0], want)
+	}
+}
+
+func TestDIYDeviceFireCommandSelectAllGUI(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	d := &diyDevice{deviceBase: newBase(dev)}
+	if err := d.FireCommand(CmdSelectAll, byte(ModifierGUI)); err != nil {
+		t.Fatalf("FireCommand: %v", err)
+	}
+	writes := dev.written()
+	if len(writes) != 1 {
+		t.Fatalf("writes len = %d, want 1", len(writes))
+	}
+	want := []byte{0x00, byte(CmdSelectAll), byte(ModifierGUI)}
 	if !bytes.Equal(writes[0], want) {
 		t.Fatalf("write = %v, want %v", writes[0], want)
 	}

@@ -59,9 +59,15 @@ Written by the host to the OUT endpoint. 2 bytes, no report ID.
 | `0x00` | — | Reserved (no-op) |
 | `0x01` | `FIRE_PASTE` | Inject Ctrl/Cmd+V keystroke via the keyboard interface |
 | `0x02` | `GET_VERSION` | Request firmware version; device replies with a 2-byte IN report |
+| `0x03` | `SELECT_ALL` | Inject Ctrl/Cmd+A (select all) via the keyboard interface |
+| `0x04` | `SELECT_LINE` | Inject Home then Shift+End (select the current line) |
+| `0x05` | `LINE_START` | Inject Home (jump to start of line) |
+| `0x06` | `LINE_END` | Inject End (jump to end of line) |
+| `0x07` | `BACKSPACE` | Inject Backspace (delete backward) |
+| `0x08` | `DELETE` | Inject Delete Forward |
 | Other | — | Reserved (no-op) |
 
-#### Modifier table (arg byte, for `FIRE_PASTE` only)
+#### Modifier table (arg byte, for `FIRE_PASTE` and `SELECT_ALL`)
 
 | Value | Modifier | USB HID constant | Firmware mapping |
 |-------|----------|------------------|-----------------|
@@ -69,8 +75,9 @@ Written by the host to the OUT endpoint. 2 bytes, no report ID.
 | `0x02` | GUI/Cmd (macOS) | `KEYBOARD_MODIFIER_LEFTGUI` | `0x08` |
 | Other | — | — | Ignored (no keystroke sent) |
 
-When `cmd = FIRE_PASTE` with an unknown arg, the entire command is ignored
-(no keystroke is sent).
+When `cmd = FIRE_PASTE` or `SELECT_ALL` with an unknown arg, the entire command
+is ignored (no keystroke is sent). The other editing commands ignore the arg
+byte (`0x00`); `SELECT_LINE` uses a fixed Shift (not OS-dependent).
 
 #### GET_VERSION response
 
@@ -111,21 +118,41 @@ Standard 6KRO HID keyboard report:
 | 1 | reserved (always 0) |
 | 2–7 | keycodes (up to 6 simultaneous) |
 
-### FIRE_PASTE keystroke sequence
+### Device-keyboard keystroke sequences
 
 The vendor `set_report` callback runs in TinyUSB task/IRQ context, so it does
-NOT execute the keystroke directly — it only arms a `volatile pending_paste`
-flag (0 = none, 1 = Ctrl, 2 = GUI). The main `loop()` drains the flag and runs
-the keystroke sequence where blocking is safe:
+NOT execute the keystroke directly — it only arms a `volatile pending_cmd`
+(0 = none) and `volatile pending_arg` pair. The main `loop()` drains the flags
+and runs the keystroke sequence via `send_key` where blocking is safe. The
+callback sets `pending_arg` first, then `pending_cmd` (commit); the benign race
+between callback-arm and loop-drain is acceptable for a macro pad driven at
+human speed (a later command supersedes an unprocessed earlier one).
+
+`send_key(modifier, keycode)` per keystroke:
 
 1. **Guard:** check `TinyUSBDevice.mounted()`.
-2. **Key down:** `usb_keyboard.keyboardReport(0, modifier, {HID_KEY_V, 0, 0, 0, 0, 0})`.
+2. **Key down:** `usb_keyboard.keyboardReport(0, modifier, {keycode, 0, 0, 0, 0, 0})`.
 3. **Wait:** `delay(10)` — ≥ 2 ms poll interval, lets the host read the key-down report.
 4. **Release all:** `usb_keyboard.keyboardReport(0, 0, {0, 0, 0, 0, 0, 0})`.
+5. **Wait:** `delay(10)` — gap so consecutive keys in a sequence are registered as distinct.
 
-`HID_KEY_V = 0x19` (USB HID keycode for 'V'). The flag is a single `volatile
-uint8_t`; the benign race between callback-arm and loop-drain is acceptable for
-paste (a later command simply supersedes an unprocessed earlier one).
+| Command | arg | Sequence (HID keycodes) |
+|---------|-----|--------------------------|
+| `FIRE_PASTE` (0x01) | modifier (0x01 Ctrl / 0x02 GUI) | Ctrl/Cmd down + V down → release |
+| `SELECT_ALL` (0x03) | modifier (0x01 Ctrl / 0x02 GUI) | Ctrl/Cmd down + A down → release |
+| `SELECT_LINE` (0x04) | `0x00` (unused) | Home down → release; Shift down + End down → release |
+| `LINE_START` (0x05) | `0x00` (unused) | Home down → release |
+| `LINE_END` (0x06) | `0x00` (unused) | End down → release |
+| `BACKSPACE` (0x07) | `0x00` (unused) | Backspace down → release |
+| `DELETE` (0x08) | `0x00` (unused) | Delete Forward down → release |
+
+HID keycodes (Adafruit TinyUSB `hid.h`): A = `HID_KEY_A` (0x04),
+V = `HID_KEY_V` (0x19), Home = `HID_KEY_HOME` (0x4A), End = `HID_KEY_END` (0x4D),
+Backspace = `HID_KEY_BACKSPACE` (0x2A), Delete Forward = `HID_KEY_DELETE` (0x4C).
+Modifiers: Ctrl = `KEYBOARD_MODIFIER_LEFTCTRL` (0x01),
+Shift = `KEYBOARD_MODIFIER_LEFTSHIFT` (0x02), GUI/Cmd = `KEYBOARD_MODIFIER_LEFTGUI` (0x08).
+`SELECT_LINE` sends Home (jump to line start) then Shift+End (select to line
+end), selecting the whole line.
 
 ### Focus behavior
 
@@ -194,6 +221,6 @@ IN report `[row, col]` is sent on press. No report is sent on release.
   and `keyboardReport` calls pass `report_id = 0`.
 - **Single factory flash.** The device is flashed once and never reflashed.
   All configuration lives in the host app (TOML). The device receives only
-  transient commands in RAM (e.g., fire paste) and never persists anything.
+  transient commands in RAM (e.g., fire paste, editing keystrokes) and never persists anything.
 - **PID stability.** The PID (`0xABCD`) must not change once the composite
   device is in use — OSes cache the driver binding after first enumeration.
