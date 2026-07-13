@@ -25,6 +25,7 @@ import (
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/i18n"
+	"github.com/docg1701/radkeys/internal/keystroke"
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
@@ -131,11 +132,15 @@ func (u *appUI) press(row, col int) {
 	case config.ActionText:
 		u.previewText = b.Content
 		u.preview.SetText(b.Content)
+		// Auto-copy to clipboard so Paste can send Ctrl+V to the RIS.
+		u.a.Clipboard().SetContent(b.Content)
 	case config.ActionCopy:
 		u.a.Clipboard().SetContent(u.previewText)
 	case config.ActionPaste:
-		u.previewText = u.a.Clipboard().Content()
-		u.preview.SetText(u.previewText)
+		// Send Ctrl+V to the focused window (the RIS), not the app.
+		if err := keystroke.SendCtrlV(); err != nil {
+			log.Printf("radkeys: paste failed: %v", err)
+		}
 	case config.ActionPrev:
 		if len(u.stack) > 0 {
 			u.current = u.stack[len(u.stack)-1]
