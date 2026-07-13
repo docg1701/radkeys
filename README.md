@@ -18,7 +18,7 @@ You write your report templates once in a config file. The app shows them
 in a grid that mirrors your physical keypad. Press a physical button → the
 phrase appears on screen → press Copy → paste into the RIS. That's it.
 
-Works on Linux and Windows. One executable, one config file, zero install.
+Works on Linux, Windows, and macOS. One executable, one config file, zero install.
 Everything else (icon, translations, themes) is embedded in the binary.
 
 ## Features
@@ -135,10 +135,10 @@ No host-side software is needed for paste — the device is the USB keyboard.
 
 | Option | Device | Keys | Cost |
 |--------|--------|------|------|
-| DIY | RP2040-Zero + push buttons + 3D case | Até 36 | ~R$55-70 |
+| DIY | RP2040-Zero + push buttons + 3D case | Up to 36 | ~R$55-70 |
 
 Firmware: [`firmware/rp2040-zero/`](firmware/rp2040-zero/)
-Guia de montagem: [`BUILD.md`](BUILD.md)
+Assembly guide: [`BUILD.md`](BUILD.md)
 
 ## Configuration
 
