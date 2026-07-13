@@ -27,7 +27,9 @@ func Open(dev config.Device) (Device, error) {
 	}
 	switch dev.Protocol {
 	case config.ProtocolDIY:
-		return &diyDevice{deviceBase: newBase(d)}, nil
+		dd := &diyDevice{deviceBase: newBase(d)}
+		dd.versionMajor, dd.versionMinor, dd.versionKnown = readFirmwareVersion(d)
+		return dd, nil
 	default:
 		_ = d.Close()
 		return nil, fmt.Errorf("hid: unsupported protocol %q", dev.Protocol)
@@ -129,9 +131,11 @@ func (b *deviceBase) emit(e Event) {
 }
 
 const (
-	diyReportLen = 2
-	cmdFirePaste = 0x01
-	reportIDNone = 0x00
+	diyReportLen       = 2
+	cmdFirePaste       = 0x01
+	cmdGetVersion      = 0x02
+	reportIDNone       = 0x00
+	versionReadTimeout = 500 * time.Millisecond
 )
 
 // diyDevice implements the RadKeys DIY protocol: input report = 2 bytes
@@ -139,11 +143,23 @@ const (
 // fire-paste vendor OUT command.
 type diyDevice struct {
 	deviceBase
+	versionMajor byte
+	versionMinor byte
+	versionKnown bool
 }
 
 func (d *diyDevice) Open() error {
 	go d.loop()
 	return nil
+}
+
+// Version returns the firmware version read once at connect. Returns
+// errFirmwareVersionUnknown when the device did not respond to GET_VERSION.
+func (d *diyDevice) Version() (byte, byte, error) {
+	if !d.versionKnown {
+		return 0, 0, errFirmwareVersionUnknown
+	}
+	return d.versionMajor, d.versionMinor, nil
 }
 
 // FirePaste writes the vendor OUT command [reportID, CMD_FIRE_PASTE, modifier]
@@ -155,6 +171,22 @@ func (d *diyDevice) FirePaste(mod Modifier) error {
 		return fmt.Errorf("hid: fire paste: %w", err)
 	}
 	return nil
+}
+
+// readFirmwareVersion sends CMD_GET_VERSION to the device and reads the
+// 2-byte [major, minor] response. Returns known=false on any error or
+// timeout. Must be called before the event loop starts (no concurrent reader).
+func readFirmwareVersion(dev hidDevice) (major, minor byte, known bool) {
+	out := []byte{reportIDNone, cmdGetVersion, 0x00}
+	if _, err := dev.Write(out); err != nil {
+		return 0, 0, false
+	}
+	buf := make([]byte, 2)
+	n, err := dev.ReadWithTimeout(buf, versionReadTimeout)
+	if err != nil || n < 2 {
+		return 0, 0, false
+	}
+	return buf[0], buf[1], true
 }
 
 func (d *diyDevice) loop() {

@@ -104,6 +104,20 @@ func Run(cfg *config.Config, configPath string, dev hid.Device, version string, 
 		u.renderGrid()
 	})
 
+	// One-shot firmware version check at connect (before the event loop).
+	// Warns the user once if the firmware is outdated or its version is
+	// unknown. Shown at startup — NOT on the HID event path.
+	fwMaj, fwMin, fwErr := dev.Version()
+	if hid.FirmwareOutdated(fwMaj, fwMin, fwErr == nil) {
+		var fwMsg string
+		if fwErr != nil {
+			fwMsg = fmt.Sprintf(i18n.T("firmware.unknown_message"), hid.MinFirmwareMajor, hid.MinFirmwareMinor)
+		} else {
+			fwMsg = fmt.Sprintf(i18n.T("firmware.outdated_message"), fwMaj, fwMin, hid.MinFirmwareMajor, hid.MinFirmwareMinor)
+		}
+		dialog.ShowInformation(i18n.T("firmware.outdated_title"), fwMsg, w)
+	}
+
 	if err := dev.Open(); err != nil {
 		return fmt.Errorf("hid: open: %w", err)
 	}

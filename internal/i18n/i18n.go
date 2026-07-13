@@ -237,6 +237,32 @@ var messages = map[string]map[string]string{
 		"it":    "Lettura HID fallita. L'hardware potrebbe essere disconnesso.",
 	},
 
+	// ── Firmware version warning (one-shot at connect) ─────
+	"firmware.outdated_title": {
+		"en": "Firmware Update Required", "pt-BR": "Atualização de Firmware Necessária",
+		"pt-PT": "Atualização de Firmware Necessária", "es": "Actualización de Firmware Requerida",
+		"fr": "Mise à jour du firmware requise", "de": "Firmware-Aktualisierung erforderlich",
+		"it": "Aggiornamento Firmware Necessario",
+	},
+	"firmware.outdated_message": {
+		"en":    "Device firmware is v%d.%d, but v%d.%d or later is required.",
+		"pt-BR": "O firmware do dispositivo é v%d.%d, mas v%d.%d ou superior é necessário.",
+		"pt-PT": "O firmware do dispositivo é v%d.%d, mas v%d.%d ou superior é necessário.",
+		"es":    "El firmware del dispositivo es v%d.%d, pero se requiere v%d.%d o posterior.",
+		"fr":    "Le firmware du périphérique est v%d.%d, mais v%d.%d ou ultérieur est requis.",
+		"de":    "Geräte-Firmware ist v%d.%d, aber v%d.%d oder neuer ist erforderlich.",
+		"it":    "Il firmware del dispositivo è v%d.%d, ma è richiesta v%d.%d o successiva.",
+	},
+	"firmware.unknown_message": {
+		"en":    "Firmware version unknown — update to v%d.%d or later.",
+		"pt-BR": "Versão de firmware desconhecida — atualize para v%d.%d ou superior.",
+		"pt-PT": "Versão de firmware desconhecida — atualize para v%d.%d ou superior.",
+		"es":    "Versión de firmware desconocida — actualice a v%d.%d o posterior.",
+		"fr":    "Version du firmware inconnue — mettez à jour vers v%d.%d ou ultérieur.",
+		"de":    "Firmware-Version unbekannt — aktualisieren Sie auf v%d.%d oder neuer.",
+		"it":    "Versione firmware sconosciuta — aggiornare a v%d.%d o successiva.",
+	},
+
 	// ── Config error dialog ───────────────────────────────
 	"error.config_title": {
 		"en": "RadKeys — Config Error", "pt-BR": "RadKeys — Erro de Configuração",

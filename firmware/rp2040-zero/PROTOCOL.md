@@ -58,6 +58,7 @@ Written by the host to the OUT endpoint. 2 bytes, no report ID.
 |-------|------|-------------|
 | `0x00` | — | Reserved (no-op) |
 | `0x01` | `FIRE_PASTE` | Inject Ctrl/Cmd+V keystroke via the keyboard interface |
+| `0x02` | `GET_VERSION` | Request firmware version; device replies with a 2-byte IN report |
 | Other | — | Reserved (no-op) |
 
 #### Modifier table (arg byte, for `FIRE_PASTE` only)
@@ -70,6 +71,25 @@ Written by the host to the OUT endpoint. 2 bytes, no report ID.
 
 When `cmd = FIRE_PASTE` with an unknown arg, the entire command is ignored
 (no keystroke is sent).
+
+#### GET_VERSION response
+
+When `cmd = GET_VERSION` (0x02), the `set_report` callback arms a
+`pending_version` flag (non-blocking — same pattern as `pending_paste`).
+The main `loop()` drains the flag and sends a one-shot 2-byte IN report on
+the vendor interface:
+
+| Byte | Field | Range |
+|------|-------|-------|
+| 0 | major | 0–255 |
+| 1 | minor | 0–255 |
+
+The host reads this response **once at connect** (before the `[row, col]`
+event loop starts) to check whether the firmware is current. No report ID
+is used (`report_id = 0`). The first composite firmware reports `[1, 0]`
+(v1.0). If no response arrives within the host timeout, the firmware
+version is treated as unknown (the device may be running a pre-v1.0
+firmware without `GET_VERSION` support).
 
 ## Interface B — Keyboard (usage page `0x0001`)
 

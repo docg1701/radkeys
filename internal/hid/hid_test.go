@@ -127,3 +127,50 @@ func TestMockDeviceFirePasteConcurrentCloseNoPanic(t *testing.T) {
 		wg.Wait()
 	}
 }
+
+func TestFirmwareOutdated(t *testing.T) {
+	tests := []struct {
+		name  string
+		major byte
+		minor byte
+		known bool
+		want  bool
+	}{
+		{"unknown", 0, 0, false, true},
+		{"v0.9 known", 0, 9, true, true},
+		{"v1.0 known", 1, 0, true, false},
+		{"v1.1 known", 1, 1, true, false},
+		{"v2.0 known", 2, 0, true, false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := FirmwareOutdated(tc.major, tc.minor, tc.known); got != tc.want {
+				t.Fatalf("FirmwareOutdated(%d, %d, %v) = %v, want %v",
+					tc.major, tc.minor, tc.known, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMockDeviceVersion(t *testing.T) {
+	m := NewMock()
+	maj, min, err := m.Version()
+	if err != nil || maj != 1 || min != 0 {
+		t.Fatalf("Version() = (%d, %d, %v), want (1, 0, nil)", maj, min, err)
+	}
+}
+
+func TestMockDeviceSetFirmwareVersion(t *testing.T) {
+	m := NewMock()
+	m.SetFirmwareVersion(2, 3)
+	maj, min, err := m.Version()
+	if err != nil || maj != 2 || min != 3 {
+		t.Fatalf("Version() = (%d, %d, %v), want (2, 3, nil)", maj, min, err)
+	}
+
+	m.SetFirmwareVersion(0, 0)
+	_, _, err = m.Version()
+	if err == nil {
+		t.Fatal("Version() should return error when major=0 (unknown)")
+	}
+}

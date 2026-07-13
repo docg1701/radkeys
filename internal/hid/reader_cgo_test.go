@@ -25,6 +25,7 @@ type fakeHIDDevice struct {
 	next        int
 	closedCalls int
 	writes      [][]byte
+	onWrite     func(p []byte) []byte // optional: returns a read reply to queue
 }
 
 type readCall struct {
@@ -55,6 +56,11 @@ func (f *fakeHIDDevice) Write(p []byte) (int, error) {
 	cp := make([]byte, len(p))
 	copy(cp, p)
 	f.writes = append(f.writes, cp)
+	if f.onWrite != nil {
+		if reply := f.onWrite(cp); reply != nil {
+			f.calls = append(f.calls, readCall{report: reply, n: len(reply)})
+		}
+	}
 	return len(p), nil
 }
 
@@ -258,5 +264,59 @@ func TestSelectVendorPathEmpty(t *testing.T) {
 	_, ok := selectVendorPath(nil)
 	if ok {
 		t.Fatal("expected ok=false for empty infos")
+	}
+}
+
+func TestReadFirmwareVersionReply(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	dev.onWrite = func(p []byte) []byte {
+		if len(p) >= 3 && p[0] == reportIDNone && p[1] == cmdGetVersion && p[2] == 0x00 {
+			return []byte{1, 0} // simulate firmware v1.0
+		}
+		return nil
+	}
+	major, minor, known := readFirmwareVersion(dev)
+	if !known || major != 1 || minor != 0 {
+		t.Fatalf("readFirmwareVersion = (%d, %d, %v), want (1, 0, true)", major, minor, known)
+	}
+	writes := dev.written()
+	if len(writes) != 1 || !bytes.Equal(writes[0], []byte{reportIDNone, cmdGetVersion, 0x00}) {
+		t.Fatalf("writes = %v, want [[0x00 0x02 0x00]]", writes)
+	}
+}
+
+func TestReadFirmwareVersionTimeout(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	// No onWrite: the device never replies; ReadWithTimeout returns ErrTimeout.
+	major, minor, known := readFirmwareVersion(dev)
+	if known {
+		t.Fatalf("readFirmwareVersion = (%d, %d, %v), want unknown", major, minor, known)
+	}
+	writes := dev.written()
+	if len(writes) != 1 || !bytes.Equal(writes[0], []byte{reportIDNone, cmdGetVersion, 0x00}) {
+		t.Fatalf("writes = %v, want [[0x00 0x02 0x00]]", writes)
+	}
+}
+
+func TestDIYDeviceVersionKnown(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	d := &diyDevice{
+		deviceBase:   newBase(dev),
+		versionMajor: 1,
+		versionMinor: 0,
+		versionKnown: true,
+	}
+	maj, min, err := d.Version()
+	if err != nil || maj != 1 || min != 0 {
+		t.Fatalf("Version() = (%d, %d, %v), want (1, 0, nil)", maj, min, err)
+	}
+}
+
+func TestDIYDeviceVersionUnknown(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	d := &diyDevice{deviceBase: newBase(dev)}
+	_, _, err := d.Version()
+	if err == nil {
+		t.Fatal("Version() should return error when version is unknown")
 	}
 }

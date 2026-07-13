@@ -23,11 +23,16 @@
 #define DIY_PID 0xABCD
 
 // Vendor OUT command codes (byte 0 of the 2-byte OUT report).
-#define CMD_FIRE_PASTE 0x01
+#define CMD_FIRE_PASTE   0x01
+#define CMD_GET_VERSION  0x02
 
 // Modifier selectors for FIRE_PASTE (byte 1 of the OUT report).
 #define MOD_CTRL 0x01  // Ctrl — Linux/Windows
 #define MOD_GUI  0x02  // GUI/Cmd — macOS
+
+// Firmware version reported in response to CMD_GET_VERSION.
+#define FW_VERSION_MAJOR 0x01
+#define FW_VERSION_MINOR 0x00
 
 // 6×6 matrix — RP2040-Zero GPIOs
 const uint8_t colPins[6] = {6, 7, 8, 9, 10, 11};
@@ -64,6 +69,12 @@ bool prevState[6][6] = {false};
 // callback runs in TinyUSB task/IRQ context while loop() reads/clears it.
 volatile uint8_t pending_paste = 0;
 
+// Pending version request armed by the vendor OUT callback, drained in loop().
+// Mirrors pending_paste: the callback only arms the flag; loop() sends the
+// 2-byte version IN report where blocking is safe. volatile for the same
+// reason as pending_paste.
+volatile uint8_t pending_version = 0;
+
 // Inject Ctrl/Cmd+V via the keyboard interface, then release all keys.
 // The report goes to the currently focused window (HID keyboard does not
 // steal focus). Guarded by mount state. Called from loop() (NOT from the USB
@@ -96,14 +107,18 @@ void set_report_callback(uint8_t report_id, hid_report_type_t report_type,
                          uint8_t const *buffer, uint16_t bufsize) {
   (void)report_id;
   if (report_type != HID_REPORT_TYPE_OUTPUT || bufsize < 2) return;
-  if (buffer[0] != CMD_FIRE_PASTE) return;  // only FIRE_PASTE; others reserved/no-op
 
-  if (buffer[1] == MOD_CTRL) {
-    pending_paste = 1;
-  } else if (buffer[1] == MOD_GUI) {
-    pending_paste = 2;
+  if (buffer[0] == CMD_FIRE_PASTE) {
+    if (buffer[1] == MOD_CTRL) {
+      pending_paste = 1;
+    } else if (buffer[1] == MOD_GUI) {
+      pending_paste = 2;
+    }
+    // Unknown arg: leave pending_paste unchanged (no-op).
+  } else if (buffer[0] == CMD_GET_VERSION) {
+    pending_version = 1;
   }
-  // Unknown arg: leave pending_paste unchanged (no-op).
+  // Unknown cmd: no-op.
 }
 
 void setup() {
@@ -145,6 +160,15 @@ void loop() {
     uint8_t mod = (job == 1) ? KEYBOARD_MODIFIER_LEFTCTRL   // 0x01
                              : KEYBOARD_MODIFIER_LEFTGUI;   // 0x08
     fire_paste(mod);
+  }
+
+  // Drain a pending version request armed by the vendor OUT callback.
+  // Sends a one-shot 2-byte IN report [FW_VERSION_MAJOR, FW_VERSION_MINOR].
+  // Done in loop() (not in the callback) to keep the callback non-blocking.
+  if (pending_version) {
+    pending_version = 0;
+    uint8_t ver[2] = {FW_VERSION_MAJOR, FW_VERSION_MINOR};
+    usb_vendor.sendReport(0, ver, sizeof(ver));
   }
 
   for (int c = 0; c < 6; c++) {
