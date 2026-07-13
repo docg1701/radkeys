@@ -44,16 +44,17 @@ func (m *MockReader) Close() error {
 	return nil
 }
 
-// Put injects an event (non-blocking). Safe to call before or after Close.
+// Put injects an event. Non-blocking: drops if the buffer is full.
+// Safe to call before, during, or after Close — the mutex prevents sending
+// on a channel that Close is about to close.
 func (m *MockReader) Put(e Event) {
 	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.closed {
-		m.mu.Unlock()
 		return
 	}
-	m.mu.Unlock()
 	select {
-	case <-m.done:
 	case m.ch <- e:
+	default:
 	}
 }

@@ -4,6 +4,8 @@ package hid
 
 import (
 	"fmt"
+	"log"
+	"sync"
 	"time"
 
 	"github.com/sstallion/go-hid"
@@ -38,6 +40,7 @@ type baseReader struct {
 	ch   chan Event
 	stop chan struct{}
 	done chan struct{}
+	once sync.Once
 }
 
 func newBase(dev *hid.Device) baseReader {
@@ -46,10 +49,17 @@ func newBase(dev *hid.Device) baseReader {
 
 func (b *baseReader) Events() <-chan Event { return b.ch }
 
+// Close is idempotent: a second call returns nil without re-closing the
+// device or panicking on a closed channel. The event channel is closed by
+// loop() when it exits (stop or read error), so pollHID stops cleanly.
 func (b *baseReader) Close() error {
-	close(b.stop)
-	<-b.done
-	return b.dev.Close()
+	var err error
+	b.once.Do(func() {
+		close(b.stop)
+		<-b.done
+		err = b.dev.Close()
+	})
+	return err
 }
 
 // emit sends an event. Non-blocking — drops if channel is full (shouldn't happen).
@@ -75,6 +85,7 @@ func (d *diyReader) Open() error {
 
 func (d *diyReader) loop() {
 	defer close(d.done)
+	defer close(d.ch) // signals pollHID to stop on stop OR read error
 	buf := make([]byte, diyReportLen)
 	for {
 		select {
@@ -87,6 +98,7 @@ func (d *diyReader) loop() {
 			if err == hid.ErrTimeout {
 				continue
 			}
+			log.Printf("radkeys: hid read failed: %v", err)
 			return
 		}
 		if n >= diyReportLen {

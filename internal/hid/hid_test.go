@@ -1,6 +1,7 @@
 package hid
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -48,5 +49,21 @@ func TestMockReaderEventsClosedAfterClose(t *testing.T) {
 	_, ok := <-m.Events()
 	if ok {
 		t.Fatal("Events channel should be closed after Close")
+	}
+}
+
+// TestMockReaderPutConcurrentCloseNoPanic is a regression test for the
+// send-on-closed-channel race: Put used to unlock before selecting on m.ch,
+// so a concurrent Close could close m.ch and panic the send. Run with
+// `go test -race` to also catch the data race.
+func TestMockReaderPutConcurrentCloseNoPanic(t *testing.T) {
+	for i := 0; i < 200; i++ {
+		m := NewMock()
+		_ = m.Open()
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() { defer wg.Done(); m.Put(Event{Row: 0, Col: 0, Pressed: true}) }()
+		go func() { defer wg.Done(); _ = m.Close() }()
+		wg.Wait()
 	}
 }
