@@ -77,8 +77,13 @@ clicks.
 5. Press Copy → phrase goes to the clipboard.
 6. Press Paste → the device sends Ctrl+V (Linux/Windows) or Cmd+V (macOS)
    to the focused window (your RIS/PACS) as a USB keyboard. The phrase appears
-   at the cursor position. No host-side software is needed for Paste — the
-   device is the keyboard. RadKeys never steals focus.
+   at the cursor position. Editing commands (select_all, select_line, line_start,
+   line_end, backspace, delete) are also sent by the device keyboard — they
+   go to the currently focused window without stealing focus. No host-side
+   software is needed — the device is the keyboard. RadKeys never steals focus.
+
+   To configure the keypad visually, use the `radkeys-config` binary instead of
+   hand-editing the TOML file.
 
 The radiologist never touches the keyboard.
 
@@ -150,12 +155,15 @@ everything:
 - Keypad layout (columns × rows)
 - Screens and buttons (phrases organized in a hierarchy)
 
-Edit the file manually — the UI's "Settings" tab only changes app settings,
-not screens/buttons. To add phrases, edit the TOML file directly.
+Use the `radkeys-config` binary (included in each release) to edit the config
+visually — never touch TOML syntax. The editor shows the 6×6 grid, lets you
+add/remove layers and buttons, and validates everything before saving.
 
-Note: the Settings tab's Save rewrites the file without comments
-(BurntSushi/toml does not preserve them); it first copies the previous file
-to `radkeys.config.toml.bak` so your comments are not lost.
+You can also edit the TOML file directly with any text editor.
+
+Note: saving the config strips comments (BurntSushi/toml limitation); a backup
+(`radkeys.config.toml.bak`) is created before every save so your comments
+survive.
 
 ## Contributing
 

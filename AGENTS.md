@@ -8,11 +8,12 @@ RadKeys is a radiology shortcut deck: a 6×6 (36-button) USB keypad copies
 pre-written report phrases to the clipboard and pastes them into the RIS/PACS
 without stealing focus. The RP2040-Zero runs a **composite USB firmware**
 (vendor HID for `[row,col]` button events + HID keyboard that sends Ctrl/Cmd+V
-on host command — see `firmware/rp2040-zero/` + `PROTOCOL.md`). The Go+Fyne
-host is a **configurator**: single binary per OS, all config in
-`radkeys.config.toml`, no host-side keystroke injection (the `keystroke`
-package was removed). No hardware prototype yet — validation is static + mock +
-cross-compile; 1.0.0 only after approval on the prototype hardware.
+and 6 editing keystrokes on host command — see `firmware/rp2040-zero/` +
+`PROTOCOL.md`). The Go+Fyne host is a **configurator**: single binary per OS,
+all config in `radkeys.config.toml`, no host-side keystroke injection (the
+`keystroke` package was removed). A separate optional binary (`radkeys-config`)
+is a visual TOML editor. No hardware prototype yet — validation is static +
+mock + cross-compile; 1.0.0 only after approval on the prototype hardware.
 
 ## Dev cycle (MANDATORY — follow every time)
 
@@ -25,13 +26,15 @@ cross-compile; 1.0.0 only after approval on the prototype hardware.
 6. Build all release binaries LOCALLY to dist/:
    go build -tags flatpak -o dist/radkeys-linux-amd64 .
    CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
+   go build -tags flatpak -o dist/radkeys-config-linux-amd64 ./cmd/radkeys-config
+   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=/usr/bin/x86_64-w64-mingw32-gcc go build -o dist/radkeys-config-windows-amd64.exe ./cmd/radkeys-config
 7. git tag vA.B.C <sha>       ← LIGHTWEIGHT, NOT -a, NOT -m
 8. git push origin vA.B.C
 9. MONITOR: gh run watch <run-id> --exit-status
     Wait until CI passes → release auto-created by CI.
 10. Upload the locally-built binaries to the release:
-    gh release upload vA.B.C dist/radkeys-linux-amd64 dist/radkeys-windows-amd64.exe
-    The agent MUST NOT stop until all binaries are in the release.
+    gh release upload vA.B.C dist/radkeys-linux-amd64 dist/radkeys-windows-amd64.exe dist/radkeys-config-linux-amd64 dist/radkeys-config-windows-amd64.exe --clobber
+    The agent MUST NOT stop until all 4 binaries are in the release.
 ```
 
 ## Commands
@@ -75,7 +78,7 @@ go mod tidy
   ```
 
 ### 🚫 Never
-- Keyboard HID (F13-F24) macro input — rejected by product. The device DOES have an HID keyboard interface, but ONLY to send the paste keystroke (Ctrl/Cmd+V); F13-F24 macro input is still rejected.
+- Keyboard HID (F13-F24) macro input — rejected by product. The device's HID keyboard interface sends paste (Ctrl/Cmd+V) and 6 editing keystrokes (select_all, select_line, line_start, line_end, backspace, delete); F13-F24 macro input is still rejected.
 - Hardcoded UI strings — use `i18n.T()`.
 - Hardcoded version numbers in config or other Go files: version lives ONLY in `var Version` in `main.go` and is bumped there per release (dev cycle step 3). It is NOT injected via `-ldflags` — the build embeds the source literal directly. Test fixtures use `"0.0.0-test"`, which the TOML decoder ignores since `Config` has no `Version` field.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
@@ -95,9 +98,11 @@ go mod tidy
 - [ ] Version bumped in `main.go` (var Version)
 - [ ] `dist/radkeys-linux-amd64` built and uploaded
 - [ ] `dist/radkeys-windows-amd64.exe` built (mingw) and uploaded
+- [ ] `dist/radkeys-config-linux-amd64` built and uploaded
+- [ ] `dist/radkeys-config-windows-amd64.exe` built (mingw) and uploaded
 - [ ] `git tag vX.Y.Z` (lightweight) pushed
 - [ ] CI passed → release published by CI
-- [ ] Linux + Windows binaries uploaded to the release
+- [ ] All 4 binaries uploaded to the release
 
 ## Testing
 
@@ -118,7 +123,9 @@ radkeys/
 │   ├── ui/                  # Fyne UI: preview + grid + settings + about
 │   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # theme.go — 13 presets
-│   └── assets/              # embedded icons
+│   ├── assets/              # embedded icons
+│   └── editor/              # Fyne visual config editor (radkeys-config)
+├── cmd/radkeys-config/      # Entry point for the optional editor binary
 ├── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard + PROTOCOL.md
 └── research/                # 0.12.0 config-editor research briefs (UX, Fyne, schema)
 ```
@@ -156,4 +163,4 @@ The CI `.github/workflows/build.yml`:
    - `radkeys-linux-amd64`
    - `radkeys.config.toml`
 
-The agent then uploads the locally-built Windows (and macOS if available) binaries to the same release.
+The agent then uploads the locally-built Windows and config-editor binaries to the same release.
