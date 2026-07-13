@@ -85,7 +85,8 @@
 ## Current state (starting point)
 
 > Progress snapshot — steps 0-7 COMPLETE and committed. Release
-> v0.10.0 published (Linux + Windows). No hardware prototype yet.
+> v0.10.0 published (Linux + Windows). Steps 8-9 (0.11.0 device editing
+> functions, 0.12.0 config-editor app) planned. No hardware prototype yet.
 
 - `var Version = "0.10.0"` in `main.go` (Step 7 bump).
 - **Block 1+2 (antipattern cleanup, commits 5e1af11..8085d90):** kept —
@@ -107,7 +108,7 @@
   in `press()` + static guard `TestHIDPathDoesNotActivateWindow`. ✅ COMPLETE.
 - **Step 5 — Version check one-shot (@ c22537d):** `FirmwareOutdated` +
   `MinFirmware 1.0` + one-time warning dialog on connect. ✅ COMPLETE.
-- **Step 6 — Final documentation (@ 8e55d53):** README/BUILD/AGENTS/ANALISE/
+- **Step 6 — Final documentation (@ 8e55d53):** README/BUILD/AGENTS/PLAN/
   radkeys.config.toml updated for the composite-USB architecture;
   `PROTOCOL.md` verified against the firmware (no change). ✅ COMPLETE.
 - **Step 7 — Release 0.10.0 (@ 916734f):** bump 0.9.1→0.10.0, tag v0.10.0,
@@ -216,7 +217,7 @@
   vendor+keyboard device + single factory flash), `PROTOCOL.md`
   (referenced by Step 1 — confirm it matches the final firmware),
   `radkeys.config.toml` (versioned example coherent with current fields/uses),
-  and this `ANALISE.md` itself (mark steps 0-7 as done, reflect the reframe
+  and this `PLAN.md` itself (mark steps 0-7 as done, reflect the reframe
   "no hardware prototype yet → only static/mock validation; real flash when the
   prototype is ready; `0.x.x` until hardware approval, `1.0.0` only after", and
   rewrite all stale GATE/flash language in the validations of steps 1/3/4). Check
@@ -238,8 +239,132 @@
   (USB keyboard); does not steal focus; macOS supported in code; keystroke
   package removed."
 - **Subagent:** none (parent executes the dev cycle).
-- **Validation:** green CI + release with Linux+Windows + **Galvani confirms the
-  full flow on hardware** before the tag.
+- **Validation:** green CI + release with Linux+Windows. Real hardware
+  confirmation deferred (no prototype yet); `1.0.0` only after hardware approval.
+
+### Step 8 — Release 0.11.0: device keyboard editing functions
+
+- **What:** add six new configurable button actions that make the device
+  keyboard send editing keystrokes (extending the composite keyboard interface
+  from Step 1 — no new USB interface):
+  - `select_all` — Ctrl/Cmd+A (select all text). Modifier per OS.
+  - `select_line` — select the current line: Home, then Shift+End (two-key
+    sequence; Shift is fixed, not OS-dependent).
+  - `line_start` — Home (jump to start of line).
+  - `line_end` — End (jump to end of line).
+  - `backspace` — Backspace (delete backward).
+  - `delete` — Delete Forward (delete forward).
+  Firmware: new vendor OUT commands `0x03`..`0x08` (SELECT_ALL, SELECT_LINE,
+  LINE_START, LINE_END, BACKSPACE, DELETE); each arms a volatile flag (like
+  `pending_paste`) and `loop()` sends the keyboard sequence (HID keycodes:
+  A=0x04, Home=0x4A, End=0x4D, Backspace=0x2A, Delete Forward=0x4C; Shift=
+  KEYBOARD_MODIFIER_LEFTSHIFT 0x02; Ctrl/Cmd per OS). The `arg` byte carries the
+  OS modifier selector for SELECT_ALL (0x01 Ctrl / 0x02 GUI, like paste);
+  unused (0x00) for the others.
+  Host: new `config` actions (ActionSelectAll/SelectLine/LineStart/LineEnd/
+  Backspace/Delete) + validActions; `ui.go` press() dispatches them to a device
+  command writer (generalize `FirePaste` into `FireCommand(cmd, arg)` — keep
+  paste working); `ModifierForOS()` for select_all, `0x00` for the rest.
+  `MockDevice` records the commands; unit tests assert the bytes. i18n button
+  labels in all 7 languages. `PROTOCOL.md` documents the new commands +
+  sequences.
+- **Subagent:** `planner`/`reviewer` (firmware keycodes/sequences + host action
+  wiring) → `worker` (firmware + host + i18n + PROTOCOL.md + tests) → fresh
+  validators (firmware static + host mock + PROTOCOL coherence).
+- **Validation:** `go test -race ./...`, build Linux/Windows, `GOOS=darwin go
+  vet`, static firmware review (no compile/hardware). Real hardware test
+  deferred (no prototype yet); `1.0.0` only after hardware approval.
+- **Why:** radiologists need quick text editing (select all/line, jump
+  start/end, delete) from the keypad without touching the keyboard or losing
+  RIS focus — same no-focus-steal property as paste (device keyboard sends to
+  the focused window).
+
+### Step 9 — Release 0.12.0: dedicated RadKeys TOML config editor (separate, optional binary)
+
+- **What:** build a complete, dedicated Go+Fyne app that makes editing
+  `radkeys.config.toml` extremely easy for a lay user — a visual editor that
+  knows the RadKeys schema (not a generic TOML editor). It is a SEPARATE,
+  OPTIONAL binary (`cmd/radkeys-config/`, built for Linux + Windows like the
+  RadKeys binary); RadKeys runs without it, and the TOML can still be hand-edited.
+
+  **Launch / file handling:** on startup it auto-loads `radkeys.config.toml`
+  from its own directory; File→Open loads any `.toml`; one-click Save (toolbar)
+  writes back to the open file (Save As supported); recent files via
+  `fyne.App.Preferences`. Dirty-state asterisk in the title +
+  confirm-on-unsaved-quit.
+
+  **UX metaphor (game-inventory feel, creative but KISS):** a three-panel layout
+  inspired by Elgato Stream Deck (research: /tmp/radkeys-012/research-config-editor-ux.md)
+  but RadKeys-specific and minimal:
+  - Left: **screens list** (the "pages" of the inventory). Add / rename / delete a
+    screen; select one to show its grid.
+  - Center: **visual 6×6 grid mirroring the physical keypad** (the inventory
+    grid). Each cell is a button slot: empty cells show "+"; filled cells show the
+    label + an action icon. Click a cell to edit that (row, col) button.
+  - Right: **property inspector** for the selected button (or the selected
+    screen, or the App settings): the relevant fields only, with inline
+    validation and a tooltip/help on every field.
+
+  **Static + dynamic explanations (the core ask):**
+  - Static: every field has a tooltip/help text (i18n, 7 languages) explaining
+    what it does in plain language. A Help toggle reveals all explanations
+    inline (a guided "what can I configure here" view). An info panel explains
+    the RadKeys model (device → screens → buttons → actions).
+  - Dynamic: the property inspector adapts to the chosen action — `navigate`
+    shows a Target picker populated with valid screen ids (and flags missing
+    targets); `text` shows a multi-line Content editor with a live preview of the
+    phrase that will be pasted; `copy/paste/prev/home` and the 0.11.0 editing
+    actions (`select_all/select_line/line_start/line_end/backspace/delete`) show
+    only the Label field. Invalid buttons are highlighted on the grid
+    (duplicate position, out-of-bounds row/col, bad navigate target) with a
+    tooltip stating the problem in plain language.
+
+  **KISS / no over-engineering:**
+  - No drag-drop (Fyne lacks native list reordering — research gap
+    /tmp/radkeys-012/research-fyne-forms.md). Reorder screens/buttons with up/down
+    buttons; assign a button by clicking its grid cell (the grid IS the row/col
+    picker — no separate row/col fields for the common case).
+  - No generic TOML editing — schema-driven forms only (the user can never
+    produce a syntactically invalid TOML).
+  - Explicit Save (not auto-save) — config edits have consequences.
+  - Save writes a canonical, fully-commented TOML (the editor owns the format;
+    comments are part of its output) and backs up the previous file to `.bak`.
+    Target users edit via the editor, so canonical comments are sufficient; the
+    `.bak` protects hand-editors. (A comment-preserving lib such as
+    pelletier/go-toml/v2 is allowed ONLY if it stays simple; do NOT build an AST
+    editor.)
+
+  **Reuses:** `internal/config` (Load/Validate/Save + the `.bak`), `internal/i18n`
+  (existing button.*/settings.*/status.* + new `editor.*` keys in 7 languages —
+  see scout /tmp/radkeys-012/scout-config-schema.md), `internal/theme` (13
+  presets). New `cmd/radkeys-config/main.go` + a new `internal/editor` package for
+  the Fyne editor.
+
+- **Subagent:** `planner`/`reviewer` (UX spec → Fyne widget mapping: `widget.Form`
+  + Entry/Select/Check, `widget.List` with manual callbacks for screens/buttons
+  [NOT `BindStruct` — issue #2607], `AppTabs`/`HSplit`, validation + `HintText`,
+  `dialog.NewFileOpen`/`NewFileSave`, `Preferences`) → `worker` (build
+  `cmd/radkeys-config` + `internal/editor`: auto-load/open/save/save-as, the
+  3-panel UI, property inspector, static+dynamic help, inline validation +
+  grid highlighting, `editor.*` i18n keys, reuse `config.Validate`) → fresh
+  validators (UX review against the research patterns, Fyne-pattern review,
+  schema-coverage review that every config field + validation rule is editable +
+  guarded, and a no-over-engineering check).
+
+- **Validation:** `go test -race ./...` (editor unit tests: load/save round-trip,
+  validation surfacing, mock Fyne where feasible), build `radkeys-config` for
+  Linux flatpak + Windows mingw (same toolchain as RadKeys), `GOOS=darwin go
+  vet`. The editor is OPTIONAL — RadKeys still builds/runs without it. Ship
+  `radkeys-config-linux-amd64` + `radkeys-config-windows-amd64.exe` in the
+  0.12.0 release (alongside the RadKeys binaries + config template). Real
+  usability test with radiologists deferred (no prototype pressure).
+
+- **Why:** today the only way to add phrases/screens is hand-editing TOML (the
+  Settings tab edits app settings only — scout-confirmed gap). A dedicated
+  visual editor with game-inventory clarity + static/dynamic help makes the
+  36-button configurability accessible to any radiologist, with zero TOML
+  knowledge — this is the make-or-break UX for adoption. A separate, optional
+  binary keeps RadKeys itself single-purpose.
 
 ---
 
@@ -264,6 +389,15 @@
    against the shipped code (also rewrite stale GATE/flash language in steps
    1/3/4 validations). Depends on 1-5 being done.
 8. **Step 7** (parent directly): release 0.10.0.
+9. **Step 8** (planner→worker→validators): device keyboard editing functions
+   (select_all/select_line/line_start/line_end/backspace/delete) + release
+   0.11.0. Depends on Step 1 (composite keyboard) + Step 2 (device-command
+   writer), which it extends.
+10. **Step 9** (planner→worker→validators): dedicated RadKeys TOML config editor
+    (`cmd/radkeys-config`, separate optional binary) — game-inventory 3-panel
+    UI + static/dynamic help + inline validation. Depends on Step 8 (0.11.0
+    actions in the action set) for full action coverage; can start in parallel
+    once the action set is agreed. Release 0.12.0.
 
 **Critical dependency:** no hardware prototype yet, so all validation is
 static + mock + cross-compile (Linux flatpak, Windows mingw, `GOOS=darwin
