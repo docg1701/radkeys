@@ -44,13 +44,17 @@ clicks.
 1. Edit `radkeys.config.toml` to add your phrases. The file is heavily
    commented — a human or LLM can read it and generate a custom config
    following the rules in the comments.
-2. Connect your USB device (Stream Deck / Elgato-compatible clone, or the
-   DIY keypad).
+2. Connect your USB device with the DIY keypad (RP2040-Zero).
 3. Run RadKeys.
-4. Press a button → phrase appears in the preview → press Copy → paste in
-   the RIS (Ctrl+V).
+4. Press a text button → phrase appears in the preview.
+5. Press Copy → phrase goes to the clipboard.
+6. Press Paste → Ctrl+V is sent to the focused window (your RIS/PACS).
+   The phrase appears at the cursor position. RadKeys never steals focus.
 
-The radiologist never touches the keyboard except to paste.
+**Linux only:** `xdotool` must be installed for Paste to work:
+`sudo apt install xdotool`
+
+The radiologist never touches the keyboard.
 
 ## Build from source
 
@@ -91,6 +95,12 @@ CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o ra
 ```bash
 go test ./... -v
 ```
+
+### Runtime dependencies (end user)
+
+| Dependency | Linux | Windows |
+|------------|-------|---------|
+| **xdotool** | `sudo apt install xdotool` — required for Paste (sends Ctrl+V to RIS) | Not needed — uses Windows API natively |
 
 ## Hardware
 

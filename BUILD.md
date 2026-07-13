@@ -229,6 +229,18 @@ KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1234", ATTRS{idProduct
 
 Depois: `sudo adduser $USER input` (fazer logout/login).
 
+### 4.5 Dependência: xdotool (Linux)
+
+O botão "Paste" do RadKeys envia Ctrl+V para a janela focada (o RIS/PACS).
+No Linux isso usa o `xdotool`. Instale:
+
+```
+sudo apt install xdotool
+```
+
+Sem o xdotool, o botão Paste não funciona no Linux. No Windows não é
+necessário — usa a API nativa do Windows (keybd_event).
+
 ---
 
 ## 5. Durabilidade e Manutenção

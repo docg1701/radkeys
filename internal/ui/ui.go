@@ -132,8 +132,6 @@ func (u *appUI) press(row, col int) {
 	case config.ActionText:
 		u.previewText = b.Content
 		u.preview.SetText(b.Content)
-		// Auto-copy to clipboard so Paste can send Ctrl+V to the RIS.
-		u.a.Clipboard().SetContent(b.Content)
 	case config.ActionCopy:
 		u.a.Clipboard().SetContent(u.previewText)
 	case config.ActionPaste:
