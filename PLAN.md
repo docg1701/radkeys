@@ -293,39 +293,46 @@
   `fyne.App.Preferences`. Dirty-state asterisk in the title +
   confirm-on-unsaved-quit.
 
-  **UX metaphor (game-inventory feel, creative but KISS):** a three-panel layout
-  inspired by Elgato Stream Deck (research: /tmp/radkeys-012/research-config-editor-ux.md)
-  but RadKeys-specific and minimal:
-  - Left: **screens list** (the "pages" of the inventory). Add / rename / delete a
-    screen; select one to show its grid.
-  - Center: **visual 6×6 grid mirroring the physical keypad** (the inventory
-    grid). Each cell is a button slot: empty cells show "+"; filled cells show the
-    label + an action icon. Click a cell to edit that (row, col) button.
-  - Right: **property inspector** for the selected button (or the selected
-    screen, or the App settings): the relevant fields only, with inline
-    validation and a tooltip/help on every field.
+  **UX (absolutely intuitive + graphical; the user never touches TOML syntax):**
+  - Main view = the visual **6×6 grid** of the CURRENT layer, mirroring the
+    physical keypad. Empty cells show "+"; filled cells show the label + an
+    action icon. The user clicks a cell and the **options appear at the TOP of
+    the window** (a top property bar, not a side panel): Label, an Action
+    dropdown, and the per-action fields — only the fields valid for that action.
+  - **Layers (= config `screens`):** the user adds / removes / renames layers
+    and connects them with `navigate` buttons (a navigate button's Target is
+    another layer). The top bar shows the current layer name + a Back (prev)
+    button + a layer dropdown to jump to any layer + Add/Remove layer. (Config
+    field stays `screens` for back-compat; the UI labels say "Layer".)
+  - **Navigate like the device:** a Simulate/Preview toggle makes button clicks
+    act like the real RadKeys — a `navigate` button switches to its target
+    layer's grid, a `text` button shows the phrase in a preview pane, etc. — so
+    the user walks the whole layer graph interactively before saving. In the
+    default Edit mode, a click shows the button's options at the top.
 
-  **Static + dynamic explanations (the core ask):**
-  - Static: every field has a tooltip/help text (i18n, 7 languages) explaining
-    what it does in plain language. A Help toggle reveals all explanations
-    inline (a guided "what can I configure here" view). An info panel explains
-    the RadKeys model (device → screens → buttons → actions).
-  - Dynamic: the property inspector adapts to the chosen action — `navigate`
-    shows a Target picker populated with valid screen ids (and flags missing
-    targets); `text` shows a multi-line Content editor with a live preview of the
-    phrase that will be pasted; `copy/paste/prev/home` and the 0.11.0 editing
-    actions (`select_all/select_line/line_start/line_end/backspace/delete`) show
-    only the Label field. Invalid buttons are highlighted on the grid
-    (duplicate position, out-of-bounds row/col, bad navigate target) with a
-    tooltip stating the problem in plain language.
+  **The app resolves syntax; the user only makes valid choices (the core ask):**
+  - The user NEVER sees or writes TOML. The editor only offers valid options:
+    dropdowns for enums (action, language, theme preset, protocol, navigate
+    target — populated from the actual layers), bounded inputs (row/col come
+    from the grid cell, not free text), required fields enforced (label always;
+    content for `text`; target for `navigate`), and inline validation that
+    blocks invalid values before Save. The app generates the TOML; the output
+    is guaranteed to be a valid `radkeys.config.toml`.
+  - Static help: every field has a tooltip/help text (i18n, 7 languages) in
+    plain language; a Help toggle reveals all explanations inline; an info
+    panel explains the RadKeys model (device → layers → buttons → actions).
+  - Dynamic help: the top options bar adapts to the chosen action (see above);
+    invalid buttons are highlighted on the grid (duplicate position, bad
+    navigate target) with a tooltip stating the problem in plain language.
 
   **KISS / no over-engineering:**
   - No drag-drop (Fyne lacks native list reordering — research gap
-    /tmp/radkeys-012/research-fyne-forms.md). Reorder screens/buttons with up/down
-    buttons; assign a button by clicking its grid cell (the grid IS the row/col
-    picker — no separate row/col fields for the common case).
-  - No generic TOML editing — schema-driven forms only (the user can never
-    produce a syntactically invalid TOML).
+    /tmp/radkeys-012/research-fyne-forms.md). Reorder layers with up/down
+    buttons; assign a button by clicking its grid cell (the grid IS the
+    row/col picker — no row/col fields).
+  - Schema-driven, constrained inputs only — the user can never produce an
+    invalid TOML (see above); the app writes it.
+  - Explicit Save (not auto-save) — config edits have consequences.
   - Explicit Save (not auto-save) — config edits have consequences.
   - Save writes a canonical, fully-commented TOML (the editor owns the format;
     comments are part of its output) and backs up the previous file to `.bak`.
