@@ -35,15 +35,15 @@ func main() {
 		return
 	}
 
-	reader, err := hid.Open(cfg.App.Device)
+	dev, err := hid.Open(cfg.App.Device)
 	isMock := false
 	if err != nil {
 		log.Printf("radkeys: %v; using mock (click UI buttons)", err)
-		reader = hid.NewMock()
+		dev = hid.NewMock()
 		isMock = true
 	}
 
-	if err := ui.Run(cfg, path, reader, Version, isMock); err != nil {
+	if err := ui.Run(cfg, path, dev, Version, isMock); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
 }

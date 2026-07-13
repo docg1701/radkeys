@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestMockReaderOpenClose(t *testing.T) {
+func TestMockDeviceOpenClose(t *testing.T) {
 	m := NewMock()
 	if err := m.Open(); err != nil {
 		t.Fatalf("Open: %v", err)
@@ -16,7 +16,7 @@ func TestMockReaderOpenClose(t *testing.T) {
 	}
 }
 
-func TestMockReaderPutAndReceive(t *testing.T) {
+func TestMockDevicePutAndReceive(t *testing.T) {
 	m := NewMock()
 	_ = m.Open()
 	defer func() { _ = m.Close() }()
@@ -33,7 +33,7 @@ func TestMockReaderPutAndReceive(t *testing.T) {
 	}
 }
 
-func TestMockReaderPutAfterCloseIsSafe(t *testing.T) {
+func TestMockDevicePutAfterCloseIsSafe(t *testing.T) {
 	m := NewMock()
 	_ = m.Open()
 	_ = m.Close()
@@ -41,7 +41,7 @@ func TestMockReaderPutAfterCloseIsSafe(t *testing.T) {
 	m.Put(Event{Row: 0, Col: 0, Pressed: true})
 }
 
-func TestMockReaderEventsClosedAfterClose(t *testing.T) {
+func TestMockDeviceEventsClosedAfterClose(t *testing.T) {
 	m := NewMock()
 	_ = m.Open()
 	_ = m.Close()
@@ -52,11 +52,53 @@ func TestMockReaderEventsClosedAfterClose(t *testing.T) {
 	}
 }
 
-// TestMockReaderPutConcurrentCloseNoPanic is a regression test for the
+func TestMockDeviceFirePasteRecordsCalls(t *testing.T) {
+	m := NewMock()
+	_ = m.Open()
+	defer func() { _ = m.Close() }()
+
+	if err := m.FirePaste(ModifierCtrl); err != nil {
+		t.Fatalf("FirePaste Ctrl: %v", err)
+	}
+	if err := m.FirePaste(ModifierGUI); err != nil {
+		t.Fatalf("FirePaste GUI: %v", err)
+	}
+
+	calls := m.PasteCalls()
+	if len(calls) != 2 {
+		t.Fatalf("PasteCalls len = %d, want 2", len(calls))
+	}
+	if calls[0] != ModifierCtrl || calls[1] != ModifierGUI {
+		t.Fatalf("PasteCalls = %v, want [Ctrl, GUI]", calls)
+	}
+}
+
+func TestMockDevicePasteCallsReturnsCopy(t *testing.T) {
+	m := NewMock()
+	_ = m.FirePaste(ModifierCtrl)
+	calls := m.PasteCalls()
+	calls[0] = ModifierGUI
+	if m.PasteCalls()[0] != ModifierCtrl {
+		t.Fatal("PasteCalls should return a copy, not the internal slice")
+	}
+}
+
+func TestMockDeviceCloseIdempotent(t *testing.T) {
+	m := NewMock()
+	_ = m.Open()
+	if err := m.Close(); err != nil {
+		t.Fatalf("first Close: %v", err)
+	}
+	if err := m.Close(); err != nil {
+		t.Fatalf("second Close: %v", err)
+	}
+}
+
+// TestMockDevicePutConcurrentCloseNoPanic is a regression test for the
 // send-on-closed-channel race: Put used to unlock before selecting on m.ch,
 // so a concurrent Close could close m.ch and panic the send. Run with
 // `go test -race` to also catch the data race.
-func TestMockReaderPutConcurrentCloseNoPanic(t *testing.T) {
+func TestMockDevicePutConcurrentCloseNoPanic(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		m := NewMock()
 		_ = m.Open()
@@ -64,6 +106,22 @@ func TestMockReaderPutConcurrentCloseNoPanic(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go func() { defer wg.Done(); <-start; m.Put(Event{Row: 0, Col: 0, Pressed: true}) }()
+		go func() { defer wg.Done(); <-start; _ = m.Close() }()
+		close(start)
+		wg.Wait()
+	}
+}
+
+// TestMockDeviceFirePasteConcurrentCloseNoPanic ensures FirePaste and Close
+// can run concurrently without panicking or racing on the pastes slice.
+func TestMockDeviceFirePasteConcurrentCloseNoPanic(t *testing.T) {
+	for i := 0; i < 5000; i++ {
+		m := NewMock()
+		_ = m.Open()
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() { defer wg.Done(); <-start; _ = m.FirePaste(ModifierCtrl) }()
 		go func() { defer wg.Done(); <-start; _ = m.Close() }()
 		close(start)
 		wg.Wait()

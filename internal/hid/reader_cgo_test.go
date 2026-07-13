@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"log"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -14,15 +15,16 @@ import (
 	"github.com/sstallion/go-hid"
 )
 
-// fakeHIDDevice is a programmable stand-in for *hid.Device used by diyReader.loop.
-// When the programmed calls are exhausted it returns hid.ErrTimeout (matching
+// fakeHIDDevice is a programmable stand-in for *hid.Device used by diyDevice.loop.
+// When the programmed reads are exhausted it returns hid.ErrTimeout (matching
 // real device behavior when no report is pending), keeping the loop alive
-// until Close signals stop.
+// until Close signals stop. Write captures every written byte for assertions.
 type fakeHIDDevice struct {
 	mu          sync.Mutex
 	calls       []readCall
 	next        int
 	closedCalls int
+	writes      [][]byte
 }
 
 type readCall struct {
@@ -47,6 +49,15 @@ func (f *fakeHIDDevice) ReadWithTimeout(p []byte, _ time.Duration) (int, error) 
 	return call.n, call.err
 }
 
+func (f *fakeHIDDevice) Write(p []byte) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	cp := make([]byte, len(p))
+	copy(cp, p)
+	f.writes = append(f.writes, cp)
+	return len(p), nil
+}
+
 func (f *fakeHIDDevice) Close() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -54,11 +65,20 @@ func (f *fakeHIDDevice) Close() error {
 	return nil
 }
 
-func TestDIYReaderReportDelivered(t *testing.T) {
+// written returns a copy of all byte slices passed to Write.
+func (f *fakeHIDDevice) written() [][]byte {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	out := make([][]byte, len(f.writes))
+	copy(out, f.writes)
+	return out
+}
+
+func TestDIYDeviceReportDelivered(t *testing.T) {
 	dev := newFakeHIDDevice([]readCall{
 		{report: []byte{2, 5}, n: 2, err: nil},
 	})
-	r := &diyReader{baseReader: newBase(dev)}
+	r := &diyDevice{deviceBase: newBase(dev)}
 	if err := r.Open(); err != nil {
 		t.Fatalf("Open: %v", err)
 	}
@@ -80,12 +100,12 @@ func TestDIYReaderReportDelivered(t *testing.T) {
 	}
 }
 
-func TestDIYReaderReadErrorClosesEvents(t *testing.T) {
+func TestDIYDeviceReadErrorClosesEvents(t *testing.T) {
 	readErr := errors.New("usb disconnect")
 	dev := newFakeHIDDevice([]readCall{
 		{err: readErr},
 	})
-	r := &diyReader{baseReader: newBase(dev)}
+	r := &diyDevice{deviceBase: newBase(dev)}
 	_ = r.Open()
 
 	select {
@@ -103,9 +123,9 @@ func TestDIYReaderReadErrorClosesEvents(t *testing.T) {
 	}
 }
 
-func TestDIYReaderStopClosesEvents(t *testing.T) {
+func TestDIYDeviceStopClosesEvents(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	r := &diyReader{baseReader: newBase(dev)}
+	r := &diyDevice{deviceBase: newBase(dev)}
 	_ = r.Open()
 
 	if err := r.Close(); err != nil {
@@ -126,9 +146,9 @@ func TestDIYReaderStopClosesEvents(t *testing.T) {
 	}
 }
 
-func TestDIYReaderCloseIdempotent(t *testing.T) {
+func TestDIYDeviceCloseIdempotent(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	r := &diyReader{baseReader: newBase(dev)}
+	r := &diyDevice{deviceBase: newBase(dev)}
 	_ = r.Open()
 	_ = r.Close()
 	if err := r.Close(); err != nil {
@@ -140,7 +160,7 @@ func TestDIYReaderCloseIdempotent(t *testing.T) {
 }
 
 func TestEmitLogsWhenChannelFull(t *testing.T) {
-	br := baseReader{
+	br := deviceBase{
 		ch:   make(chan Event, 1),
 		stop: make(chan struct{}),
 		done: make(chan struct{}),
@@ -164,5 +184,79 @@ func TestEmitLogsWhenChannelFull(t *testing.T) {
 	msg := buf.String()
 	if !strings.Contains(msg, "hid event dropped") {
 		t.Fatalf("expected log about dropped event, got %q", msg)
+	}
+}
+
+func TestDIYDeviceFirePasteWritesCtrlBytes(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	d := &diyDevice{deviceBase: newBase(dev)}
+	if err := d.FirePaste(ModifierCtrl); err != nil {
+		t.Fatalf("FirePaste: %v", err)
+	}
+	writes := dev.written()
+	if len(writes) != 1 {
+		t.Fatalf("writes len = %d, want 1", len(writes))
+	}
+	want := []byte{0x00, 0x01, byte(ModifierCtrl)}
+	if !bytes.Equal(writes[0], want) {
+		t.Fatalf("write = %v, want %v", writes[0], want)
+	}
+}
+
+func TestDIYDeviceFirePasteWritesGUIBytes(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	d := &diyDevice{deviceBase: newBase(dev)}
+	if err := d.FirePaste(ModifierGUI); err != nil {
+		t.Fatalf("FirePaste: %v", err)
+	}
+	writes := dev.written()
+	if len(writes) != 1 {
+		t.Fatalf("writes len = %d, want 1", len(writes))
+	}
+	want := []byte{0x00, 0x01, byte(ModifierGUI)}
+	if !bytes.Equal(writes[0], want) {
+		t.Fatalf("write = %v, want %v", writes[0], want)
+	}
+}
+
+func TestModifierForOS(t *testing.T) {
+	got := ModifierForOS()
+	want := ModifierCtrl
+	if runtime.GOOS == "darwin" {
+		want = ModifierGUI
+	}
+	if got != want {
+		t.Fatalf("ModifierForOS() = %d, want %d", got, want)
+	}
+}
+
+func TestSelectVendorPathPicksVendorInterface(t *testing.T) {
+	infos := []*hid.DeviceInfo{
+		{Path: "/dev/hidraw0", UsagePage: 0x0001},
+		{Path: "/dev/hidraw1", UsagePage: 0xFF00},
+	}
+	path, ok := selectVendorPath(infos)
+	if !ok {
+		t.Fatal("expected ok=true for vendor interface present")
+	}
+	if path != "/dev/hidraw1" {
+		t.Fatalf("path = %q, want /dev/hidraw1", path)
+	}
+}
+
+func TestSelectVendorPathFallsBackWhenNone(t *testing.T) {
+	infos := []*hid.DeviceInfo{
+		{Path: "/dev/hidraw0", UsagePage: 0x0001},
+	}
+	_, ok := selectVendorPath(infos)
+	if ok {
+		t.Fatal("expected ok=false when no vendor interface")
+	}
+}
+
+func TestSelectVendorPathEmpty(t *testing.T) {
+	_, ok := selectVendorPath(nil)
+	if ok {
+		t.Fatal("expected ok=false for empty infos")
 	}
 }

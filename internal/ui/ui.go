@@ -29,7 +29,7 @@ import (
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
-func Run(cfg *config.Config, configPath string, reader hid.Reader, version string, mock bool) error {
+func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool) error {
 	a := app.New()
 
 	customTheme := resolveFullTheme(cfg)
@@ -51,7 +51,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 	u := &appUI{
 		cfg:        cfg,
 		configPath: configPath,
-		reader:     reader,
+		device:     dev,
 		a:          a,
 		win:        w,
 		titleBase:  appName(cfg),
@@ -105,14 +105,14 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		u.renderGrid()
 	})
 
-	if err := reader.Open(); err != nil {
+	if err := dev.Open(); err != nil {
 		return fmt.Errorf("hid: open: %w", err)
 	}
 	go u.pollHID()
 	w.SetOnClosed(func() {
 		u.closing.Store(true)
-		if err := reader.Close(); err != nil {
-			log.Printf("radkeys: reader close failed: %v", err)
+		if err := dev.Close(); err != nil {
+			log.Printf("radkeys: device close failed: %v", err)
 		}
 	})
 	w.ShowAndRun()
@@ -124,7 +124,7 @@ type appUI struct {
 	configPath  string
 	current     string   // current screen id
 	stack       []string // parent screen ids for prev
-	reader      hid.Reader
+	device      hid.Device
 	a           fyne.App
 	win         fyne.Window
 	titleBase   string
@@ -256,7 +256,7 @@ func (u *appUI) previewBox() fyne.CanvasObject {
 }
 
 func (u *appUI) pollHID() {
-	for ev := range u.reader.Events() {
+	for ev := range u.device.Events() {
 		if !ev.Pressed {
 			continue
 		}
