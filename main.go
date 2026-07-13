@@ -17,7 +17,7 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.4.0"
+var Version = "0.5.0"
 
 const configFileName = "radkeys.config.toml"
 
