@@ -128,6 +128,9 @@ func (u *appUI) currentScreen() config.Screen {
 func (u *appUI) press(row, col int, fromUI bool) {
 	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
+		if row < 0 || row >= u.rows || col < 0 || col >= u.cols {
+			log.Printf("radkeys: device event out of grid bounds (row=%d, col=%d) for %dx%d", row, col, u.rows, u.cols)
+		}
 		return
 	}
 	switch b.Action {
@@ -156,8 +159,10 @@ func (u *appUI) press(row, col int, fromUI bool) {
 		u.current = u.cfg.Screens[0].ID
 		u.stack = u.stack[:0]
 	case config.ActionNavigate:
-		u.stack = append(u.stack, u.current)
-		u.current = b.Target
+		if b.Target != u.current {
+			u.stack = append(u.stack, u.current)
+			u.current = b.Target
+		}
 	}
 	u.renderGrid()
 }
