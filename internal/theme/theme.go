@@ -195,7 +195,7 @@ var Presets = []preset{
 	nord,
 	oneDark,
 	tokyoNight,
-	catMocha,
+	catppuccinMocha,
 	solarizedLight,
 	gruvboxLight,
 	lightGray,
@@ -227,7 +227,7 @@ func NewCustomTheme(p preset) fyne.Theme { return newTheme(p) }
 // ID returns the machine-readable id (for i18n keys).
 func (p preset) ID() string { return p.id }
 
-func bc(bg, fg, primary, button, header, input, hover [3]uint8) *baseColors {
+func newBaseColors(bg, fg, primary, button, header, input, hover [3]uint8) *baseColors {
 	return &baseColors{
 		bg:      color.NRGBA{bg[0], bg[1], bg[2], 0xff},
 		fg:      color.NRGBA{fg[0], fg[1], fg[2], 0xff},
@@ -242,7 +242,7 @@ func bc(bg, fg, primary, button, header, input, hover [3]uint8) *baseColors {
 // ─── Theme data ────────────────────────────────────────────────────────────
 
 var dracula = preset{id: "dracula", name: "Dracula",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x28, 0x2a, 0x36}, [3]uint8{0xf8, 0xf8, 0xf2},
 		[3]uint8{0xbd, 0x93, 0xf9}, [3]uint8{0x44, 0x47, 0x5a},
 		[3]uint8{0x35, 0x37, 0x47}, [3]uint8{0x34, 0x36, 0x46},
@@ -251,7 +251,7 @@ var dracula = preset{id: "dracula", name: "Dracula",
 }
 
 var solarizedDark = preset{id: "solarized_dark", name: "Solarized Dark",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x00, 0x2b, 0x36}, [3]uint8{0x83, 0x94, 0x96},
 		[3]uint8{0x2a, 0xa1, 0x98}, [3]uint8{0x07, 0x36, 0x42},
 		[3]uint8{0x05, 0x30, 0x3c}, [3]uint8{0x06, 0x32, 0x3e},
@@ -260,7 +260,7 @@ var solarizedDark = preset{id: "solarized_dark", name: "Solarized Dark",
 }
 
 var monokai = preset{id: "monokai", name: "Monokai",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x27, 0x28, 0x22}, [3]uint8{0xf8, 0xf8, 0xf2},
 		[3]uint8{0xa6, 0xe2, 0x2e}, [3]uint8{0x3e, 0x3d, 0x32},
 		[3]uint8{0x32, 0x32, 0x2a}, [3]uint8{0x33, 0x32, 0x2a},
@@ -269,7 +269,7 @@ var monokai = preset{id: "monokai", name: "Monokai",
 }
 
 var gruvboxDark = preset{id: "gruvbox_dark", name: "Gruvbox Dark",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x28, 0x28, 0x28}, [3]uint8{0xeb, 0xdb, 0xb2},
 		[3]uint8{0xd7, 0x99, 0x21}, [3]uint8{0x3c, 0x38, 0x36},
 		[3]uint8{0x32, 0x31, 0x2f}, [3]uint8{0x31, 0x2f, 0x2e},
@@ -278,7 +278,7 @@ var gruvboxDark = preset{id: "gruvbox_dark", name: "Gruvbox Dark",
 }
 
 var nord = preset{id: "nord", name: "Nord",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x2e, 0x34, 0x40}, [3]uint8{0xe5, 0xe9, 0xf0},
 		[3]uint8{0x88, 0xc0, 0xd0}, [3]uint8{0x3b, 0x42, 0x52},
 		[3]uint8{0x37, 0x3e, 0x4c}, [3]uint8{0x35, 0x3c, 0x4a},
@@ -287,7 +287,7 @@ var nord = preset{id: "nord", name: "Nord",
 }
 
 var oneDark = preset{id: "one_dark", name: "One Dark",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x28, 0x2c, 0x34}, [3]uint8{0xab, 0xb2, 0xbf},
 		[3]uint8{0x61, 0xaf, 0xef}, [3]uint8{0x35, 0x3b, 0x41},
 		[3]uint8{0x30, 0x34, 0x3c}, [3]uint8{0x30, 0x34, 0x3c},
@@ -296,7 +296,7 @@ var oneDark = preset{id: "one_dark", name: "One Dark",
 }
 
 var tokyoNight = preset{id: "tokyo_night", name: "Tokyo Night",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x1a, 0x1b, 0x26}, [3]uint8{0xc0, 0xca, 0xf5},
 		[3]uint8{0x7a, 0xa2, 0xf7}, [3]uint8{0x24, 0x28, 0x3b},
 		[3]uint8{0x1f, 0x21, 0x33}, [3]uint8{0x1f, 0x20, 0x30},
@@ -304,8 +304,8 @@ var tokyoNight = preset{id: "tokyo_night", name: "Tokyo Night",
 	),
 }
 
-var catMocha = preset{id: "catppuccin_mocha", name: "Catppuccin Mocha",
-	dark: bc(
+var catppuccinMocha = preset{id: "catppuccin_mocha", name: "Catppuccin Mocha",
+	dark: newBaseColors(
 		[3]uint8{0x1e, 0x1e, 0x2e}, [3]uint8{0xcd, 0xd6, 0xf4},
 		[3]uint8{0xcb, 0xa6, 0xf7}, [3]uint8{0x31, 0x32, 0x44},
 		[3]uint8{0x26, 0x26, 0x3a}, [3]uint8{0x25, 0x25, 0x38},
@@ -314,7 +314,7 @@ var catMocha = preset{id: "catppuccin_mocha", name: "Catppuccin Mocha",
 }
 
 var solarizedLight = preset{id: "solarized_light", name: "Solarized Light",
-	light: bc(
+	light: newBaseColors(
 		[3]uint8{0xfd, 0xf6, 0xe3}, [3]uint8{0x58, 0x6e, 0x75},
 		[3]uint8{0x2a, 0xa1, 0x98}, [3]uint8{0xee, 0xe8, 0xd5},
 		[3]uint8{0xf0, 0xe9, 0xd0}, [3]uint8{0xf4, 0xee, 0xdc},
@@ -323,7 +323,7 @@ var solarizedLight = preset{id: "solarized_light", name: "Solarized Light",
 }
 
 var gruvboxLight = preset{id: "gruvbox_light", name: "Gruvbox Light",
-	light: bc(
+	light: newBaseColors(
 		[3]uint8{0xfb, 0xf1, 0xc7}, [3]uint8{0x3c, 0x38, 0x36},
 		[3]uint8{0xd7, 0x99, 0x21}, [3]uint8{0xeb, 0xdb, 0xb2},
 		[3]uint8{0xee, 0xde, 0xb5}, [3]uint8{0xf2, 0xe5, 0xbc},
@@ -332,7 +332,7 @@ var gruvboxLight = preset{id: "gruvbox_light", name: "Gruvbox Light",
 }
 
 var lightGray = preset{id: "light_gray", name: "Light Gray",
-	light: bc(
+	light: newBaseColors(
 		[3]uint8{0xe0, 0xe0, 0xe0}, [3]uint8{0x20, 0x20, 0x20},
 		[3]uint8{0x40, 0x40, 0xff}, [3]uint8{0xc0, 0xc0, 0xc0},
 		[3]uint8{0xcc, 0xcc, 0xcc}, [3]uint8{0xd5, 0xd5, 0xd5},
@@ -341,7 +341,7 @@ var lightGray = preset{id: "light_gray", name: "Light Gray",
 }
 
 var darkGray = preset{id: "dark_gray", name: "Dark Gray",
-	dark: bc(
+	dark: newBaseColors(
 		[3]uint8{0x20, 0x20, 0x20}, [3]uint8{0xd0, 0xd0, 0xd0},
 		[3]uint8{0x60, 0x60, 0xff}, [3]uint8{0x30, 0x30, 0x30},
 		[3]uint8{0x28, 0x28, 0x28}, [3]uint8{0x28, 0x28, 0x28},

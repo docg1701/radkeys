@@ -25,8 +25,8 @@ const (
 	ActionNavigate = "navigate"
 )
 
-// ValidActions is the set of all supported button actions.
-var ValidActions = map[string]bool{
+// validActions is the set of all supported button actions.
+var validActions = map[string]bool{
 	ActionText:     true,
 	ActionCopy:     true,
 	ActionPaste:    true,
@@ -172,7 +172,7 @@ func (c *Config) validate() error {
 					s.ID, other, b.Label, b.Row, b.Col)
 			}
 			occupied[pos] = b.Label
-			if !ValidActions[b.Action] {
+			if !validActions[b.Action] {
 				return fmt.Errorf(
 					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate)",
 					s.ID, b.Label, b.Action)

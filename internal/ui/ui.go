@@ -52,7 +52,7 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 		reader:     reader,
 		a:          a,
 		win:        w,
-		titleBase:  "RadKeys",
+		titleBase:  appName(cfg),
 		cols:       cols,
 		rows:       rows,
 		version:    version,
@@ -116,6 +116,14 @@ type appUI struct {
 	rows        int
 	keypad      *fyne.Container
 	previewBg   *canvas.Rectangle
+}
+
+// appName returns the configured app name, defaulting to "RadKeys".
+func appName(cfg *config.Config) string {
+	if cfg.App.Name != "" {
+		return cfg.App.Name
+	}
+	return "RadKeys"
 }
 
 func resolveFullTheme(cfg *config.Config) fyne.Theme {

@@ -12,7 +12,6 @@ import (
 const sample = `
 [app]
 name = "RadKeys"
-version = "0.0.0-test"
 
 [app.device]
 vendor_id  = 0x1234
