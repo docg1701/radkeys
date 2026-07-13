@@ -224,6 +224,24 @@ func (c *Config) ScreenByID(id string) (Screen, bool) {
 	return Screen{}, false
 }
 
+// Save writes the config to path as TOML. The existing file is first copied to
+// path+".bak" because BurntSushi/toml does not preserve comments on encode,
+// so the user's commented master survives in the backup.
+func (c *Config) Save(path string) error {
+	if existing, err := os.ReadFile(path); err == nil {
+		_ = os.WriteFile(path+".bak", existing, 0o600)
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+	defer func() { _ = f.Close() }()
+	if err := toml.NewEncoder(f).Encode(c); err != nil {
+		return fmt.Errorf("TOML: %w", err)
+	}
+	return nil
+}
+
 // ButtonAt returns the button at (row, col) for the screen, or (Button{}, false).
 func (s Screen) ButtonAt(row, col int) (Button, bool) {
 	for _, b := range s.Buttons {
