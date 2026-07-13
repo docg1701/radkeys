@@ -169,6 +169,15 @@ func (u *appUI) currentScreen() config.Screen {
 // press handles a button press at physical (row, col). fromUI reports whether
 // the press came from an on-screen button click (which gives RadKeys focus)
 // versus the physical HID keypad (which preserves the RIS focus).
+//
+// HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
+// focus the RadKeys window — the only permitted focus grab is the initial
+// w.ShowAndRun() at startup. ActionText/Copy/Navigate are silent (preview,
+// clipboard, internal state + renderGrid); ActionPaste delegates the keystroke
+// to the device (FirePaste) so the already-focused window (the RIS) receives
+// Ctrl/Cmd+V without RadKeys taking focus. Do not call u.win.Show/ShowAndRun/
+// SetContent/RequestFocus here. The fromUI dialog is the exception
+// (the user clicked RadKeys). Enforced statically by TestHIDPathDoesNotActivateWindow.
 func (u *appUI) press(row, col int, fromUI bool) {
 	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
@@ -254,6 +263,9 @@ func (u *appUI) previewBox() fyne.CanvasObject {
 	return container.NewStack(u.previewBg, container.NewPadded(scroll))
 }
 
+// pollHID reads keypad events and forwards pressed events to the UI goroutine
+// via press(..., fromUI=false). See the HID_FOCUS_INVARIANT in press: this path
+// must never raise, activate, or focus the RadKeys window.
 func (u *appUI) pollHID() {
 	for ev := range u.device.Events() {
 		if !ev.Pressed {
