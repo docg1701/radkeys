@@ -25,7 +25,6 @@ import (
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/i18n"
-	"github.com/docg1701/radkeys/internal/keystroke"
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
@@ -187,13 +186,13 @@ func (u *appUI) press(row, col int, fromUI bool) {
 		u.a.Clipboard().SetContent(u.previewText)
 	case config.ActionPaste:
 		// Paste is driven by the physical keypad so the RIS keeps focus.
-		// A UI click gives RadKeys focus, so sending Ctrl+V would paste into
-		// RadKeys itself — refuse and explain instead.
+		// A UI click gives RadKeys focus, so the device's Ctrl/Cmd+V would
+		// paste into RadKeys itself — refuse and explain instead.
 		if fromUI {
 			dialog.ShowInformation(i18n.T("button.paste"), i18n.T("paste.via_keypad_hint"), u.win)
 			return
 		}
-		if err := keystroke.SendCtrlV(); err != nil {
+		if err := u.device.FirePaste(hid.ModifierForOS()); err != nil {
 			u.flashStatus(fmt.Sprintf(i18n.T("status.paste_failed"), err))
 			log.Printf("radkeys: paste failed: %v", err)
 		}
