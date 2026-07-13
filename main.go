@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -49,7 +50,9 @@ func showConfigError(configPath string, err error) {
 	msg.Wrapping = fyne.TextWrapWord
 
 	editBtn := widget.NewButton("Open file to edit", func() {
-		_ = exec.Command("xdg-open", configPath).Start()
+		if err := openConfigEditor(configPath); err != nil {
+			log.Printf("radkeys: cannot open config: %v", err)
+		}
 	})
 	editBtn.Importance = widget.HighImportance
 
@@ -110,5 +113,17 @@ label = "Example"
 action = "text"
 content = "Example phrase."
 `
-	_ = os.WriteFile(path, []byte(tmpl), 0o644)
+	_ = os.WriteFile(path, []byte(tmpl), 0o600)
+}
+
+// openConfigEditor opens the config file in the platform's default editor.
+func openConfigEditor(path string) error {
+	switch runtime.GOOS {
+	case "darwin":
+		return exec.Command("open", path).Start()
+	case "windows":
+		return exec.Command("cmd", "/c", "start", "", path).Start()
+	default:
+		return exec.Command("xdg-open", path).Start()
+	}
 }
