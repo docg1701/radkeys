@@ -63,7 +63,7 @@ go mod tidy
   ```
 
 ### 🚫 Never
-- Keyboard HID (F13-F24) input — rejected by product.
+- Keyboard HID (F13-F24) macro input — rejected by product. The device DOES have an HID keyboard interface, but ONLY to send the paste keystroke (Ctrl/Cmd+V); F13-F24 macro input is still rejected.
 - Hardcoded UI strings — use `i18n.T()`.
 - Hardcoded version numbers in config or other Go files: version lives ONLY in `var Version` in `main.go` and is bumped there per release (dev cycle step 3). It is NOT injected via `-ldflags` — the build embeds the source literal directly. Test fixtures use `"0.0.0-test"`, which the TOML decoder ignores since `Config` has no `Version` field.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
@@ -102,17 +102,19 @@ radkeys/
 ├── BUILD.md                 # Guia de montagem do hardware
 ├── internal/
 │   ├── config/              # TOML parser + validation + types
-│   ├── hid/                 # HID reader (go-hid + mock)
+│   ├── hid/                 # HID device: reader + writer (go-hid + mock)
 │   ├── ui/                  # Fyne UI: preview + grid + settings + about
 │   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # theme.go — 13 presets
 │   └── assets/              # embedded icons
-├── firmware/rp2040-zero/    # RP2040-Zero: TinyUSB, (row, col) protocol
+├── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard
 └── research/                # investigation notes
 ```
 
 > `internal/deck/` removed. Navigation is stack-based with screen ids.
 > `firmware/arduino/` and `firmware/rp2040/` removed. Only RP2040-Zero.
+> `internal/keystroke/` removed — paste goes through the device keyboard (no host-side keystroke injection).
+> Architecture: the app is a configurator (all config in TOML); paste is sent via the device's HID keyboard interface; single binary per OS; macOS is supported in code (builds with GOOS=darwin) even though no binary is shipped.
 
 ## Code Style
 

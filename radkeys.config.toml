@@ -14,7 +14,8 @@
 # Actions:
 #   text     — loads the content into the preview (requires content)
 #   copy     — copies the preview text to clipboard
-#   paste    — pastes from clipboard into the preview
+#   paste    — sends Ctrl/Cmd+V to the focused window (the RIS) via the device
+#              keyboard, pasting the clipboard there (RadKeys never steals focus)
 #   prev     — goes back to the previous screen (stack-based)
 #   home     — goes to the first screen (root)
 #   navigate — goes to a specific screen (requires target = screen id)

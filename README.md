@@ -21,6 +21,22 @@ phrase appears on screen → press Copy → paste into the RIS. That's it.
 Works on Linux and Windows. One executable, one config file, zero install.
 Everything else (icon, translations, themes) is embedded in the binary.
 
+## How it works
+
+The RP2040-Zero is a **composite USB device** with two HID interfaces:
+
+- **Vendor HID** — sends `[row, col]` button events to the host (background,
+  no focus stealing).
+- **HID keyboard** — sends Ctrl+V (Linux/Windows) or Cmd+V (macOS) to the
+  already-focused window when the host commands a paste.
+
+The app is a **configurator**: all configuration (phrases, button actions) lives
+in `radkeys.config.toml`. The device is flashed **once** at the factory and
+never reflashed for configuration. Paste goes through the device's keyboard
+interface, so the RIS keeps focus — the app never injects keystrokes into the
+OS. At connect, the app checks the firmware version once and warns if it is
+outdated or unknown.
+
 ## Download
 
 Get the latest release from [Releases](../../releases). Each release includes:
@@ -31,8 +47,10 @@ Get the latest release from [Releases](../../releases). Each release includes:
 | `radkeys-windows-amd64.exe` | Windows x86_64 |
 | `radkeys.config.toml` | Config template (all platforms) |
 
-**macOS**: not provided (cross-compile from Linux is impossible — needs Apple's
-proprietary SDK). Build from source on a Mac following the instructions below.
+**macOS**: binary not provided (cross-compile from Linux is impossible — needs
+Apple's proprietary SDK). macOS is supported in code: build from source on a
+Mac following the instructions below. Paste is cross-platform via the device
+(no per-OS keystroke injection), so macOS works the same as Linux/Windows.
 
 Put the binary and `radkeys.config.toml` in the same directory and run.
 
@@ -48,11 +66,10 @@ clicks.
 3. Run RadKeys.
 4. Press a text button → phrase appears in the preview.
 5. Press Copy → phrase goes to the clipboard.
-6. Press Paste → Ctrl+V is sent to the focused window (your RIS/PACS).
-   The phrase appears at the cursor position. RadKeys never steals focus.
-
-**Linux only:** `xdotool` must be installed for Paste to work:
-`sudo apt install xdotool`
+6. Press Paste → the device sends Ctrl+V (Linux/Windows) or Cmd+V (macOS)
+   to the focused window (your RIS/PACS) as a USB keyboard. The phrase appears
+   at the cursor position. No host-side software is needed for Paste — the
+   device is the keyboard. RadKeys never steals focus.
 
 The radiologist never touches the keyboard.
 
@@ -98,9 +115,12 @@ go test ./... -v
 
 ### Runtime dependencies (end user)
 
+The device enumerates as a standard composite HID device (vendor + keyboard).
+No host-side software is needed for paste — the device is the USB keyboard.
+
 | Dependency | Linux | Windows |
 |------------|-------|---------|
-| **xdotool** | `sudo apt install xdotool` — required for Paste (sends Ctrl+V to RIS) | Not needed — uses Windows API natively | Not needed — uses AppleScript natively |
+| **libudev** (HID access via hidapi) | system library (part of systemd) | bundled with the binary |
 
 ## Hardware
 

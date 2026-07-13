@@ -93,20 +93,34 @@
 
 ## Estado atual (ponto de partida)
 
-- `var Version = "0.9.0"` em `main.go` (intacto).
-- **Bloco 1 — antipattern cleanup Fyne-side (4 commits, CI verde @ 4bba0f9):**
-  config `validate` pura + default 6×6; status label (mock mode + erros
-  acionáveis surfados na UI); erros `_=` logados; `ensureConfig` fail-loud;
-  `showConfigError` i18n-ado; CI `go test -race` + CGO + timeout; teste
-  concorrente do hid endurecido. **Mantém** (Fyne segue na arquitetura nova).
-- **Bloco 2 — causa-raiz estrutural (2 commits @ 8085d90):**
-  `variantFor` determinístico (marker interface + fallback explícito, sem
-  interface `==` nem global async); `isLight` race removido (sign local);
-  `shift()` guardião de overflow; `emit()` loga drops com throttle;
-  `hidDevice` interface + fake pro `diyReader.loop` (lifecycle testável).
-  **Mantém** (Fyne theme + hid reader vendor seguem).
-- Esses 6 commits estão em `main`, **sem bump de versão / sem tag / sem
-  release** ainda.
+> Snapshot de progresso — etapas 0-5 COMPLETAS e committadas. Etapa 6
+> (documentação) em andamento. Etapa 7 (release 0.10.0) pendente.
+
+- `var Version = "0.9.1"` em `main.go` (Etapa 0 bump).
+- **Bloco 1+2 (antipattern cleanup, commits 5e1af11..8085d90):** mantém —
+  config pura + 6×6, status label, erros surfados, CI -race, variantFor
+  determinístico, hid lifecycle testável. Fyne segue na arquitetura nova.
+- **Etapa 0 — Release 0.9.1 (@ b3b26e0):** bump 0.9.0→0.9.1, tag v0.9.1, release
+  com Linux+Windows. ✅ COMPLETA.
+- **Etapa 1 — Firmware composite USB (@ 4dcc90e):** `diy.ino` reescrito como
+  composite TinyUSB: interface vendor IN `[row,col]` + OUT `[cmd,arg]` +
+  interface teclado HID (Ctrl/Cmd+V). `PROTOCOL.md` documentado. ✅ COMPLETA
+  (validação estática — sem hardware protótipo ainda).
+- **Etapa 2 — Host device-command writer (@ 1cc1ac6):** interface
+  `hid.Device` com `FirePaste(Modifier)` + `Version()`. `ModifierForOS()`
+  (darwin→GUI, senão Ctrl). Mock testável. ✅ COMPLETA (mock + cross-compile).
+- **Etapa 3 — Rewire paste + deletar keystroke (@ 21770d9):** `ui.go` paste
+  via `device.FirePaste(hid.ModifierForOS())`. Pacote `internal/keystroke`
+  REMOVIDO (sem xdotool/SendInput/osascript). ✅ COMPLETA.
+- **Etapa 4 — Invariante de foco (@ d26a2ed):** HID_FOCUS_INVARIANT documentada
+  em `press()` + guard estático `TestHIDPathDoesNotActivateWindow`. ✅ COMPLETA.
+- **Etapa 5 — Version check one-shot (@ c22537d):** `FirmwareOutdated` +
+  `MinFirmware 1.0` + dialog de aviso uma vez no connect. ✅ COMPLETA.
+- **Sem hardware protótipo ainda:** toda validação até aqui é estática
+  (firmware review) + mock (host) + cross-compile (Linux flatpak, Windows
+  mingw, `GOOS=darwin go vet`). O firmware será flasheado + testado no
+  RP2040-Zero só quando o protótipo estiver pronto (semanas). Versionar
+  `0.x.x` até tudo pronto; `1.0.0` só após aprovação no hardware.
 - Toolchain: go 1.24 · golangci-lint v1.64.8 em `$(go env GOPATH)/bin` (botar no
   PATH) · mingw OK · `gh` auth `docg1701` · DISPLAY=:0 (X11).
 
@@ -141,12 +155,12 @@
 - **Subagent:** `planner`/`reviewer` (pesquisar TinyUSB composite + HID
   keyboard no RP2040-Zero, ler o firmware atual e a lib TinyUSB/Adafruit) →
   `worker` (escrever o firmware composite + o PROTOCOL.md). O pai valida
-  estaticamente (descritores HID coerentes) — **mas só o Galvani flasheia e
-  testa no hardware.**
-- **Validação:** revisão estática do firmware (descritores, lógica do
-  teclado, handling do comando). **Galvani:** flash no RP2040-Zero, conferir
-  que o device aparece como vendor+keyboard, e que mandando o comando (via
-  app de teste) dispara Ctrl+V na janela focada. **HARDWARE = Galvani.**
+  estaticamente (descritores HID coerentes).
+- **Validação:** revisão estática do firmware (descritores HID coerentes,
+  lógica do teclado, handling do comando OUT) + cross-check do `PROTOCOL.md`.
+  **Sem hardware protótipo ainda** — o flash real + teste no RP2040-Zero fica
+  pra quando o protótipo estiver pronto (semanas); até lá nada é "testei que
+  funciona no hardware". 0.x.x até aprovação no hardware, 1.0.0 depois.
 - **Risco honesto:** firmware composite TinyUSB é trabalho real (descritores
   HID de 2 interfaces + lógica de teclado + recepção de comando OUT). É
   bounded e padrão, mas não é trivial. Uma vez feito, nunca mais se toca.
@@ -173,9 +187,10 @@
 - **Subagent:** `reviewer` (auditar o que depende de `keystroke`) → `worker`
   (rewire + deletar + ajustar imports/tests).
 - **Validação:** `go build -tags flatpak`, `go test -race ./...`,
-  `GOOS=windows ... go build`, `GOOS=darwin go build` (confirma que compila
-  sem o keystroke). App roda (DISPLAY=:0). **Galvani:** testa paste real com o
-  firmware da Etapa 1 (device manda Ctrl+V → RIS cola).
+  `GOOS=windows ... go build`, `GOOS=darwin go vet ./...` (confirma que compila
+  sem o keystroke). App roda (DISPLAY=:0) em mock. **Sem hardware protótipo
+  ainda** — o teste real do paste (device manda Ctrl+V → RIS cola) fica pra
+  quando o protótipo estiver pronto. 0.x.x até aprovação no hardware.
 - **Nota:** macOS passa a ser suportado no código (sem per-OS keystroke;
   device-command é cross-platform). Não shipamos binário macOS.
 
@@ -186,10 +201,14 @@
   Adicionar invariante documentada (comentário +, se possível, um teste/guard).
 - **Subagent:** `reviewer` (auditar paths de HID em busca de raise/foco) →
   `worker` (corrigir se houver + documentar a invariante).
-- **Validação:** revisão de código + **Galvani** testa o "1000 cliques, cursor
-  piscando no RIS sem ping" (text/copy/navigate silenciosos; só paste manda pro
-  RIS). Testar em Linux Xorg, Linux Wayland, Windows (macOS se tiver Mac).
-- **Sem firmware:** só host. Mas a confirmação visual "sem ping" é Galvani.
+- **Validação:** revisão de código (invariante documentada + guard estático
+  `TestHIDPathDoesNotActivateWindow`) + `go test -race ./...` em mock. **Sem
+  hardware protótipo ainda** — a confirmação visual "1000 cliques, cursor no
+  RIS sem ping" (text/copy/navigate silenciosos; só paste manda pro RIS) fica
+  pra quando o protótipo estiver pronto. Testar em Linux Xorg, Linux Wayland,
+  Windows (macOS se tiver Mac). 0.x.x até aprovação no hardware.
+- **Sem firmware:** só host. A confirmação visual "sem ping" fica pra quando o
+  protótipo estiver pronto.
 
 ### Etapa 5 — (Opcional) Firmware version check one-shot
 - **O quê:** ao conectar o device, o App lê a versão do firmware **uma vez** e
