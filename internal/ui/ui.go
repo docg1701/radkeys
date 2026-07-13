@@ -78,6 +78,21 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 	w.SetContent(tabs)
 	u.renderGrid()
 
+	// Fyne detects the OS theme variant asynchronously, so the initial render
+	// may use the wrong variant (e.g. dark on a light OS). Re-apply the theme
+	// colors when settings change — Fyne fires this once the variant settles,
+	// which fixes the system-default "black background on reopen" regression
+	// without requiring the user to re-select and save the theme.
+	u.a.Settings().AddListener(func(s fyne.Settings) {
+		th := s.Theme()
+		v := variantFor(th)
+		if u.previewBg != nil {
+			u.previewBg.FillColor = th.Color(fyneTheme.ColorNameBackground, v)
+			canvas.Refresh(u.previewBg)
+		}
+		u.renderGrid()
+	})
+
 	if err := reader.Open(); err != nil {
 		return fmt.Errorf("hid: open: %w", err)
 	}
