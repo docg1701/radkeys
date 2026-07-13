@@ -371,6 +371,37 @@ func TestButtonAt(t *testing.T) {
 	}
 }
 
+func TestConfigSaveWritesFileAndBackup(t *testing.T) {
+	cfg, err := Load(writeFile(t, "radkeys.config.toml", sample))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	path := filepath.Join(t.TempDir(), "c.toml")
+	// seed an existing file with comments so the .bak backup path is exercised
+	if err := os.WriteFile(path, []byte("# my comments\n"), 0o600); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	if err := cfg.Save(path); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	// the rewritten file must be valid and reloadable
+	cfg2, err := Load(path)
+	if err != nil {
+		t.Fatalf("reload: %v", err)
+	}
+	if len(cfg2.Screens) != len(cfg.Screens) {
+		t.Fatalf("roundtrip screens: %d vs %d", len(cfg2.Screens), len(cfg.Screens))
+	}
+	// the backup must preserve the original commented content
+	bak, err := os.ReadFile(path + ".bak")
+	if err != nil {
+		t.Fatalf("backup missing: %v", err)
+	}
+	if string(bak) != "# my comments\n" {
+		t.Fatalf("backup = %q, want the original comments", bak)
+	}
+}
+
 func TestLoadUnsupportedLanguage(t *testing.T) {
 	body := `
 [app]

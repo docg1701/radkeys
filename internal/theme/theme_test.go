@@ -140,3 +140,50 @@ func TestShiftPositiveFactorLightens(t *testing.T) {
 		t.Fatalf("shift(dark, 0.08) = %v did not lighten %v", got, dark)
 	}
 }
+
+func TestBlendMidpoint(t *testing.T) {
+	got := blend(color.NRGBA{0, 0, 0, 255}, color.NRGBA{255, 255, 255, 255}, 0.5)
+	if got.R != 127 || got.G != 127 || got.B != 127 || got.A != 255 {
+		t.Fatalf("blend midpoint = %v, want (127,127,127,255)", got)
+	}
+}
+
+func TestSatAddSaturates(t *testing.T) {
+	if satAdd(200, 100) != 255 {
+		t.Fatal("satAdd(200,100) should saturate to 255")
+	}
+	if satAdd(100, 50) != 150 {
+		t.Fatal("satAdd(100,50) should be 150")
+	}
+}
+
+func TestSatSubFloors(t *testing.T) {
+	if satSub(50, 100) != 0 {
+		t.Fatal("satSub(50,100) should floor to 0")
+	}
+	if satSub(100, 50) != 50 {
+		t.Fatal("satSub(100,50) should be 50")
+	}
+}
+
+func TestContrastOf(t *testing.T) {
+	if got := contrastOf(color.NRGBA{255, 255, 255, 255}); got != (color.NRGBA{0, 0, 0, 255}) {
+		t.Fatalf("contrastOf(white) = %v, want black", got)
+	}
+	if got := contrastOf(color.NRGBA{0, 0, 0, 255}); got != (color.NRGBA{255, 255, 255, 255}) {
+		t.Fatalf("contrastOf(black) = %v, want white", got)
+	}
+}
+
+func TestLerp(t *testing.T) {
+	if lerp(0, 100, 0.5) != 50 {
+		t.Fatal("lerp(0,100,0.5) should be 50")
+	}
+}
+
+func TestSetAlpha(t *testing.T) {
+	got := setAlpha(color.NRGBA{255, 255, 255, 255}, 0x80)
+	if got.A != 0x80 {
+		t.Fatalf("setAlpha A = %v, want 0x80", got.A)
+	}
+}

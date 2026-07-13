@@ -40,3 +40,16 @@ func TestCommonKeysPresent(t *testing.T) {
 	}
 	SetLanguage("en")
 }
+
+// TestAllMessagesHaveAllLanguages ensures every message ID has a translation
+// for every supported language, so a new language or key can't silently fall
+// back to the raw ID in the UI.
+func TestAllMessagesHaveAllLanguages(t *testing.T) {
+	for id, langs := range messages {
+		for _, lang := range Supported {
+			if _, ok := langs[lang]; !ok {
+				t.Errorf("message %q missing translation for language %q", id, lang)
+			}
+		}
+	}
+}
