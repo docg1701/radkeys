@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: 1
     steps:
       - uses: actions/checkout@v6
 
@@ -27,7 +30,7 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: go test -v ./...
+        run: go test -race -v ./...
 
       - name: Vet
         run: go vet ./...
