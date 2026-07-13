@@ -65,7 +65,7 @@ go mod tidy
 ### 🚫 Never
 - Keyboard HID (F13-F24) input — rejected by product.
 - Hardcoded UI strings — use `i18n.T()`.
-- Hardcoded version numbers in Go source or config files: version is set via `var Version` in `main.go` and injected at build time (`-ldflags "-X main.Version=X.Y.Z"`). Test fixtures use `"0.0.0-test"`.
+- Hardcoded version numbers in config or other Go files: version lives ONLY in `var Version` in `main.go` and is bumped there per release (dev cycle step 3). It is NOT injected via `-ldflags` — the build embeds the source literal directly. Test fixtures use `"0.0.0-test"`, which the TOML decoder ignores since `Config` has no `Version` field.
 - Annotated tags (`git tag -a`, `git tag -m`) — lightweight only.
 - Cross-compile in CI — agent does it locally.
 - End the turn before CI release is published and all binaries are uploaded.
