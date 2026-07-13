@@ -57,13 +57,15 @@ func TestMockReaderEventsClosedAfterClose(t *testing.T) {
 // so a concurrent Close could close m.ch and panic the send. Run with
 // `go test -race` to also catch the data race.
 func TestMockReaderPutConcurrentCloseNoPanic(t *testing.T) {
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 5000; i++ {
 		m := NewMock()
 		_ = m.Open()
+		start := make(chan struct{})
 		var wg sync.WaitGroup
 		wg.Add(2)
-		go func() { defer wg.Done(); m.Put(Event{Row: 0, Col: 0, Pressed: true}) }()
-		go func() { defer wg.Done(); _ = m.Close() }()
+		go func() { defer wg.Done(); <-start; m.Put(Event{Row: 0, Col: 0, Pressed: true}) }()
+		go func() { defer wg.Done(); <-start; _ = m.Close() }()
+		close(start)
 		wg.Wait()
 	}
 }
