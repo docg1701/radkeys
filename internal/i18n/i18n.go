@@ -265,6 +265,16 @@ func SetLanguage(lang string) {
 	current = i18n.NewLocalizer(bundle, lang)
 }
 
+// IsSupported reports whether lang is one of the supported language codes.
+func IsSupported(lang string) bool {
+	for _, s := range Supported {
+		if s == lang {
+			return true
+		}
+	}
+	return false
+}
+
 // T translates a message ID to the active language.
 func T(id string) string {
 	msg, err := current.Localize(&i18n.LocalizeConfig{MessageID: id})

@@ -370,3 +370,105 @@ func TestButtonAt(t *testing.T) {
 		t.Fatal("ButtonAt(1,1) should not exist")
 	}
 }
+
+func TestLoadUnsupportedLanguage(t *testing.T) {
+	body := `
+[app]
+language = "xx"
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "prev"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for unsupported language")
+	}
+}
+
+func TestLoadUnknownThemePreset(t *testing.T) {
+	body := `
+[app]
+[app.theme]
+preset = "nonexistent"
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "prev"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for unknown theme preset")
+	}
+}
+
+func TestLoadLayoutOutOfRange(t *testing.T) {
+	body := `
+[app]
+[app.layout]
+columns = 20
+rows = 3
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "prev"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for out-of-range layout columns")
+	}
+}
+
+func TestLoadDuplicateButtonPosition(t *testing.T) {
+	body := `
+[app]
+[app.layout]
+columns = 4
+rows = 3
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 1
+col = 2
+label = "A"
+action = "prev"
+[[screens.buttons]]
+row = 1
+col = 2
+label = "B"
+action = "prev"
+`
+	_, err := Load(writeFile(t, "c.toml", body))
+	if err == nil {
+		t.Fatal("expected error for duplicate button position")
+	}
+}

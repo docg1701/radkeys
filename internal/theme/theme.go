@@ -212,6 +212,15 @@ func FindPreset(id string) (preset, bool) {
 	return systemDefault, false
 }
 
+// PresetIDs returns the machine-readable ids of all presets, in order.
+func PresetIDs() []string {
+	ids := make([]string, len(Presets))
+	for i, p := range Presets {
+		ids[i] = p.id
+	}
+	return ids
+}
+
 // NewCustomTheme constructs a fyne.Theme from a preset.
 func NewCustomTheme(p preset) fyne.Theme { return newTheme(p) }
 

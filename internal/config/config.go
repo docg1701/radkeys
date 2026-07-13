@@ -4,8 +4,12 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
+
+	"github.com/docg1701/radkeys/internal/i18n"
+	"github.com/docg1701/radkeys/internal/theme"
 )
 
 const (
@@ -108,12 +112,27 @@ func (c *Config) validate() error {
 	}
 	if c.App.Language == "" {
 		c.App.Language = "en"
+	} else if !i18n.IsSupported(c.App.Language) {
+		return fmt.Errorf("[app] language %q is not supported (use one of: %s)",
+			c.App.Language, strings.Join(i18n.Supported, ", "))
 	}
-	if c.App.Layout.Columns <= 0 || c.App.Layout.Columns > 6 {
+	if c.App.Theme.Preset == "" {
+		c.App.Theme.Preset = "system"
+	} else if _, ok := theme.FindPreset(c.App.Theme.Preset); !ok {
+		return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)",
+			c.App.Theme.Preset, strings.Join(theme.PresetIDs(), ", "))
+	}
+	switch {
+	case c.App.Layout.Columns == 0:
 		c.App.Layout.Columns = 4
+	case c.App.Layout.Columns < 1 || c.App.Layout.Columns > 6:
+		return fmt.Errorf("[app.layout] columns=%d out of range [1,6]", c.App.Layout.Columns)
 	}
-	if c.App.Layout.Rows <= 0 || c.App.Layout.Rows > 6 {
+	switch {
+	case c.App.Layout.Rows == 0:
 		c.App.Layout.Rows = 5
+	case c.App.Layout.Rows < 1 || c.App.Layout.Rows > 6:
+		return fmt.Errorf("[app.layout] rows=%d out of range [1,6]", c.App.Layout.Rows)
 	}
 	if len(c.Screens) == 0 {
 		return fmt.Errorf("no screens defined — add at least one [[screens]]")
@@ -134,6 +153,7 @@ func (c *Config) validate() error {
 		if s.Name == "" {
 			return fmt.Errorf("screen %q has empty name", s.ID)
 		}
+		occupied := map[[2]int]string{}
 		for j, b := range s.Buttons {
 			if b.Row < 0 || b.Row >= rows {
 				return fmt.Errorf(
@@ -145,6 +165,13 @@ func (c *Config) validate() error {
 					"screen %q, button %d: col=%d out of range [0,%d)",
 					s.ID, j+1, b.Col, cols)
 			}
+			pos := [2]int{b.Row, b.Col}
+			if other, dup := occupied[pos]; dup {
+				return fmt.Errorf(
+					"screen %q: buttons %q and %q both occupy (row=%d, col=%d)",
+					s.ID, other, b.Label, b.Row, b.Col)
+			}
+			occupied[pos] = b.Label
 			if !ValidActions[b.Action] {
 				return fmt.Errorf(
 					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate)",
