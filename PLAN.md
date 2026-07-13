@@ -289,9 +289,8 @@
 
   **Launch / file handling:** on startup it auto-loads `radkeys.config.toml`
   from its own directory; File→Open loads any `.toml`; one-click Save (toolbar)
-  writes back to the open file (Save As supported); recent files via
-  `fyne.App.Preferences`. Dirty-state asterisk in the title +
-  confirm-on-unsaved-quit.
+  writes back to the open file (Save As supported). Dirty-state asterisk in the
+  title + confirm-on-unsaved-quit.
 
   **UX (absolutely intuitive + graphical; the user never touches TOML syntax):**
   - Main view = the visual **6×6 grid** of the CURRENT layer, mirroring the
@@ -304,11 +303,10 @@
     another layer). The top bar shows the current layer name + a Back (prev)
     button + a layer dropdown to jump to any layer + Add/Remove layer. (Config
     field stays `screens` for back-compat; the UI labels say "Layer".)
-  - **Navigate like the device:** a Simulate/Preview toggle makes button clicks
-    act like the real RadKeys — a `navigate` button switches to its target
-    layer's grid, a `text` button shows the phrase in a preview pane, etc. — so
-    the user walks the whole layer graph interactively before saving. In the
-    default Edit mode, a click shows the button's options at the top.
+  - **Navigate between layers (like using the device):** the top-bar Back +
+    layer dropdown let the user walk the layer graph to view/edit each layer; a
+    `navigate` button's options include a one-click preview jump to its target
+    layer. (No separate simulate mode — keep it simple.)
 
   **The app resolves syntax; the user only makes valid choices (the core ask):**
   - The user NEVER sees or writes TOML. The editor only offers valid options:
@@ -326,22 +324,18 @@
     navigate target) with a tooltip stating the problem in plain language.
 
   **Grid format + non-destructive resize (configuration hierarchy):**
-  - The grid format (columns × rows → button count) is intuitive to adjust:
-    a bounded stepper/slider (1–6 each) in the App-settings view.
-  - **Configuration hierarchy:** the user sets the grid format (and the other
-    app settings — device, theme, language, radiologist) FIRST; button-grid
-    editing is the next step. On first run (empty/default config) a quick setup
-    sets the grid format before any button editing. (Ordered sections / a
-    first-run wizard — not a rigid lock; keep it simple.)
-  - **Non-destructive resize (least destructive, preserve maximum data):** when
-    the grid shrinks, buttons that no longer fit are NOT deleted — they move to
-    a **parked/overflow pool** for that screen (preserved in the TOML as
-    `[[screens.parked_buttons]]`, inactive; the RadKeys app ignores them and
-    only loads `buttons`). The editor lists parked buttons with a way to place
-    them back when the grid grows (auto-fill empty cells, or click-to-place).
-    Growing the grid never loses data; shrinking never deletes a configured
-    button. This needs a small `internal/config` addition
-    (`Screen.ParkedButtons []Button`) that the app ignores on load.
+  - The grid format (columns × rows → button count) is intuitive to adjust: a
+    bounded stepper (1–6 each) in the App-settings view. The App-settings view
+    (grid format, device, theme, language, radiologist) is presented FIRST;
+    button-grid editing is the next step — on a fresh config the editor opens on
+    App settings so the grid format is set before any buttons. (Just ordered
+    sections — no wizard machinery.)
+  - **Non-destructive resize (least destructive, no hidden state):** shrinking
+    the grid NEVER auto-deletes a configured button. Buttons that fall outside
+    the new bounds are surfaced as "out of grid" (highlighted, with a tooltip)
+    and Save is blocked until the user moves them to free cells or removes them
+    — the same inline-validation principle as any other invalid state. No data
+    is silently lost; no parked/overflow section, no schema change.
 
   **KISS / no over-engineering:**
   - No drag-drop (Fyne lacks native list reordering — research gap
@@ -350,14 +344,9 @@
     row/col picker — no row/col fields).
   - Schema-driven, constrained inputs only — the user can never produce an
     invalid TOML (see above); the app writes it.
-  - Explicit Save (not auto-save) — config edits have consequences.
-  - Explicit Save (not auto-save) — config edits have consequences.
-  - Save writes a canonical, fully-commented TOML (the editor owns the format;
-    comments are part of its output) and backs up the previous file to `.bak`.
-    Target users edit via the editor, so canonical comments are sufficient; the
-    `.bak` protects hand-editors. (A comment-preserving lib such as
-    pelletier/go-toml/v2 is allowed ONLY if it stays simple; do NOT build an AST
-    editor.)
+  - Explicit Save (not auto-save) — config edits have consequences. Save writes
+    valid TOML and backs up the previous file to `.bak`. (Comment preservation
+    is a nice-to-have, NOT a requirement — do NOT build a TOML AST editor.)
 
   **Reuses:** `internal/config` (Load/Validate/Save + the `.bak`), `internal/i18n`
   (existing button.*/settings.*/status.* + new `editor.*` keys in 7 languages —
