@@ -100,7 +100,7 @@ go test ./... -v
 
 | Dependency | Linux | Windows |
 |------------|-------|---------|
-| **xdotool** | `sudo apt install xdotool` — required for Paste (sends Ctrl+V to RIS) | Not needed — uses Windows API natively |
+| **xdotool** | `sudo apt install xdotool` — required for Paste (sends Ctrl+V to RIS) | Not needed — uses Windows API natively | Not needed — uses AppleScript natively |
 
 ## Hardware
 
