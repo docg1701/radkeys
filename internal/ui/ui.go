@@ -317,6 +317,11 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}
 		cfg.App.Device.Protocol = protoSel.Selected
 
+		// BurntSushi/toml does not preserve comments on encode, so back up the
+		// existing file first — the user's commented config survives in .bak.
+		if existing, rerr := os.ReadFile(u.configPath); rerr == nil {
+			_ = os.WriteFile(u.configPath+".bak", existing, 0o600)
+		}
 		f, err := os.Create(u.configPath)
 		if err != nil {
 			dialog.ShowError(fmt.Errorf("save: %w", err), u.win)

@@ -124,6 +124,10 @@ everything:
 Edit the file manually — the UI's "Settings" tab only changes app settings,
 not screens/buttons. To add phrases, edit the TOML file directly.
 
+Note: the Settings tab's Save rewrites the file without comments
+(BurntSushi/toml does not preserve them); it first copies the previous file
+to `radkeys.config.toml.bak` so your comments are not lost.
+
 ## Contributing
 
 See [`AGENTS.md`](AGENTS.md) for AI agent rules, the dev cycle (test → tag →
