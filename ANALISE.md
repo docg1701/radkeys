@@ -93,10 +93,10 @@
 
 ## Estado atual (ponto de partida)
 
-> Snapshot de progresso — etapas 0-5 COMPLETAS e committadas. Etapa 6
-> (documentação) em andamento. Etapa 7 (release 0.10.0) pendente.
+> Snapshot de progresso — etapas 0-7 COMPLETAS e committadas. Release
+> v0.10.0 publicado (Linux + Windows). Sem hardware protótipo ainda.
 
-- `var Version = "0.9.1"` em `main.go` (Etapa 0 bump).
+- `var Version = "0.10.0"` em `main.go` (Etapa 7 bump).
 - **Bloco 1+2 (antipattern cleanup, commits 5e1af11..8085d90):** mantém —
   config pura + 6×6, status label, erros surfados, CI -race, variantFor
   determinístico, hid lifecycle testável. Fyne segue na arquitetura nova.
@@ -116,6 +116,11 @@
   em `press()` + guard estático `TestHIDPathDoesNotActivateWindow`. ✅ COMPLETA.
 - **Etapa 5 — Version check one-shot (@ c22537d):** `FirmwareOutdated` +
   `MinFirmware 1.0` + dialog de aviso uma vez no connect. ✅ COMPLETA.
+- **Etapa 6 — Documentação final (@ 8e55d53):** README/BUILD/AGENTS/ANALISE/
+  radkeys.config.toml atualizados pra arquitetura composite-USB;
+  `PROTOCOL.md` verificado contra o firmware (sem mudança). ✅ COMPLETA.
+- **Etapa 7 — Release 0.10.0 (@ 916734f):** bump 0.9.1→0.10.0, tag v0.10.0,
+  CI verde, release publicado com Linux+Windows. ✅ COMPLETA.
 - **Sem hardware protótipo ainda:** toda validação até aqui é estática
   (firmware review) + mock (host) + cross-compile (Linux flatpak, Windows
   mingw, `GOOS=darwin go vet`). O firmware será flasheado + testado no
