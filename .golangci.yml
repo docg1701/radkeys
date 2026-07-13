@@ -31,6 +31,11 @@ linters-settings:
       - Licencia
       - Comando
       - comando
+      - Problemas
+      - problemas
+      - appareil
+      - producto
+      - Impossibile
   prealloc:
     simple: true
     range-loops: true

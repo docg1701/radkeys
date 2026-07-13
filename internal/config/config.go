@@ -2,6 +2,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -31,6 +32,41 @@ const (
 	ActionBackspace  = "backspace"
 	ActionDelete     = "delete"
 )
+
+// IssueKind identifies a class of validation problem for machine translation.
+type IssueKind string
+
+const (
+	IssueNoScreens              IssueKind = "no_screens"
+	IssueInvalidProtocol        IssueKind = "invalid_protocol"
+	IssueUnsupportedLanguage    IssueKind = "unsupported_language"
+	IssueUnknownTheme           IssueKind = "unknown_theme"
+	IssueColumnsOutOfRange      IssueKind = "columns_out_of_range"
+	IssueRowsOutOfRange         IssueKind = "rows_out_of_range"
+	IssueEmptyScreenID          IssueKind = "empty_screen_id"
+	IssueDuplicateScreenID      IssueKind = "duplicate_screen_id"
+	IssueEmptyScreenName        IssueKind = "empty_screen_name"
+	IssueEmptyLabel             IssueKind = "empty_label"
+	IssueOutOfGridRow           IssueKind = "out_of_grid_row"
+	IssueOutOfGridCol           IssueKind = "out_of_grid_col"
+	IssueDuplicatePosition      IssueKind = "duplicate_position"
+	IssueInvalidAction          IssueKind = "invalid_action"
+	IssueNavigateRequiresTarget IssueKind = "navigate_requires_target"
+	IssueActionRejectsTarget    IssueKind = "action_rejects_target"
+	IssueTextRequiresContent    IssueKind = "text_requires_content"
+	IssueActionRejectsContent   IssueKind = "action_rejects_content"
+	IssueNavigateUnknownTarget  IssueKind = "navigate_unknown_target"
+)
+
+// Issue describes one validation problem in a Config.
+type Issue struct {
+	Kind     IssueKind
+	ScreenID string
+	Row      int
+	Col      int
+	Label    string
+	Detail   string
+}
 
 // validActions is the set of all supported button actions.
 var validActions = map[string]bool{
@@ -135,104 +171,198 @@ func (c *Config) applyDefaults() {
 	}
 }
 
-func (c *Config) validate() error {
+// Issues returns every validation problem in the config.
+// The first issue is the error returned by Load/validate.
+func (c *Config) Issues() []Issue {
+	var issues []Issue
 	if c.App.Device.Protocol != ProtocolDIY {
-		return fmt.Errorf(
-			"[app.device] protocol must be %q, got %q",
-			ProtocolDIY, c.App.Device.Protocol)
+		issues = append(issues, Issue{Kind: IssueInvalidProtocol, Detail: c.App.Device.Protocol})
 	}
 	if !i18n.IsSupported(c.App.Language) {
-		return fmt.Errorf("[app] language %q is not supported (use one of: %s)",
-			c.App.Language, strings.Join(i18n.Supported, ", "))
+		issues = append(issues, Issue{Kind: IssueUnsupportedLanguage, Detail: c.App.Language})
 	}
 	if _, ok := theme.FindPreset(c.App.Theme.Preset); !ok {
-		return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)",
-			c.App.Theme.Preset, strings.Join(theme.PresetIDs(), ", "))
+		issues = append(issues, Issue{Kind: IssueUnknownTheme, Detail: c.App.Theme.Preset})
 	}
 	if c.App.Layout.Columns < 1 || c.App.Layout.Columns > 6 {
-		return fmt.Errorf("[app.layout] columns=%d out of range [1,6]", c.App.Layout.Columns)
+		issues = append(issues, Issue{Kind: IssueColumnsOutOfRange, Detail: fmt.Sprintf("%d", c.App.Layout.Columns)})
 	}
 	if c.App.Layout.Rows < 1 || c.App.Layout.Rows > 6 {
-		return fmt.Errorf("[app.layout] rows=%d out of range [1,6]", c.App.Layout.Rows)
+		issues = append(issues, Issue{Kind: IssueRowsOutOfRange, Detail: fmt.Sprintf("%d", c.App.Layout.Rows)})
 	}
 	if len(c.Screens) == 0 {
-		return fmt.Errorf("no screens defined — add at least one [[screens]]")
+		issues = append(issues, Issue{Kind: IssueNoScreens})
+		return issues
 	}
 
 	rows := c.App.Layout.Rows
 	cols := c.App.Layout.Columns
 
 	ids := map[string]struct{}{}
-	for i, s := range c.Screens {
+	for _, s := range c.Screens {
 		if s.ID == "" {
-			return fmt.Errorf("screen %d has empty id", i+1)
+			issues = append(issues, Issue{Kind: IssueEmptyScreenID})
+			continue
 		}
 		if _, dup := ids[s.ID]; dup {
-			return fmt.Errorf("duplicate screen id %q", s.ID)
+			issues = append(issues, Issue{Kind: IssueDuplicateScreenID, ScreenID: s.ID})
+			continue
 		}
 		ids[s.ID] = struct{}{}
 		if s.Name == "" {
-			return fmt.Errorf("screen %q has empty name", s.ID)
+			issues = append(issues, Issue{Kind: IssueEmptyScreenName, ScreenID: s.ID})
 		}
 		occupied := map[[2]int]string{}
-		for j, b := range s.Buttons {
+		for _, b := range s.Buttons {
+			if b.Label == "" {
+				issues = append(issues, Issue{Kind: IssueEmptyLabel, ScreenID: s.ID, Row: b.Row, Col: b.Col})
+			}
+			out := false
 			if b.Row < 0 || b.Row >= rows {
-				return fmt.Errorf(
-					"screen %q, button %d: row=%d out of range [0,%d)",
-					s.ID, j+1, b.Row, rows)
+				issues = append(issues, Issue{Kind: IssueOutOfGridRow, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+				out = true
 			}
 			if b.Col < 0 || b.Col >= cols {
-				return fmt.Errorf(
-					"screen %q, button %d: col=%d out of range [0,%d)",
-					s.ID, j+1, b.Col, cols)
+				issues = append(issues, Issue{Kind: IssueOutOfGridCol, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+				out = true
+			}
+			if out {
+				continue
 			}
 			pos := [2]int{b.Row, b.Col}
 			if other, dup := occupied[pos]; dup {
-				return fmt.Errorf(
-					"screen %q: buttons %q and %q both occupy (row=%d, col=%d)",
-					s.ID, other, b.Label, b.Row, b.Col)
+				issues = append(issues, Issue{Kind: IssueDuplicatePosition, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: other})
+				continue
 			}
 			occupied[pos] = b.Label
 			if !validActions[b.Action] {
-				return fmt.Errorf(
-					"screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)",
-					s.ID, b.Label, b.Action)
+				issues = append(issues, Issue{Kind: IssueInvalidAction, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
+				continue
 			}
 			if b.Action == ActionNavigate && b.Target == "" {
-				return fmt.Errorf(
-					"screen %q, button %q: navigate requires target",
-					s.ID, b.Label)
+				issues = append(issues, Issue{Kind: IssueNavigateRequiresTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
 			}
 			if b.Action != ActionNavigate && b.Target != "" {
-				return fmt.Errorf(
-					"screen %q, button %q: action %q does not accept target",
-					s.ID, b.Label, b.Action)
+				issues = append(issues, Issue{Kind: IssueActionRejectsTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
 			if b.Action == ActionText && b.Content == "" {
-				return fmt.Errorf(
-					"screen %q, button %q: text requires content",
-					s.ID, b.Label)
+				issues = append(issues, Issue{Kind: IssueTextRequiresContent, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
 			}
 			if b.Action != ActionText && b.Content != "" {
-				return fmt.Errorf(
-					"screen %q, button %q: action %q does not accept content",
-					s.ID, b.Label, b.Action)
+				issues = append(issues, Issue{Kind: IssueActionRejectsContent, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
 		}
 	}
-	// Validate navigate targets exist.
 	for _, s := range c.Screens {
 		for _, b := range s.Buttons {
 			if b.Action == ActionNavigate {
 				if _, ok := ids[b.Target]; !ok {
-					return fmt.Errorf(
-						"screen %q, button %q: target %q does not exist",
-						s.ID, b.Label, b.Target)
+					issues = append(issues, Issue{Kind: IssueNavigateUnknownTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Target})
 				}
 			}
 		}
 	}
+	return issues
+}
+
+func (c *Config) validate() error {
+	for _, issue := range c.Issues() {
+		return issue.Error(c.App.Layout.Rows, c.App.Layout.Columns)
+	}
 	return nil
+}
+
+// Error formats an Issue as a human-readable message.
+func (issue Issue) Error(rows, cols int) error {
+	if msg := issue.appError(); msg != "" {
+		return errors.New(msg)
+	}
+	if msg := issue.layoutError(); msg != "" {
+		return errors.New(msg)
+	}
+	if msg := issue.screenError(); msg != "" {
+		return errors.New(msg)
+	}
+	return issue.buttonError(rows, cols)
+}
+
+func (issue Issue) appError() string {
+	switch issue.Kind {
+	case IssueInvalidProtocol:
+		return fmt.Sprintf("[app.device] protocol must be %q, got %q", ProtocolDIY, issue.Detail)
+	case IssueUnsupportedLanguage:
+		return fmt.Sprintf("[app] language %q is not supported (use one of: %s)", issue.Detail, strings.Join(i18n.Supported, ", "))
+	case IssueUnknownTheme:
+		return fmt.Sprintf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(theme.PresetIDs(), ", "))
+	}
+	return ""
+}
+
+func (issue Issue) layoutError() string {
+	switch issue.Kind {
+	case IssueColumnsOutOfRange:
+		return fmt.Sprintf("[app.layout] columns=%s out of range [1,6]", issue.Detail)
+	case IssueRowsOutOfRange:
+		return fmt.Sprintf("[app.layout] rows=%s out of range [1,6]", issue.Detail)
+	}
+	return ""
+}
+
+func (issue Issue) screenError() string {
+	switch issue.Kind {
+	case IssueNoScreens:
+		return "no screens defined — add at least one [[screens]]"
+	case IssueEmptyScreenID:
+		return "screen has empty id"
+	case IssueDuplicateScreenID:
+		return fmt.Sprintf("duplicate screen id %q", issue.ScreenID)
+	case IssueEmptyScreenName:
+		return fmt.Sprintf("screen %q has empty name", issue.ScreenID)
+	}
+	return ""
+}
+
+func (issue Issue) buttonError(rows, cols int) error {
+	switch issue.Kind {
+	case IssueEmptyLabel, IssueOutOfGridRow, IssueOutOfGridCol, IssueDuplicatePosition:
+		return issue.positionError(rows, cols)
+	case IssueInvalidAction, IssueNavigateRequiresTarget, IssueActionRejectsTarget,
+		IssueTextRequiresContent, IssueActionRejectsContent, IssueNavigateUnknownTarget:
+		return issue.actionFieldError()
+	}
+	return fmt.Errorf("%v", issue)
+}
+
+func (issue Issue) positionError(rows, cols int) error {
+	switch issue.Kind {
+	case IssueEmptyLabel:
+		return fmt.Errorf("screen %q, button at (row=%d, col=%d): label is required", issue.ScreenID, issue.Row, issue.Col)
+	case IssueOutOfGridRow:
+		return fmt.Errorf("screen %q, button %q: row=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Row, rows)
+	case IssueOutOfGridCol:
+		return fmt.Errorf("screen %q, button %q: col=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Col, cols)
+	case IssueDuplicatePosition:
+		return fmt.Errorf("screen %q: buttons %q and %q both occupy (row=%d, col=%d)", issue.ScreenID, issue.Detail, issue.Label, issue.Row, issue.Col)
+	}
+	return fmt.Errorf("%v", issue)
+}
+
+func (issue Issue) actionFieldError() error {
+	switch issue.Kind {
+	case IssueInvalidAction:
+		return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)", issue.ScreenID, issue.Label, issue.Detail)
+	case IssueNavigateRequiresTarget:
+		return fmt.Errorf("screen %q, button %q: navigate requires target", issue.ScreenID, issue.Label)
+	case IssueActionRejectsTarget:
+		return fmt.Errorf("screen %q, button %q: action %q does not accept target", issue.ScreenID, issue.Label, issue.Detail)
+	case IssueTextRequiresContent:
+		return fmt.Errorf("screen %q, button %q: text requires content", issue.ScreenID, issue.Label)
+	case IssueActionRejectsContent:
+		return fmt.Errorf("screen %q, button %q: action %q does not accept content", issue.ScreenID, issue.Label, issue.Detail)
+	case IssueNavigateUnknownTarget:
+		return fmt.Errorf("screen %q, button %q: target %q does not exist", issue.ScreenID, issue.Label, issue.Detail)
+	}
+	return fmt.Errorf("%v", issue)
 }
 
 // ScreenByID returns the screen with the given id.

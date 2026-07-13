@@ -35,6 +35,13 @@ func TestCommonKeysPresent(t *testing.T) {
 		"status.mock_mode", "status.device_command_failed", "status.out_of_grid", "status.hid_read_failed",
 		"error.config_title", "error.config_message", "error.config_fix", "error.open_file",
 		"button.close",
+		"editor.title", "editor.tab_app_settings", "editor.tab_buttons",
+		"editor.layer", "editor.add_layer", "editor.remove_layer",
+		"editor.label", "editor.action", "editor.target", "editor.content",
+		"editor.save", "editor.open", "editor.new", "editor.problems_title",
+		"editor.out_of_grid", "editor.duplicate_pos", "editor.bad_target",
+		"editor.label_required", "editor.content_required", "editor.target_required",
+		"editor.invalid_action", "editor.action_rejects_target", "editor.action_rejects_content",
 	}
 	for _, key := range keys {
 		for _, lang := range Supported {
