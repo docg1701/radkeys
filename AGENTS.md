@@ -119,7 +119,8 @@ radkeys/
 │   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # theme.go — 13 presets
 │   └── assets/              # embedded icons
-└── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard + PROTOCOL.md
+├── firmware/rp2040-zero/    # Composite USB: vendor [row,col] + OUT fire-paste + HID keyboard + PROTOCOL.md
+└── research/                # 0.12.0 config-editor research briefs (UX, Fyne, schema)
 ```
 
 > `internal/deck/` removed. Navigation is stack-based with screen ids.

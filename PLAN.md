@@ -339,7 +339,7 @@
 
   **KISS / no over-engineering:**
   - No drag-drop (Fyne lacks native list reordering — research gap
-    /tmp/radkeys-012/research-fyne-forms.md). Reorder layers with up/down
+    research/012-fyne-forms.md). Reorder layers with up/down
     buttons; assign a button by clicking its grid cell (the grid IS the
     row/col picker — no row/col fields).
   - Schema-driven, constrained inputs only — the user can never produce an
@@ -350,9 +350,14 @@
 
   **Reuses:** `internal/config` (Load/Validate/Save + the `.bak`), `internal/i18n`
   (existing button.*/settings.*/status.* + new `editor.*` keys in 7 languages —
-  see scout /tmp/radkeys-012/scout-config-schema.md), `internal/theme` (13
+  see scout research/012-config-schema.md), `internal/theme` (13
   presets). New `cmd/radkeys-config/main.go` + a new `internal/editor` package for
   the Fyne editor.
+
+  **Research basis (in repo):** the design rests on 3 briefs shipped in
+  `research/`: `012-config-editor-ux.md` (Stream Deck / MetaConfigurator UX
+  patterns), `012-fyne-forms.md` (Fyne widgets / binding / gaps),
+  `012-config-schema.md` (the RadKeys config schema + the Settings-tab gap).
 
 - **Subagent:** `planner`/`reviewer` (UX spec → Fyne widget mapping: `widget.Form`
   + Entry/Select/Check, `widget.List` with manual callbacks for screens/buttons
