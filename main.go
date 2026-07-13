@@ -96,8 +96,8 @@ product_id = 0xABCD
 protocol   = "radkeys-diy"
 
 [app.layout]
-columns = 4
-rows    = 3
+columns = 6
+rows    = 6
 
 [app.theme]
 preset = "system"

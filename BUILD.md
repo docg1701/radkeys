@@ -125,7 +125,7 @@ Para cada uma das 6 colunas:
 /*
  * RadKeys — firmware RP2040-Zero.
  * Protocolo: envia [row, col] (2 bytes) via HID vendor-defined (TinyUSB).
- * Grid configurável pelo app — firmware NÃO hardcoded tamanho.
+ * Grid configurável pelo app até a matriz física 6×6 — firmware varre os 6 rows/cols.
  *
  * Configuração Arduino IDE:
  *   Placa: "Waveshare RP2040 Zero" (core earlephilhower)
@@ -211,8 +211,11 @@ void loop() {
 
 ### 4.3 VID/PID
 
-Os valores `0x1234`/`0xABCD` são placeholders. Troque por qualquer par livre
-e **case com `radkeys.config.toml`**:
+Os valores `0x1234`/`0xABCD` são **placeholders de protótipo** — `0x1234` é
+um Vendor ID de exemplo muito reusado e pode colidir com outros gadgets USB.
+**Antes de qualquer uso clínico/produção**, troque por um par próprio (um PID
+sob um VID registrado, ou um PID open-source alocado) e case com
+`radkeys.config.toml`:
 
 ```toml
 [app.device]

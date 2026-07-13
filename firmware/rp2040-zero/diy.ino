@@ -1,7 +1,7 @@
 /*
  * RadKeys — RP2040-Zero firmware.
  * Sends [row, col] (2 bytes) via HID vendor-defined (TinyUSB).
- * Grid is configurable in the app — firmware does NOT hardcode size.
+ * Grid is configurable in the app up to the 6×6 hardware matrix — firmware scans all 6 rows/cols.
  *
  * Arduino IDE setup:
  *   Board: "Waveshare RP2040 Zero" (earlephilhower core)
