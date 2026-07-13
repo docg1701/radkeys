@@ -122,8 +122,10 @@ func (u *appUI) currentScreen() config.Screen {
 	return s
 }
 
-// press handles a button press at physical (row, col).
-func (u *appUI) press(row, col int) {
+// press handles a button press at physical (row, col). fromUI reports whether
+// the press came from an on-screen button click (which gives RadKeys focus)
+// versus the physical HID keypad (which preserves the RIS focus).
+func (u *appUI) press(row, col int, fromUI bool) {
 	b, ok := u.currentScreen().ButtonAt(row, col)
 	if !ok {
 		return
@@ -135,7 +137,13 @@ func (u *appUI) press(row, col int) {
 	case config.ActionCopy:
 		u.a.Clipboard().SetContent(u.previewText)
 	case config.ActionPaste:
-		// Send Ctrl+V to the focused window (the RIS), not the app.
+		// Paste is driven by the physical keypad so the RIS keeps focus.
+		// A UI click gives RadKeys focus, so sending Ctrl+V would paste into
+		// RadKeys itself — refuse and explain instead.
+		if fromUI {
+			dialog.ShowInformation(i18n.T("button.paste"), i18n.T("paste.via_keypad_hint"), u.win)
+			return
+		}
 		if err := keystroke.SendCtrlV(); err != nil {
 			log.Printf("radkeys: paste failed: %v", err)
 		}
@@ -167,7 +175,7 @@ func (u *appUI) renderGrid() {
 		if b, ok := s.ButtonAt(r, c); ok {
 			row := r
 			col := c
-			btn := widget.NewButton(b.Label, func() { u.press(row, col) })
+			btn := widget.NewButton(b.Label, func() { u.press(row, col, true) })
 			u.keypad.Objects = append(u.keypad.Objects, btn)
 		} else {
 			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v))
@@ -201,7 +209,7 @@ func (u *appUI) pollHID() {
 			continue
 		}
 		row, col := ev.Row, ev.Col
-		fyne.Do(func() { u.press(row, col) })
+		fyne.Do(func() { u.press(row, col, false) })
 	}
 }
 

@@ -183,6 +183,15 @@ var messages = map[string]map[string]string{
 		"en": "Home", "pt-BR": "Início", "pt-PT": "Início",
 		"es": "Inicio", "fr": "Accueil", "de": "Start", "it": "Home",
 	},
+	"paste.via_keypad_hint": {
+		"en":    "Use the physical keypad for Paste — clicking here would paste into RadKeys itself.",
+		"pt-BR": "Use o teclado físico para Paste — clicar aqui colaria no próprio RadKeys.",
+		"pt-PT": "Use o teclado físico para Paste — clicar aqui colaria no próprio RadKeys.",
+		"es":    "Use el teclado físico para Paste — hacer clic aquí pegaría en el propio RadKeys.",
+		"fr":    "Utilisez le clavier physique pour Paste — cliquer ici collerait dans RadKeys lui-même.",
+		"de":    "Physisches Keypad für Paste nutzen — Klicken hier würde in RadKeys selbst einfügen.",
+		"it":    "Usa il keypad fisico per Paste — cliccare qui incollerebbe in RadKeys stesso.",
+	},
 
 	// ── About ─────────────────────────────────────────────
 	"about.version": {
