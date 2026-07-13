@@ -84,9 +84,9 @@
 
 ## Current state (starting point)
 
-> Progress snapshot — steps 0-7 COMPLETE and committed. Release
-> v0.10.0 published (Linux + Windows). Steps 8-9 (0.11.0 device editing
-> functions, 0.12.0 config-editor app) planned. No hardware prototype yet.
+> Progress snapshot — steps 0-9 COMPLETE and committed. Releases
+> v0.10.0, v0.11.0, v0.12.0 published (Linux + Windows; 0.12.0 also ships the
+> optional `radkeys-config` visual editor binary). No hardware prototype yet.
 
 - `var Version = "0.10.0"` in `main.go` (Step 7 bump).
 - **Block 1+2 (antipattern cleanup, commits 5e1af11..8085d90):** kept —
