@@ -123,6 +123,29 @@
 
 ---
 
+## Known bugs to fix (queued — not part of the current step)
+
+### i18n: mock-mode log line is English-only and user-visible
+- **Symptom:** when no HID device is found, running the binary prints an
+  English-only line to the terminal: `radkeys: hid: open <vid>:<pid>: <hid err>;
+  using mock (click UI buttons)`. The human fragment `"using mock (click UI
+  buttons)"` is hardcoded English in `main.go`
+  (`log.Printf("radkeys: %v; using mock (click UI buttons)", err)`).
+- **Not the UI status:** the GUI status-bar message `status.mock_mode` IS
+  correctly translated in all 7 languages (verified: `SetLanguage("pt-BR")` →
+  `T("status.mock_mode")` returns "Dispositivo HID não encontrado — executando
+  em modo mock (use os botões na tela)."; OCR of a mock-mode run confirmed the
+  status bar shows Portuguese). There is no hardcoded English `"No HID…"` UI
+  string — the only English the user sees is this `log.Printf` line.
+- **Fix (pick one):** (a) internationalize the human fragment via a new i18n
+  key (e.g. `log.using_mock`) and keep the raw hid error (`%v`) as the
+  diagnostic tail; or (b) drop the instructional English fragment and log only
+  the raw hid error at debug level, relying on the already-translated UI status
+  (`status.mock_mode`) for user communication. Sweep the other `log.Printf`
+  lines in `main.go`/`ui.go` for user-visible English fragments and apply the
+  same rule. (Logs are English per AGENTS for debugging, but this one is
+  user-visible CLI output when the binary is run from a terminal.)
+
 ## Step-by-step plan (pi-subagents, small and actionable)
 
 > Principle: each step = planner/worker/validator fresh-context (parent is
