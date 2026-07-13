@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -98,10 +99,28 @@ func Load(path string) (*Config, error) {
 	if err := toml.Unmarshal(b, &c); err != nil {
 		return nil, fmt.Errorf("syntax error in %s:\n%w", path, err)
 	}
+	c.applyDefaults()
 	if err := c.validate(); err != nil {
 		return nil, err
 	}
 	return &c, nil
+}
+
+// applyDefaults fills in omitted values with the product defaults.
+// It must be called before validate() so validation is pure.
+func (c *Config) applyDefaults() {
+	if c.App.Language == "" {
+		c.App.Language = "en"
+	}
+	if c.App.Theme.Preset == "" {
+		c.App.Theme.Preset = "system"
+	}
+	if c.App.Layout.Columns == 0 {
+		c.App.Layout.Columns = 6
+	}
+	if c.App.Layout.Rows == 0 {
+		c.App.Layout.Rows = 6
+	}
 }
 
 func (c *Config) validate() error {
@@ -110,28 +129,18 @@ func (c *Config) validate() error {
 			"[app.device] protocol must be %q, got %q",
 			ProtocolDIY, c.App.Device.Protocol)
 	}
-	if c.App.Language == "" {
-		c.App.Language = "en"
-	} else if !i18n.IsSupported(c.App.Language) {
+	if !i18n.IsSupported(c.App.Language) {
 		return fmt.Errorf("[app] language %q is not supported (use one of: %s)",
 			c.App.Language, strings.Join(i18n.Supported, ", "))
 	}
-	if c.App.Theme.Preset == "" {
-		c.App.Theme.Preset = "system"
-	} else if _, ok := theme.FindPreset(c.App.Theme.Preset); !ok {
+	if _, ok := theme.FindPreset(c.App.Theme.Preset); !ok {
 		return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)",
 			c.App.Theme.Preset, strings.Join(theme.PresetIDs(), ", "))
 	}
-	switch {
-	case c.App.Layout.Columns == 0:
-		c.App.Layout.Columns = 4
-	case c.App.Layout.Columns < 1 || c.App.Layout.Columns > 6:
+	if c.App.Layout.Columns < 1 || c.App.Layout.Columns > 6 {
 		return fmt.Errorf("[app.layout] columns=%d out of range [1,6]", c.App.Layout.Columns)
 	}
-	switch {
-	case c.App.Layout.Rows == 0:
-		c.App.Layout.Rows = 5
-	case c.App.Layout.Rows < 1 || c.App.Layout.Rows > 6:
+	if c.App.Layout.Rows < 1 || c.App.Layout.Rows > 6 {
 		return fmt.Errorf("[app.layout] rows=%d out of range [1,6]", c.App.Layout.Rows)
 	}
 	if len(c.Screens) == 0 {
@@ -229,13 +238,19 @@ func (c *Config) ScreenByID(id string) (Screen, bool) {
 // so the user's commented master survives in the backup.
 func (c *Config) Save(path string) error {
 	if existing, err := os.ReadFile(path); err == nil {
-		_ = os.WriteFile(path+".bak", existing, 0o600)
+		if err := os.WriteFile(path+".bak", existing, 0o600); err != nil {
+			log.Printf("radkeys: cannot write backup %s.bak: %v", path, err)
+		}
 	}
 	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("save: %w", err)
 	}
-	defer func() { _ = f.Close() }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("radkeys: config close failed: %v", err)
+		}
+	}()
 	if err := toml.NewEncoder(f).Encode(c); err != nil {
 		return fmt.Errorf("TOML: %w", err)
 	}

@@ -240,6 +240,105 @@ action = "prev"
 	}
 }
 
+func TestLoadAppliesDefaultsOmittedLayoutIsSixBySix(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 5
+col = 5
+label = "X"
+action = "prev"
+`
+	cfg, err := Load(writeFile(t, "c.toml", body))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.App.Layout.Columns != 6 {
+		t.Fatalf("columns = %d, want 6", cfg.App.Layout.Columns)
+	}
+	if cfg.App.Layout.Rows != 6 {
+		t.Fatalf("rows = %d, want 6", cfg.App.Layout.Rows)
+	}
+}
+
+func TestLoadAppliesDefaultsOmittedLanguageAndTheme(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 0
+col = 0
+label = "X"
+action = "prev"
+`
+	cfg, err := Load(writeFile(t, "c.toml", body))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.App.Language != "en" {
+		t.Fatalf("language = %q, want en", cfg.App.Language)
+	}
+	if cfg.App.Theme.Preset != "system" {
+		t.Fatalf("theme preset = %q, want system", cfg.App.Theme.Preset)
+	}
+}
+
+func TestValidateDoesNotMutatePopulatedConfig(t *testing.T) {
+	cfg := Config{
+		App: App{
+			Language: "pt-BR",
+			Theme:    Theme{Preset: "dracula"},
+			Layout:   Layout{Columns: 5, Rows: 4},
+			Device:   Device{Protocol: ProtocolDIY},
+		},
+		Screens: []Screen{{ID: "root", Name: "x"}},
+	}
+	want := cfg
+	if err := cfg.validate(); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+	if cfg.App.Language != want.App.Language ||
+		cfg.App.Theme.Preset != want.App.Theme.Preset ||
+		cfg.App.Layout.Columns != want.App.Layout.Columns ||
+		cfg.App.Layout.Rows != want.App.Layout.Rows {
+		t.Fatalf("validate mutated config: got %+v, want %+v", cfg, want)
+	}
+}
+
+func TestLoadOmittedLayoutDoesNotBreakSixBySixButtons(t *testing.T) {
+	body := `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+row = 5
+col = 5
+label = "X"
+action = "prev"
+`
+	if _, err := Load(writeFile(t, "c.toml", body)); err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+}
+
 func TestLoadNoScreens(t *testing.T) {
 	body := `
 [app]
