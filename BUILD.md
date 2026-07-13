@@ -1,48 +1,48 @@
-# RadKeys — Guia de Montagem do Hardware
+# RadKeys — Hardware Assembly Guide
 
-> Teclado físico 6×6 (36 teclas) com Raw HID custom, fiação ponto a ponto e conectores Dupont.
-> Custo total: ~R$ 55–70 (AliExpress).
+> Physical 6×6 (36-key) keypad with custom Raw HID, point-to-point wiring, and Dupont connectors.
+> Total cost: ~R$ 55–70 (AliExpress).
 
 ---
 
-## 1. Lista de Compras (AliExpress)
+## 1. Shopping List (AliExpress)
 
-### 1.1 Eletrônica
+### 1.1 Electronics
 
-| Item | Qtd | Buscar por |
+| Item | Qty | Search for |
 |------|-----|------------|
 | **RP2040-Zero** | 1 | "RP2040-Zero" — ~R$ 10 |
-| Push buttons SPST 4 pinos 6×6mm | 36 | "push button 6x6 4 pin 100pcs" |
-| Diodos 1N4148 through-hole | 36 | "1N4148 diodo through hole" |
-| Cabos flexíveis coloridos AWG 24-26 | kit | "wire kit awg 24" ou use cabo de rede |
-| Terminais Dupont fêmea + alicate de crimp | 12+ | "dupont connector kit" |
-| Ferro de solda, estanho, alicate de corte | 1 cada | — |
-| Abraçadeiras pequenas | ~10 | "zip tie small" |
+| Push buttons SPST 4 pins 6×6mm | 36 | "push button 6x6 4 pin 100pcs" |
+| 1N4148 through-hole diodes | 36 | "1N4148 diode through hole" |
+| Colored flexible wires AWG 24-26 | kit | "wire kit awg 24" or use network cable |
+| Female Dupont terminals + crimping plier | 12+ | "dupont connector kit" |
+| Soldering iron, solder, cutting pliers | 1 each | — |
+| Small zip ties | ~10 | "zip tie small" |
 
-### 1.2 Estrutura
+### 1.2 Enclosure
 
-| Item | Qtd | Nota |
+| Item | Qty | Note |
 |------|-----|------|
-| Case 3D impresso — grade 6×6 | 1 | Furos quadrados 6,2×6,2mm, espaçamento 14mm centro a centro |
-| Tampa inferior 3D impressa | 1 | Protege a fiação |
-| Parafusos M2 ou M3 | 4-6 | Fechar o case |
-| Cabo USB-C | 1 | O RP2040-Zero já tem conector USB-C |
+| 3D printed case — 6×6 grid | 1 | Square holes 6.2×6.2mm, 14mm center-to-center spacing |
+| 3D printed bottom cover | 1 | Protects the wiring |
+| M2 or M3 screws | 4-6 | Close the case |
+| USB-C cable | 1 | RP2040-Zero already has a USB-C connector |
 
 ---
 
-## 2. Circuito Elétrico (Matriz 6×6 com Anti-Ghosting)
+## 2. Electrical Circuit (6×6 Matrix with Anti-Ghosting)
 
-- **Linhas (Rows)**: 6 saídas digitais
-- **Colunas (Columns)**: 6 entradas com pull-up interno
+- **Rows**: 6 digital outputs
+- **Columns**: 6 inputs with internal pull-up
 
-Cada push button é ligado em série com um diodo 1N4148:
-- **Ânodo** do diodo → terminal do botão (lado da coluna)
-- **Cátodo** (faixa preta) → barramento da linha (fio comum daquela linha)
-- O **outro terminal** do botão → barramento da coluna
+Each push button is wired in series with a 1N4148 diode:
+- **Diode anode** → button terminal (column side)
+- **Cathode** (black band) → row bus (common wire for that row)
+- The **other terminal** of the button → column bus
 
-Esse arranjo garante corrente apenas da linha para a coluna, eliminando ghosting.
+This arrangement ensures current only flows from row to column, eliminating ghosting.
 
-### Atribuição de Pinos (RP2040-Zero)
+### Pin Assignment (RP2040-Zero)
 
 ```
         Col 0  Col 1  Col 2  Col 3  Col 4  Col 5
@@ -55,7 +55,7 @@ Row 4 (GP4)  B24    B25    B26    B27    B28    B29
 Row 5 (GP5)  B30    B31    B32    B33    B34    B35
 ```
 
-| Linha | GPIO | | Coluna | GPIO |
+| Row | GPIO | | Column | GPIO |
 |-------|------|-|--------|------|
 | R0 | GP0 | | C0 | GP6 |
 | R1 | GP1 | | C1 | GP7 |
@@ -64,95 +64,95 @@ Row 5 (GP5)  B30    B31    B32    B33    B34    B35
 | R4 | GP4 | | C4 | GP10 |
 | R5 | GP5 | | C5 | GP11 |
 
-> GPIOs GP12–GP22 ficam livres para LED, buzzer ou expansão futura.
+> GPIOs GP12–GP22 are free for LED, buzzer, or future expansion.
 
 ---
 
-## 3. Montagem Ponto a Ponto + Dupont
+## 3. Point-to-Point + Dupont Assembly
 
-### 3.1 Preparação
+### 3.1 Preparation
 
-1. Encaixe os 36 push buttons no frame 3D.
-2. Padronize a orientação: terminais mais longos na horizontal ou vertical — mas **igual para todos**.
-3. Identifique para cada botão: terminal da coluna e terminal da linha.
-   - Sugestão: terminal superior-esquerdo = coluna, inferior-direito = linha.
+1. Fit the 36 push buttons into the 3D frame.
+2. Standardize the orientation: longer terminals horizontally or vertically — but **the same for all**.
+3. Identify for each button: the column terminal and the row terminal.
+   - Suggestion: upper-left terminal = column, lower-right = row.
 
-### 3.2 Soldar os diodos (anti-ghosting)
+### 3.2 Solder the Diodes (Anti-Ghosting)
 
-Para cada botão:
-- Solde o **cátodo** (faixa preta) do diodo no terminal escolhido para **linha**.
-- Deixe o **ânodo** livre, apontando para fora do botão.
+For each button:
+- Solder the **cathode** (black band) of the diode to the terminal chosen for **row**.
+- Leave the **anode** free, pointing outward from the button.
 
-### 3.3 Barramentos de linha
+### 3.3 Row Buses
 
-Para cada uma das 6 linhas:
-1. Pegue um fio flexível que percorra todos os 6 botões da linha + ~20cm extra.
-2. Descasque pequenos trechos onde o fio encontra cada diodo.
-3. Enrole o fio descascado no ânodo de cada diodo e solde.
-4. Na ponta final, solde ou crimpe um terminal **Dupont fêmea**.
-5. Conecte ao GPIO correspondente (R0→GP0, R1→GP1, ... R5→GP5).
+For each of the 6 rows:
+1. Take a flexible wire that runs across all 6 buttons in the row + ~20cm extra.
+2. Strip small sections where the wire meets each diode.
+3. Wrap the stripped wire around the anode of each diode and solder.
+4. At the final end, solder or crimp a **female Dupont** terminal.
+5. Connect to the corresponding GPIO (R0→GP0, R1→GP1, ... R5→GP5).
 
-### 3.4 Barramentos de coluna
+### 3.4 Column Buses
 
-Para cada uma das 6 colunas:
-1. Pegue um fio de **outra cor** (ex: preto/azul).
-2. Percorra os terminais de **coluna** dos 6 botões daquela coluna.
-3. Descasque, enrole no terminal, solde.
-4. Na ponta, terminal **Dupont fêmea**.
-5. Conecte ao GPIO (C0→GP6, C1→GP7, ... C5→GP11).
+For each of the 6 columns:
+1. Take a wire of **another color** (e.g., black/blue).
+2. Run across the **column** terminals of the 6 buttons in that column.
+3. Strip, wrap around the terminal, and solder.
+4. At the end, attach a **female Dupont** terminal.
+5. Connect to the GPIO (C0→GP6, C1→GP7, ... C5→GP11).
 
-### 3.5 Organização final
+### 3.5 Cable Management
 
-1. Agrupe os 12 fios (6 linhas + 6 colunas) com abraçadeiras.
-2. Plugue cada Dupont fêmea no pino correto do RP2040-Zero.
-3. Fixe o RP2040-Zero no fundo do case com fita dupla face.
-4. Feche a tampa inferior.
+1. Group the 12 wires (6 rows + 6 columns) with zip ties.
+2. Plug each female Dupont into the correct RP2040-Zero pin.
+3. Fix the RP2040-Zero at the bottom of the case with double-sided tape.
+4. Close the bottom cover.
 
-### 3.6 Teste
+### 3.6 Testing
 
-1. Carregue o firmware no RP2040-Zero (ver seção 4).
-2. Conecte o USB-C e execute `./radkeys`.
-3. Pressione cada botão — a UI deve mostrar `(row, col)` no log/terminal.
-4. Se coordenadas estiverem trocadas (ex: botão físico 0,3 aciona 3,0), troque os Duponts no RP2040-Zero.
+1. Flash the firmware onto the RP2040-Zero (see section 4).
+2. Connect the USB-C cable and run `./radkeys`.
+3. Press each button — the UI should show `(row, col)` in the log/terminal.
+4. If coordinates are swapped (e.g., physical button 0,3 triggers 3,0), swap the Duponts on the RP2040-Zero.
 
 ---
 
 ## 4. Firmware
 
-O device é **composite USB**: interface vendor HID (eventos `[row,col]`) +
-interface de teclado HID (Ctrl/Cmd+V para paste). **Flash único de fábrica** —
-o firmware nunca é regravado para configuração (toda config vive no App/TOML).
-O botão Paste faz o device enviar Ctrl/Cmd+V para a janela focada (o RIS) como
-teclado USB.
+The device is a **composite USB**: vendor HID interface (`[row,col]` events) +
+HID keyboard interface (Ctrl/Cmd+V for paste). **Single factory flash** — the
+firmware is never rewritten for configuration (all configuration lives in the
+App/TOML). The Paste button makes the device send Ctrl/Cmd+V to the focused
+window (the RIS) as a USB keyboard.
 
-### 4.1 Código (grave no RP2040-Zero via Arduino IDE)
+### 4.1 Code (Flash onto the RP2040-Zero via Arduino IDE)
 
-O firmware está em [`firmware/rp2040-zero/diy.ino`](firmware/rp2040-zero/diy.ino)
-— dispositivo composite USB (vendor HID `[row,col]` + interface de teclado HID
-para paste). Veja [`PROTOCOL.md`](firmware/rp2040-zero/PROTOCOL.md) para o
-protocolo de comandos.
+The firmware is at [`firmware/rp2040-zero/diy.ino`](firmware/rp2040-zero/diy.ino)
+— composite USB device (vendor HID `[row,col]` + HID keyboard interface for
+paste). See [`PROTOCOL.md`](firmware/rp2040-zero/PROTOCOL.md) for the command
+protocol.
 
-### 4.2 Configuração no Arduino IDE
+### 4.2 Arduino IDE Configuration
 
-1. Instalar o core **Raspberry Pi Pico/RP2040** (earlephilhower):
-   `Arquivo → Preferências → URLs adicionais`:
+1. Install the **Raspberry Pi Pico/RP2040** core (earlephilhower):
+   `File → Preferences → Additional Boards Manager URLs`:
    ```
    https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
    ```
-2. Instalar a biblioteca **Adafruit TinyUSB Library** (Library Manager).
-3. Selecionar:
-   - **Placa**: "Waveshare RP2040 Zero"
+2. Install the **Adafruit TinyUSB Library** (Library Manager).
+3. Select:
+   - **Board**: "Waveshare RP2040 Zero"
    - **USB Stack**: "Adafruit TinyUSB"
-4. Conectar o RP2040-Zero com **botão BOOT pressionado** → soltar após conectar.
-5. Porta: selecionar a porta que aparece (UF2 Board).
-6. Compilar e gravar.
+4. Connect the RP2040-Zero with the **BOOT button pressed** → release after connecting.
+5. Port: select the port that appears (UF2 Board).
+6. Compile and flash.
 
 ### 4.3 VID/PID
 
-Os valores `0x1234`/`0xABCD` são **placeholders de protótipo** — `0x1234` é
-um Vendor ID de exemplo muito reusado e pode colidir com outros gadgets USB.
-**Antes de qualquer uso clínico/produção**, troque por um par próprio (um PID
-sob um VID registrado, ou um PID open-source alocado) e case com
+The values `0x1234`/`0xABCD` are **prototype placeholders** — `0x1234` is a
+commonly reused example Vendor ID and may collide with other USB gadgets.
+**Before any clinical/production use**, replace them with your own pair (a PID
+under a registered VID, or an allocated open-source PID) and match
 `radkeys.config.toml`:
 
 ```toml
@@ -162,35 +162,35 @@ product_id = 0xABCD
 protocol = "radkeys-diy"
 ```
 
-### 4.4 Permissão Linux (udev)
+### 4.4 Linux Permission (udev)
 
-Crie `/etc/udev/rules.d/49-radkeys.rules`:
+Create `/etc/udev/rules.d/49-radkeys.rules`:
 
 ```
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="abcd", MODE="0660", GROUP="input"
 ```
 
-Depois: `sudo adduser $USER input` (fazer logout/login).
+Then: `sudo adduser $USER input` (log out / log in).
 
 ---
 
-## 5. Durabilidade e Manutenção
+## 5. Durability and Maintenance
 
-- Soldas bem feitas (brilhantes e firmes) garantem contato duradouro.
-- Os Duponts permitem desconectar o RP2040-Zero facilmente para manutenção.
-- Push buttons: 100.000 a 500.000 ciclos. Se algum falhar, dessoldar 2 fios e trocar.
-- O frame 3D protege os componentes.
+- Well-made solders (shiny and firm) ensure long-lasting contact.
+- The Dupont connectors let you disconnect the RP2040-Zero easily for maintenance.
+- Push buttons: 100,000 to 500,000 cycles. If one fails, desolder 2 wires and replace it.
+- The 3D frame protects the components.
 
 ---
 
-## 6. Custo por unidade
+## 6. Cost per Unit
 
-| Item | Unitário (lote 1) | Unitário (lote 10+) |
-|------|-------------------|---------------------|
+| Item | Unit price (batch 1) | Unit price (batch 10+) |
+|------|----------------------|------------------------|
 | RP2040-Zero | R$ 10 | R$ 10 |
 | Push buttons ×36 | R$ 20 | R$ 12 |
-| Diodos 1N4148 ×36 | R$ 5 | R$ 3 |
-| Fios + Duponts | R$ 12 | R$ 8 |
-| Case 3D (filamento) | R$ 5 | R$ 5 |
-| Cabo USB-C | R$ 5 | R$ 3 |
+| 1N4148 diodes ×36 | R$ 5 | R$ 3 |
+| Wires + Duponts | R$ 12 | R$ 8 |
+| 3D case (filament) | R$ 5 | R$ 5 |
+| USB-C cable | R$ 5 | R$ 3 |
 | **Total** | **~R$ 57** | **~R$ 41** |

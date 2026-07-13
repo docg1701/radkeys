@@ -17,7 +17,7 @@ cross-compile; 1.0.0 only after approval on the prototype hardware.
 ## Dev cycle (MANDATORY — follow every time)
 
 ```
-1. Desenvolver
+1. Develop
 2. gofmt -w . && go vet ./... && golangci-lint run ./... && go test ./...
 3. Bump version in main.go (var Version = "X.Y.Z"). NEVER hardcode version in config or other Go files.
 4. Commit: fix: version bump X.Y.Z → A.B.C (context)
@@ -61,14 +61,14 @@ go mod tidy
 - `gofmt -w . && go vet ./... && golangci-lint run ./... && go test ./...` before every commit.
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`).
 - Build Linux binary (priority — tested) and upload to the release.
-- Build Windows binary locally (mingw) and upload to the release (fornecido, NÃO testado pelo autor).
+- Build Windows binary locally (mingw) and upload to the release (provided, NOT tested by the author).
 - Monitor CI after tag push until release is published.
 - Conventional commits for changelog.
 
 ### ⚠️ macOS
-- NÃO entregamos binário macOS. SDK proprietário da Apple exige Mac físico — não pagamos por isso.
-- Fornecemos instruções de build no README para quem tiver Mac.
-- Comandos para referência:
+- We do NOT ship a macOS binary. Apple's proprietary SDK requires a physical Mac — we do not pay for that.
+- Build instructions are provided in the README for anyone with a Mac.
+- Reference commands:
   ```bash
   CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
   CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
@@ -82,7 +82,7 @@ go mod tidy
 - Cross-compile in CI — agent does it locally.
 - End the turn before CI release is published and all binaries are uploaded.
 - End the turn before the release has Linux + Windows binaries.
-- Build ou upload de binário macOS — não é nossa responsabilidade.
+- Build or upload a macOS binary — not our responsibility.
 - Screens are connected via `navigate` with `target`. Navigation is stack-based (`prev` goes back, `home` goes to root).
 - `[app.fixed_buttons]` — removed. `copy`/`paste`/`prev`/`home` are normal actions.
 - Firmware with fixed-size bitmap — use `(row, col)` 2-byte protocol.
@@ -110,8 +110,8 @@ go mod tidy
 ```
 radkeys/
 ├── main.go / go.mod / go.sum
-├── radkeys.config.toml      # Config example (versionado)
-├── BUILD.md                 # Guia de montagem do hardware
+├── radkeys.config.toml      # Config example (versioned)
+├── BUILD.md                 # Hardware assembly guide
 ├── internal/
 │   ├── config/              # TOML parser + validation + types
 │   ├── hid/                 # HID device: reader + writer (go-hid + mock)
