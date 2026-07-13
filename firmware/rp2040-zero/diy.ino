@@ -17,7 +17,9 @@
 const uint8_t colPins[6] = {6, 7, 8, 9, 10, 11};
 const uint8_t rowPins[6] = {0, 1, 2, 3, 4, 5};
 
-// HID descriptor: report ID 1, 2 bytes (row, col)
+// HID descriptor: single 2-byte vendor input report (no report ID).
+// TUD_HID_REPORT_DESC_GENERIC_INOUT(2) declares one unnumbered report;
+// sendReport MUST pass report_id=0 so TinyUSB does not prepend an extra byte.
 static const uint8_t desc_hid[] = {
   TUD_HID_REPORT_DESC_GENERIC_INOUT(2)
 };
@@ -56,7 +58,7 @@ void loop() {
       bool pressed = (digitalRead(rowPins[r]) == LOW);
       if (pressed && !prevState[r][c]) {
         uint8_t report[2] = {uint8_t(r), uint8_t(c)};
-        usb_hid.sendReport(1, report, sizeof(report));
+        usb_hid.sendReport(0, report, sizeof(report));
         delay(30); // debounce
       }
       prevState[r][c] = pressed;
