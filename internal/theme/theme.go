@@ -23,8 +23,16 @@ type baseColors struct {
 // radKeysTheme resolves every ThemeColorName from baseColors.
 type radKeysTheme struct {
 	light, dark *baseColors
-	isLight     bool
 }
+
+// CustomThemeMarker is implemented only by *radKeysTheme so that internal/ui
+// can recognize our themes without comparing interface values to DefaultTheme().
+type CustomThemeMarker interface {
+	fyne.Theme
+	isRadKeysTheme()
+}
+
+func (t *radKeysTheme) isRadKeysTheme() {}
 
 func newTheme(p preset) fyne.Theme {
 	if p.id == "system" {
@@ -38,7 +46,10 @@ func (t *radKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) colo
 	if bc == nil {
 		return theme.DefaultTheme().Color(name, v)
 	}
-	t.isLight = v == theme.VariantLight
+	sign := -1.0
+	if v == theme.VariantLight {
+		sign = 1.0
+	}
 
 	switch name {
 	case theme.ColorNameBackground:
@@ -64,7 +75,7 @@ func (t *radKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) colo
 	case theme.ColorNameHover:
 		return bc.hover
 	case theme.ColorNamePressed:
-		return shift(bc.button, t.sign()*-0.08)
+		return shift(bc.button, sign*-0.08)
 	case theme.ColorNameFocus:
 		return setAlpha(bc.primary, 0x5c)
 	case theme.ColorNameSelection:
@@ -116,13 +127,6 @@ func (t *radKeysTheme) resolve(v fyne.ThemeVariant) *baseColors {
 	return t.light
 }
 
-func (t *radKeysTheme) sign() float64 {
-	if t.isLight {
-		return 1
-	}
-	return -1
-}
-
 func (t *radKeysTheme) Font(style fyne.TextStyle) fyne.Resource {
 	return theme.DefaultTheme().Font(style)
 }
@@ -151,9 +155,13 @@ func contrastOf(c color.NRGBA) color.NRGBA {
 }
 
 func shift(c color.NRGBA, factor float64) color.NRGBA {
-	// Use the absolute magnitude so a negative factor darkens instead of
-	// wrapping uint8(-20) to 236 and saturating to black on light themes.
-	d := uint8(255 * math.Abs(factor))
+	// Clamp magnitude to [0,1] so |factor| > 1 cannot wrap uint8 and
+	// produce a wrong color.
+	mag := math.Abs(factor)
+	if mag > 1 {
+		mag = 1
+	}
+	d := uint8(255 * mag)
 	if factor >= 0 {
 		return color.NRGBA{satAdd(c.R, d), satAdd(c.G, d), satAdd(c.B, d), c.A}
 	}

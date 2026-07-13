@@ -141,6 +141,41 @@ func TestShiftPositiveFactorLightens(t *testing.T) {
 	}
 }
 
+func TestShiftFactorGreaterThanOneSaturates(t *testing.T) {
+	mid := color.NRGBA{R: 0x80, G: 0x80, B: 0x80, A: 0xff}
+	got := shift(mid, 2.0)
+	want := color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+	if got != want {
+		t.Fatalf("shift(mid, 2.0) = %v, want %v (saturated white)", got, want)
+	}
+}
+
+func TestShiftFactorLessThanNegativeOneSaturates(t *testing.T) {
+	mid := color.NRGBA{R: 0x80, G: 0x80, B: 0x80, A: 0xff}
+	got := shift(mid, -2.0)
+	want := color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}
+	if got != want {
+		t.Fatalf("shift(mid, -2.0) = %v, want %v (saturated black)", got, want)
+	}
+}
+
+func TestColorConcurrentNoRace(t *testing.T) {
+	th := NewCustomTheme(dracula)
+	const n = 100
+	done := make(chan struct{}, 2)
+	for i := 0; i < 2; i++ {
+		go func() {
+			for j := 0; j < n; j++ {
+				_ = th.Color(theme.ColorNamePressed, theme.VariantDark)
+				_ = th.Color(theme.ColorNamePressed, theme.VariantLight)
+			}
+			done <- struct{}{}
+		}()
+	}
+	<-done
+	<-done
+}
+
 func TestBlendMidpoint(t *testing.T) {
 	got := blend(color.NRGBA{0, 0, 0, 255}, color.NRGBA{255, 255, 255, 255}, 0.5)
 	if got.R != 127 || got.G != 127 || got.B != 127 || got.A != 255 {

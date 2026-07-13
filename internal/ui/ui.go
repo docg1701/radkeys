@@ -94,7 +94,10 @@ func Run(cfg *config.Config, configPath string, reader hid.Reader, version strin
 	// without requiring the user to re-select and save the theme.
 	u.a.Settings().AddListener(func(s fyne.Settings) {
 		th := s.Theme()
-		v := variantFor(th)
+		if _, ok := th.(themes.CustomThemeMarker); ok {
+			return // deterministic; no OS settling needed
+		}
+		v := variantFor(th, u.a.Settings().ThemeVariant())
 		if u.previewBg != nil {
 			u.previewBg.FillColor = th.Color(fyneTheme.ColorNameBackground, v)
 			canvas.Refresh(u.previewBg)
@@ -216,7 +219,7 @@ func (u *appUI) renderGrid() {
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
 	th := u.a.Settings().Theme()
-	v := variantFor(th)
+	v := variantFor(th, u.a.Settings().ThemeVariant())
 
 	for i := 0; i < totalSlots; i++ {
 		r := i / u.cols
@@ -247,7 +250,7 @@ func appIconData(cfg *config.Config) []byte {
 
 func (u *appUI) previewBox() fyne.CanvasObject {
 	th := u.a.Settings().Theme()
-	u.previewBg = canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, variantFor(th)))
+	u.previewBg = canvas.NewRectangle(th.Color(fyneTheme.ColorNameBackground, variantFor(th, u.a.Settings().ThemeVariant())))
 	scroll := container.NewVScroll(u.preview)
 	return container.NewStack(u.previewBg, container.NewPadded(scroll))
 }
@@ -412,7 +415,7 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		newTheme := resolveFullTheme(cfg)
 		u.a.Settings().SetTheme(newTheme)
 		if u.previewBg != nil {
-			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme))
+			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme, u.a.Settings().ThemeVariant()))
 			canvas.Refresh(u.previewBg)
 		}
 
@@ -539,10 +542,18 @@ func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(items...)
 }
 
-func variantFor(th fyne.Theme) fyne.ThemeVariant {
-	if th == fyneTheme.DefaultTheme() {
-		return fyne.CurrentApp().Settings().ThemeVariant()
+// variantFor returns the theme variant to use for manual Color() lookups.
+// For RadKeys custom themes it is derived from the resolved background color,
+// so it needs no app/global state. For the adaptive system/DefaultTheme it
+// falls back to the variant supplied by the caller.
+func variantFor(th fyne.Theme, fallback fyne.ThemeVariant) fyne.ThemeVariant {
+	if _, ok := th.(themes.CustomThemeMarker); ok {
+		return variantFromBackground(th)
 	}
+	return fallback
+}
+
+func variantFromBackground(th fyne.Theme) fyne.ThemeVariant {
 	bg := th.Color(fyneTheme.ColorNameBackground, fyneTheme.VariantDark)
 	r, g, b, _ := bg.RGBA()
 	if 0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b) > 0xffff*0.45 {
