@@ -43,31 +43,30 @@
 
 ---
 
-## 4. Colored wire kit AWG 24–26
+## 4. Wiring — Dupont jumpers + bus wire
 
-| Platform | Price | Link |
-|----------|-------|------|
-| **AliExpress** | ~R$ 6.99 (120 pcs, 6 colors) | [aliexpress.com/w/wholesale-wiring-kit](https://pt.aliexpress.com/w/wholesale-wiring-kit.html) |
-| **Mercado Livre** | ~R$ 15–25 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — search "kit jumper wires 20cm" |
-| **Shopee** | ~R$ 10–18 | [shopee.com.br](https://shopee.com.br) — search "colored wire kit awg 24" |
+**The smart way**: M-F (male-female) Dupont jumpers serve double duty — the
+female end plugs into the RP2040-Zero, the cut end solders to the matrix.
+One 20 cm jumper cut in half yields two device-ready wires.
 
-> Free alternative: an Ethernet cable (CAT5/6) has 8 colored AWG 24 wires. 2m of cable gives you enough wire.
+You need **6 jumpers per device** (cut → 12 wires: 6 rows + 6 columns).
+Kits come in 20–60 pieces — buy one kit, cover several devices.
+
+For the row/column buses (the long wire running across all buttons in a row),
+use an old Ethernet cable: 8 color-coded AWG 24 solid-core wires, free.
+
+| Platform | Item | Price | Devices covered |
+|----------|------|-------|----------------|
+| **Mercado Livre** | 60 M-F jumpers 20 cm | ~R$ 12 | 10 |
+| **Shopee** | 20–40 M-F jumpers kit | ~R$ 8–15 | 3–6 |
+| **AliExpress** | 40–65 M-F jumpers kit | ~R$ 5–10 | 6–10 |
+
+> Ethernet cable for bus wire: any old CAT5/6 cable works — 8 solid-color wires,
+> AWG 24, already stripped and ready to solder.
 
 ---
 
-## 5. Female Dupont connectors (×12)
-
-| Platform | Price | Link |
-|----------|-------|------|
-| **Mercado Livre** 620-piece kit | ~R$ 35–45 | [lista.mercadolivre.com.br/dupont](https://lista.mercadolivre.com.br/dupont) |
-| **Mercado Livre** 60-piece pre-made jumper kit | ~R$ 12 | [produto.mercadolivre.com.br/MLB-1020024323](https://produto.mercadolivre.com.br/MLB-1020024323-kit-cabo-jumper-wire-20cm-60-pecas-p-arduino-veja-anuncio-_JM) |
-| **Shopee** | ~R$ 8.25 (10 connectors) | [shopee.com.br](https://shopee.com.br) — search "dupont female connector kit" |
-
-> Pre-made jumper kits: cut wires in half and solder directly — no crimping needed.
-
----
-
-## 6. Zip ties (small)
+## 5. Zip ties (small)
 
 | Platform | Price | Link |
 |----------|-------|------|
@@ -76,7 +75,7 @@
 
 ---
 
-## 7. USB-C cable (×1)
+## 6. USB-C cable (×1)
 
 | Platform | Price | Link |
 |----------|-------|------|
@@ -87,7 +86,7 @@
 
 ---
 
-## 8. 3D-printed case (optional)
+## 7. 3D-printed case (optional)
 
 Print in PETG or ABS. One 1 kg spool makes multiple cases (exact count TBD —
 case model is not finalized).
@@ -108,9 +107,10 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 
 ## Summary — per-device cost
 
-Each device needs: 1× RP2040-Zero, 36× push buttons, 36× diodes, 12× Dupont
-connectors, ~2 m of wire, 1× USB-C cable, ~10 zip ties, 1× case. Kits cover
-multiple devices; cost per device = kit price ÷ devices covered.
+Each device needs: 1× RP2040-Zero, 36× push buttons, 36× diodes, 6× Dupont
+M-F jumpers (cut in half → 12 wires), Ethernet cable for buses (free), 1× USB-C
+cable, ~10 zip ties, 1× case. Kits cover multiple devices; cost per device =
+kit price ÷ devices covered.
 
 ### 🛒 AliExpress (lowest price, free shipping, ~20–30 days)
 | Item | Kit qty | Kit price | Per device | Devices/kit |
@@ -118,11 +118,10 @@ multiple devices; cost per device = kit price ÷ devices covered.
 | RP2040-Zero | 1 | R$ 6 | R$ 6.00 | 1 |
 | Push buttons 6×6 | 100 pcs | R$ 10 | R$ 3.60 | 2.7 |
 | 1N4148 diodes | 100 pcs | R$ 6 | R$ 2.16 | 2.7 |
-| Colored wire kit | 1 kit | R$ 7 | R$ 7.00 | 1 |
-| Dupont connectors | 1 kit | R$ 10 | R$ 10.00 | 1 |
+| M-F Dupont jumpers | 40 pcs | R$ 8 | R$ 1.20 | 6.6 |
 | Zip ties | 100 pcs | R$ 5 | R$ 0.50 | 10 |
 | USB-C cable | 1 | R$ 8 | R$ 8.00 | 1 |
-| **Total per device** | | | **~R$ 37** | |
+| **Total per device** | | | **~R$ 21** | |
 
 ### 📦 Shopee (mid-range, ~7–15 days)
 | Item | Kit qty | Kit price | Per device | Devices/kit |
@@ -130,10 +129,10 @@ multiple devices; cost per device = kit price ÷ devices covered.
 | RP2040-Zero | 1 | R$ 14 | R$ 14.00 | 1 |
 | Push buttons 6×6 | 100 pcs | R$ 15 | R$ 5.40 | 2.7 |
 | 1N4148 diodes | 100 pcs | R$ 12 | R$ 4.32 | 2.7 |
-| Wires + Dupont kit | 1 kit | R$ 15 | R$ 15.00 | 1 |
+| M-F Dupont jumpers | 30 pcs | R$ 10 | R$ 2.00 | 5 |
 | Zip ties | 100 pcs | R$ 6 | R$ 0.60 | 10 |
 | USB-C cable | 1 | R$ 10 | R$ 10.00 | 1 |
-| **Total per device** | | | **~R$ 49** | |
+| **Total per device** | | | **~R$ 36** | |
 
 ### 🏠 Mercado Livre (highest price, fast delivery ~2–5 days)
 | Item | Kit qty | Kit price | Per device | Devices/kit |
@@ -141,10 +140,10 @@ multiple devices; cost per device = kit price ÷ devices covered.
 | RP2040-Zero (pre-soldered) | 1 | R$ 42 | R$ 42.00 | 1 |
 | Push buttons 6×6 | 100 pcs | R$ 25 | R$ 9.00 | 2.7 |
 | 1N4148 diodes | 100 pcs | R$ 28 | R$ 10.08 | 2.7 |
-| Dupont jumper kit | 60 pcs | R$ 12 | R$ 2.40 | 5 |
+| M-F Dupont jumpers | 60 pcs | R$ 12 | R$ 1.20 | 10 |
 | Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
 | USB-C cable | 1 | R$ 12 | R$ 12.00 | 1 |
-| **Total per device** | | | **~R$ 76** | |
+| **Total per device** | | | **~R$ 75** | |
 
 > Case: PETG ~R$ 66–110/spool or ABS ~R$ 55–123/spool. One spool covers
 > multiple devices (exact count TBD — model not finalized). Add ~R$ 5–15 per
