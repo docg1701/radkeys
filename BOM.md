@@ -55,7 +55,7 @@
 
 ---
 
-## 5. Female Dupont connectors + crimp terminals (×12)
+## 5. Female Dupont connectors (×12)
 
 | Platform | Price | Link |
 |----------|-------|------|
@@ -63,22 +63,11 @@
 | **Mercado Livre** 60-piece pre-made jumper kit | ~R$ 12 | [produto.mercadolivre.com.br/MLB-1020024323](https://produto.mercadolivre.com.br/MLB-1020024323-kit-cabo-jumper-wire-20cm-60-pecas-p-arduino-veja-anuncio-_JM) |
 | **Shopee** | ~R$ 8.25 (10 connectors) | [shopee.com.br](https://shopee.com.br) — search "dupont female connector kit" |
 
-> If you buy the pre-made jumper kit (Mercado Livre, R$ 12), cut wires in half and solder directly. Crimping pliers are optional.
+> Pre-made jumper kits: cut wires in half and solder directly — no crimping needed.
 
 ---
 
-## 6. Soldering iron + solder
-
-| Platform | Price | Link |
-|----------|-------|------|
-| **Mercado Livre** Hikari Power 60 kit (127V) | ~R$ 45–65 | [produto.mercadolivre.com.br/MLB-3253879179](https://produto.mercadolivre.com.br/MLB-3253879179-kit-ferro-solda-hikari-power-60-2-resist-4-pontas-127v-_JM) |
-| **Shopee** basic 60W iron | ~R$ 20–30 | [shopee.com.br](https://shopee.com.br) — search "soldering iron 60w" |
-
-> Already have an iron? Skip. The Hikari kit includes spare tips and a replacement heating element.
-
----
-
-## 7. Zip ties (small)
+## 6. Zip ties (small)
 
 | Platform | Price | Link |
 |----------|-------|------|
@@ -87,7 +76,7 @@
 
 ---
 
-## 8. USB-C cable (×1)
+## 7. USB-C cable (×1)
 
 | Platform | Price | Link |
 |----------|-------|------|
@@ -98,7 +87,7 @@
 
 ---
 
-## 9. 3D-printed case (optional)
+## 8. 3D-printed case (optional)
 
 Print in PLA or hire a 3D printing service.
 
@@ -111,7 +100,7 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 
 ---
 
-## Summary — best value by platform
+## Summary
 
 ### 🛒 AliExpress (lowest price, free shipping, ~20–30 days)
 | Item | Qty | Price |
@@ -140,11 +129,4 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 | Dupont jumper kit 60 pcs | 1 | R$ 12 |
 | **Total** | | **~R$ 107** |
 
-### Tools (if you don't already own them)
-| Item | Price |
-|------|-------|
-| Soldering iron + solder | R$ 45–65 |
-| Zip ties | R$ 6–10 |
-| USB-C cable | R$ 8–15 |
-| 3D case (filament) | R$ 5 |
-| **Subtotal tools** | **~R$ 65–95** |
+> Tools not included — the builder is expected to own a soldering iron, cutting pliers, and basic bench tools.
