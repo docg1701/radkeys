@@ -72,57 +72,57 @@ Real end-to-end paste/focus behavior is only verified once Galvani flashes the R
 
 ### Editor refresh and duplication
 
-- `internal/editor/grid.go:127` — `updateButtonsTab()` over-fires, rebuilding the entire Buttons tab 2-4 times per mutation. See `plans/01-raw-findings.md#B1`.
-- `internal/ui/ui.go:355` — `buildSettings()` is 191 lines with an 80-line save closure that rebuilds the whole settings tab on every save. See `plans/01-raw-findings.md#B2`.
-- `internal/ui/ui.go:31` — `Run()` is 128 lines, well above the 20-line guideline. See `plans/01-raw-findings.md#H1`.
-- `internal/ui/ui.go:624` and `internal/editor/inspector.go:190` — identical `labeled()` helpers duplicated across packages. See `plans/01-raw-findings.md#H2`.
-- `internal/ui/ui.go:584` and `internal/editor/appsettings.go:124` — identical `section()` helpers duplicated across packages. See `plans/01-raw-findings.md#H3`.
-- `internal/editor/inspector.go:95` — `actionOptions()`, `actionLabel()`, and `actionFromLabel()` keep three parallel data structures for the same 12 actions. See `plans/01-raw-findings.md#H4`.
-- `internal/ui/ui.go:473` — `tabs.Items[i].Content = X; tabs.Refresh()` is a fragile Fyne pattern. See `plans/01-raw-findings.md#L5`.
+- `internal/editor/grid.go:127` — `updateButtonsTab()` over-fires: `refresh()` calls `refreshGrid()` + `refreshInspector()` + `refreshLayerBar()` + `refreshProblems()`, each of which calls `updateButtonsTab()` → `buildButtonsTab()` → full rebuild of `layerBar` + `inspector` + `problemsBox` + `gridBox`. A single `addButton()` or `removeButton()` triggers 4 full tab rebuilds. (B1)
+- `internal/ui/ui.go:355` — `buildSettings()` is 191 lines with an 80-line save closure that mutates `tabs.Items[1].Content = u.buildSettings()` and `tabs.Items[2].Content = u.buildAbout()`, then conditionally replaces `tabs.Items[0]` with a new `VSplit`. Full teardown+rebuild on every save; 9.5× the AGENTS.md 20-line guideline. (B2)
+- `internal/ui/ui.go:31` — `Run()` is 128 lines (app creation, theme resolution, i18n setup, window creation, UI construction, grid render, mock status, settings listener, firmware check, device open, pollHID launch, close handler) — all in one function, well over the 20-line guideline. (H1)
+- `internal/ui/ui.go:624` and `internal/editor/inspector.go:190` — identical `labeled()` helper duplicated across packages. (H2)
+- `internal/ui/ui.go:584` and `internal/editor/appsettings.go:124` — identical `section()` helper duplicated across packages. (H3)
+- `internal/editor/inspector.go:95` — `actionOptions()` (hardcoded `[]string` of i18n labels), `actionLabel()` (hardcoded `map[string]string` action→label), and `actionFromLabel()` (iterates `configActionOrder()` calling `actionLabel()` to reverse-map) keep three parallel data structures for the same 12 actions; adding a 13th requires editing all three. (H4)
+- `internal/ui/ui.go:473` — `tabs.Items[i].Content = X; tabs.Refresh()` is a fragile Fyne pattern (mutating `AppTabs.Items` after `SetContent`). (L5)
 
 ### Silent failures and fallback behavior
 
-- `main.go:38` — `hid.Open` silently falls back to `hid.NewMock()` when the device is not found, violating the "fail loud" rule. See `plans/01-raw-findings.md#H5`.
-- `internal/editor/editor.go:321` — `setVendorID`/`setProductID` silently ignore invalid hex input. See `plans/01-raw-findings.md#H10`.
-- `internal/ui/ui.go:443` — the settings save closure silently ignores invalid VID/PID hex input. See `plans/01-raw-findings.md#H11`.
+- `main.go:38` — `hid.Open` silently falls back to `hid.NewMock()` when the device is not found, violating the AGENTS.md "fail loud" rule. The user sees a translated status bar but the terminal log is English-only; the real error is swallowed. (H5)
+- `internal/editor/editor.go:321` — `setVendorID`/`setProductID` return early without `setDirty()` on parse error; the user can type "xyz" and the old value persists with no error feedback and ambiguous dirty state. Contradicts PLAN.md step 9's "schema-driven, constrained inputs only" claim. (H10)
+- `internal/ui/ui.go:443` — the settings save closure silently ignores invalid VID/PID hex input (e.g. `"0x12345"` overflows uint16 → ParseUint errors → old value kept, no user feedback). Inconsistent with how columns/rows handle invalid input (which falls back to 1 and updates the entry). (H11)
 
 ### Stale or dead PLAN.md content (this file)
 
-- `PLAN.md:91` — old reference to `var Version = "0.10.0"`; actual is `0.12.1`. See `plans/01-raw-findings.md#H6`.
-- `PLAN.md:128` — "Known bugs to fix" section lists the mock-mode log-line bug as queued, but it is already fixed in `main.go`. See `plans/01-raw-findings.md#H7`.
-- `PLAN.md:159` — the historical step-by-step plan reads as actionable work and lacks a "DONE — DO NOT REDO" marker. See `plans/01-raw-findings.md#H8`.
-- `PLAN.md:86` — Steps 8 and 9 (v0.11.0 editing commands and v0.12.0 config editor) were missing from the "Current state" summary. See `plans/01-raw-findings.md#H9`.
-- `PLAN.md:128` — the "Known bugs" header says "(queued)" although the bug is fixed. See `plans/01-raw-findings.md#M7`.
-- `PLAN.md` overall — 486 lines of documentation bloat with duplicated Current state / step-by-step content. See `plans/01-raw-findings.md#L7`.
-- `PLAN.md:86` — "(starting point)" header is confusing at v0.12.1. See `plans/01-raw-findings.md#L8`.
+- `PLAN.md:91` (the obsolete file replaced by this document) — referenced `var Version = "0.10.0"` while the real source had `0.12.1`. (H6)
+- `PLAN.md:128` (the obsolete file) — the "Known bugs to fix" section listed the mock-mode log-line bug as queued, but the `"using mock (click UI buttons)"` fragment had already been removed from `main.go:44`. (H7)
+- `PLAN.md:159` (the obsolete file) — the historical step-by-step plan read as actionable work and lacked a "DONE — DO NOT REDO" marker, risking re-implementation of completed work. (H8)
+- `PLAN.md:86` (the obsolete file) — the "Current state" summary skipped Steps 8 (v0.11.0 editing commands) and 9 (v0.12.0 config editor) even though both shipped. (H9)
+- `PLAN.md:128` (the obsolete file) — the "Known bugs" header said "(queued — not part of the current step)" although the bug it described was already fixed. (M7)
+- `PLAN.md` overall (the obsolete file) — 486 lines of documentation bloat with duplicated Current state / step-by-step / History sections. (L7)
+- `PLAN.md:86` (the obsolete file) — "(starting point)" header was confusing at v0.12.1 since the project was not starting. (L8)
 
 ### Editor implementation gaps
 
-- `internal/editor/editor.go:217` — orphaned `moveButton` comment with no function body. See `plans/01-raw-findings.md#M1`.
-- `internal/i18n/i18n.go:425` — `editor.move_up` and `editor.move_down` keys exist but layer reordering is not implemented. See `plans/01-raw-findings.md#M5`.
-- `internal/i18n/i18n.go:528` — dead keys `editor.help_toggle`, `editor.help_label`, `editor.model_intro`, `editor.preview_jump`, `editor.last_screen`, `editor.about_model`, `editor.confirm_remove_button`, `editor.no_button_selected`, and all `editor.help.*` keys are unused. See `plans/01-raw-findings.md#M6`.
-- `internal/editor/io.go:136` — `saveConfigAs` receives a `fyne.URIWriteCloser` but never closes it. See `plans/01-raw-findings.md#M8`.
-- `internal/editor/inspector.go:58` — `setButtonLabel` OnChanged fires on every keystroke, triggering heavy rebuilds. See `plans/01-raw-findings.md#M9`.
-- `internal/editor/grid.go:103` — `outOfGridButton` duplicates selection logic instead of calling `selectCell()`. See `plans/01-raw-findings.md#M10`.
+- `internal/editor/editor.go:217` — orphaned `moveButton` doc comment with no function body after it (dead documentation). (M1)
+- `internal/i18n/i18n.go:425` — `editor.move_up` and `editor.move_down` keys exist in all 7 languages, but the layer-reorder UI they were meant for was never implemented. (M5)
+- `internal/i18n/i18n.go:528` — dead keys `editor.help_toggle`, `editor.help_label`, `editor.model_intro`, `editor.preview_jump`, `editor.last_screen`, `editor.about_model`, `editor.confirm_remove_button`, `editor.no_button_selected`, and all `editor.help.*` (dot-separated) keys are defined in 7 languages but never referenced in the editor package. (M6)
+- `internal/editor/io.go:136` — `saveConfigAs` receives a `fyne.URIWriteCloser` (`rc`) but never calls `rc.Close()`; the URI writer is opened and leaked. The actual write goes through `e.cfg.Save(path)` on the file path, so the URIWriteCloser is unused for I/O but still needs closing. (M8)
+- `internal/editor/inspector.go:58` — `ent.OnChanged = e.setButtonLabel` fires on every character typed; each call triggers `setDirty()` + `refreshGrid()` + `refreshProblems()`. Typing "RX" runs the chain twice. (M9)
+- `internal/editor/grid.go:103` — `outOfGridButton` sets `e.selected` directly and calls `refreshInspector()` + `refreshGrid()` manually instead of reusing `selectCell()`, duplicating the selection logic. (M10)
 
 ### Code structure and anti-patterns
 
-- `internal/ui/ui.go:197` — `press()` dispatches 12 actions via a long switch with repeated `fireDeviceCommand()` calls. See `plans/01-raw-findings.md#M2`.
-- `AGENTS.md:91` — the navigation architecture statement is misplaced in the "Never" section. See `plans/01-raw-findings.md#M4`.
-- `internal/hid/reader_cgo.go:168` — `readFirmwareVersion` could read a button `[row, col]` event instead of the version reply. See `plans/01-raw-findings.md#L1`.
-- `internal/config/config.go:289` — `Issue.Error()` uses six nested switch functions instead of a lookup table. See `plans/01-raw-findings.md#L2`.
-- `internal/theme/theme.go:218` — 13 preset globals plus a separate `Presets` slice require two edits to add a theme. See `plans/01-raw-findings.md#L3`.
+- `internal/ui/ui.go:197` — `press()` dispatches 12 actions via a long switch with repeated `u.fireDeviceCommand(action, cmd, arg, fromUI)` calls; only `cmd` and `arg` vary. Acceptable for 6 device-keyboard cases but should become table-driven if more actions are added. (M2)
+- `AGENTS.md:91` — the architectural statement "Screens are connected via `navigate` with `target`. Navigation is stack-based (`prev` goes back, `home` goes to root)." sits in the "🚫 Never" section, where prohibitions belong. (M4)
+- `internal/hid/reader_cgo.go:168` — `readFirmwareVersion` writes `GET_VERSION` then reads 2 bytes. If a button is pressed during the 500ms version-read window, the `[row, col]` IN report could arrive before the version reply and be misinterpreted as `[major, minor]`. The protocol uses no report ID to distinguish them. Low risk today (version read happens once at connect before the event loop). (L1)
+- `internal/config/config.go:289` — `Issue.Error()` dispatches through six nested switch functions (`appError` → `layoutError` → `screenError` → `buttonError` → `positionError` / `actionFieldError`) for what is essentially a `map[IssueKind]formatter`. (L2)
+- `internal/theme/theme.go:218` — 13 theme preset globals plus a separate `Presets` slice; adding a 14th theme requires two edits. (L3)
 
 ### Documentation and tests
 
-- `radkeys.config.toml` — header does not mention that saves strip comments and create a `.bak` backup. See `plans/01-raw-findings.md#L9`.
-- `internal/editor/editor_test.go:154` — `TestStartupPathUsesExecutableDir` is environment-dependent and can fail if `RADKEYS_CONFIG` is set or the test binary is in the project root. See `plans/01-raw-findings.md#L10`.
+- `radkeys.config.toml` — header does not mention that `config.Save` strips comments (BurntSushi/toml limitation) and creates a `.bak` backup before rewriting, so users who hand-edit the file are surprised when their comments vanish. (L9)
+- `internal/editor/editor_test.go:154` — `TestStartupPathUsesExecutableDir` expects the fallback `"radkeys.config.toml"`, but `StartupPath()` checks `RADKEYS_CONFIG` first, then the executable directory. If either is set, the test fails — environment-dependent. (L10)
 
 ### Verified correct (kept in the list for completeness, no change needed)
 
-- `internal/ui/ui.go:305` — `pollHID` wraps events in `fyne.Do()`; this is required because `press()` touches Fyne widgets and is correct Fyne usage. See `plans/01-raw-findings.md#M3`.
-- `internal/i18n/i18n.go:574` — `init()` calls `bundle.AddMessages` ~700 times; acceptable for a desktop app. See `plans/01-raw-findings.md#L4`.
-- `internal/ui/ui.go:148` — `previewBg` pointer is low-risk in the current single-creation flow. See `plans/01-raw-findings.md#L6`.
+- `internal/ui/ui.go:305` — `pollHID` wraps every event in `fyne.Do()`; required because `press()` touches Fyne widgets, and correct Fyne usage. No change. (M3)
+- `internal/i18n/i18n.go:574` — `init()` calls `bundle.AddMessages` ~700 times; acceptable for a desktop app (~1-2ms). No change. (L4)
+- `internal/ui/ui.go:148` — `previewBg` is a `*canvas.Rectangle` stored as a field and mutated by the settings listener; low risk in the current single-creation flow. No change. (L6)
 
 ---
 
