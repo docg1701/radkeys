@@ -7,6 +7,8 @@ import (
 	"fyne.io/fyne/v2"
 	fyneTheme "fyne.io/fyne/v2/theme"
 
+	"github.com/docg1701/radkeys/internal/config"
+	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/theme"
 )
 
@@ -86,6 +88,36 @@ func TestHexUint16Validator(t *testing.T) {
 		}
 		if !c.valid && err == nil {
 			t.Errorf("hexUint16Validator(%q) expected error, got nil", c.input)
+		}
+	}
+}
+
+func TestDeviceCommands(t *testing.T) {
+	want := map[string]struct {
+		cmd hid.Command
+		arg byte
+	}{
+		config.ActionPaste:      {hid.CmdFirePaste, byte(hid.ModifierForOS())},
+		config.ActionSelectAll:  {hid.CmdSelectAll, byte(hid.ModifierForOS())},
+		config.ActionSelectLine: {hid.CmdSelectLine, 0x00},
+		config.ActionLineStart:  {hid.CmdLineStart, 0x00},
+		config.ActionLineEnd:    {hid.CmdLineEnd, 0x00},
+		config.ActionBackspace:  {hid.CmdBackspace, 0x00},
+		config.ActionDelete:     {hid.CmdDelete, 0x00},
+	}
+	if len(deviceCommands) != len(want) {
+		t.Fatalf("deviceCommands has %d entries, want %d", len(deviceCommands), len(want))
+	}
+	for action, expected := range want {
+		def, ok := deviceCommands[action]
+		if !ok {
+			t.Fatalf("deviceCommands missing %q", action)
+		}
+		if def.cmd != expected.cmd {
+			t.Errorf("deviceCommands[%q].cmd = %v, want %v", action, def.cmd, expected.cmd)
+		}
+		if got := def.arg(); got != expected.arg {
+			t.Errorf("deviceCommands[%q].arg() = 0x%02x, want 0x%02x", action, got, expected.arg)
 		}
 	}
 }

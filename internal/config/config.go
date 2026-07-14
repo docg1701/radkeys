@@ -272,97 +272,119 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// Error formats an Issue as a human-readable message.
+// Error formats an Issue as a human-readable error by looking up its
+// formatter in the issueFormatters table.
 func (issue Issue) Error(rows, cols int) error {
-	if msg := issue.appError(); msg != "" {
-		return errors.New(msg)
+	formatter, ok := issueFormatters[issue.Kind]
+	if !ok {
+		return fmt.Errorf("%v", issue)
 	}
-	if msg := issue.layoutError(); msg != "" {
-		return errors.New(msg)
-	}
-	if msg := issue.screenError(); msg != "" {
-		return errors.New(msg)
-	}
-	return issue.buttonError(rows, cols)
+	return formatter(issue, rows, cols)
 }
 
-func (issue Issue) appError() string {
-	switch issue.Kind {
-	case IssueInvalidProtocol:
-		return fmt.Sprintf("[app.device] protocol must be %q, got %q", ProtocolDIY, issue.Detail)
-	case IssueUnsupportedLanguage:
-		return fmt.Sprintf("[app] language %q is not supported (use one of: %s)", issue.Detail, strings.Join(i18n.Supported, ", "))
-	case IssueUnknownTheme:
-		return fmt.Sprintf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(theme.PresetIDs(), ", "))
-	}
-	return ""
+// issueFormatter formats an Issue into an error, receiving the grid dimensions
+// needed for position-related messages.
+type issueFormatter func(issue Issue, rows, cols int) error
+
+// issueFormatters maps every IssueKind to its formatter. A single table
+// replaces the former nested appError/layoutError/screenError/buttonError
+// switch chain.
+var issueFormatters = map[IssueKind]issueFormatter{
+	IssueInvalidProtocol:        formatInvalidProtocol,
+	IssueUnsupportedLanguage:    formatUnsupportedLanguage,
+	IssueUnknownTheme:           formatUnknownTheme,
+	IssueColumnsOutOfRange:      formatColumnsOutOfRange,
+	IssueRowsOutOfRange:         formatRowsOutOfRange,
+	IssueNoScreens:              formatNoScreens,
+	IssueEmptyScreenID:          formatEmptyScreenID,
+	IssueDuplicateScreenID:      formatDuplicateScreenID,
+	IssueEmptyScreenName:        formatEmptyScreenName,
+	IssueEmptyLabel:             formatEmptyLabel,
+	IssueOutOfGridRow:           formatOutOfGridRow,
+	IssueOutOfGridCol:           formatOutOfGridCol,
+	IssueDuplicatePosition:      formatDuplicatePosition,
+	IssueInvalidAction:          formatInvalidAction,
+	IssueNavigateRequiresTarget: formatNavigateRequiresTarget,
+	IssueActionRejectsTarget:    formatActionRejectsTarget,
+	IssueTextRequiresContent:    formatTextRequiresContent,
+	IssueActionRejectsContent:   formatActionRejectsContent,
+	IssueNavigateUnknownTarget:  formatNavigateUnknownTarget,
 }
 
-func (issue Issue) layoutError() string {
-	switch issue.Kind {
-	case IssueColumnsOutOfRange:
-		return fmt.Sprintf("[app.layout] columns=%s out of range [1,6]", issue.Detail)
-	case IssueRowsOutOfRange:
-		return fmt.Sprintf("[app.layout] rows=%s out of range [1,6]", issue.Detail)
-	}
-	return ""
+func formatInvalidProtocol(issue Issue, _, _ int) error {
+	return fmt.Errorf("[app.device] protocol must be %q, got %q", ProtocolDIY, issue.Detail)
 }
 
-func (issue Issue) screenError() string {
-	switch issue.Kind {
-	case IssueNoScreens:
-		return "no screens defined — add at least one [[screens]]"
-	case IssueEmptyScreenID:
-		return "screen has empty id"
-	case IssueDuplicateScreenID:
-		return fmt.Sprintf("duplicate screen id %q", issue.ScreenID)
-	case IssueEmptyScreenName:
-		return fmt.Sprintf("screen %q has empty name", issue.ScreenID)
-	}
-	return ""
+func formatUnsupportedLanguage(issue Issue, _, _ int) error {
+	return fmt.Errorf("[app] language %q is not supported (use one of: %s)", issue.Detail, strings.Join(i18n.Supported, ", "))
 }
 
-func (issue Issue) buttonError(rows, cols int) error {
-	switch issue.Kind {
-	case IssueEmptyLabel, IssueOutOfGridRow, IssueOutOfGridCol, IssueDuplicatePosition:
-		return issue.positionError(rows, cols)
-	case IssueInvalidAction, IssueNavigateRequiresTarget, IssueActionRejectsTarget,
-		IssueTextRequiresContent, IssueActionRejectsContent, IssueNavigateUnknownTarget:
-		return issue.actionFieldError()
-	}
-	return fmt.Errorf("%v", issue)
+func formatUnknownTheme(issue Issue, _, _ int) error {
+	return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(theme.PresetIDs(), ", "))
 }
 
-func (issue Issue) positionError(rows, cols int) error {
-	switch issue.Kind {
-	case IssueEmptyLabel:
-		return fmt.Errorf("screen %q, button at (row=%d, col=%d): label is required", issue.ScreenID, issue.Row, issue.Col)
-	case IssueOutOfGridRow:
-		return fmt.Errorf("screen %q, button %q: row=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Row, rows)
-	case IssueOutOfGridCol:
-		return fmt.Errorf("screen %q, button %q: col=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Col, cols)
-	case IssueDuplicatePosition:
-		return fmt.Errorf("screen %q: buttons %q and %q both occupy (row=%d, col=%d)", issue.ScreenID, issue.Detail, issue.Label, issue.Row, issue.Col)
-	}
-	return fmt.Errorf("%v", issue)
+func formatColumnsOutOfRange(issue Issue, _, _ int) error {
+	return fmt.Errorf("[app.layout] columns=%s out of range [1,6]", issue.Detail)
 }
 
-func (issue Issue) actionFieldError() error {
-	switch issue.Kind {
-	case IssueInvalidAction:
-		return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)", issue.ScreenID, issue.Label, issue.Detail)
-	case IssueNavigateRequiresTarget:
-		return fmt.Errorf("screen %q, button %q: navigate requires target", issue.ScreenID, issue.Label)
-	case IssueActionRejectsTarget:
-		return fmt.Errorf("screen %q, button %q: action %q does not accept target", issue.ScreenID, issue.Label, issue.Detail)
-	case IssueTextRequiresContent:
-		return fmt.Errorf("screen %q, button %q: text requires content", issue.ScreenID, issue.Label)
-	case IssueActionRejectsContent:
-		return fmt.Errorf("screen %q, button %q: action %q does not accept content", issue.ScreenID, issue.Label, issue.Detail)
-	case IssueNavigateUnknownTarget:
-		return fmt.Errorf("screen %q, button %q: target %q does not exist", issue.ScreenID, issue.Label, issue.Detail)
-	}
-	return fmt.Errorf("%v", issue)
+func formatRowsOutOfRange(issue Issue, _, _ int) error {
+	return fmt.Errorf("[app.layout] rows=%s out of range [1,6]", issue.Detail)
+}
+
+func formatNoScreens(_ Issue, _, _ int) error {
+	return errors.New("no screens defined — add at least one [[screens]]")
+}
+
+func formatEmptyScreenID(issue Issue, _, _ int) error {
+	return errors.New("screen has empty id")
+}
+
+func formatDuplicateScreenID(issue Issue, _, _ int) error {
+	return fmt.Errorf("duplicate screen id %q", issue.ScreenID)
+}
+
+func formatEmptyScreenName(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q has empty name", issue.ScreenID)
+}
+
+func formatEmptyLabel(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button at (row=%d, col=%d): label is required", issue.ScreenID, issue.Row, issue.Col)
+}
+
+func formatOutOfGridRow(issue Issue, rows, _ int) error {
+	return fmt.Errorf("screen %q, button %q: row=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Row, rows)
+}
+
+func formatOutOfGridCol(issue Issue, _, cols int) error {
+	return fmt.Errorf("screen %q, button %q: col=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Col, cols)
+}
+
+func formatDuplicatePosition(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q: buttons %q and %q both occupy (row=%d, col=%d)", issue.ScreenID, issue.Detail, issue.Label, issue.Row, issue.Col)
+}
+
+func formatInvalidAction(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)", issue.ScreenID, issue.Label, issue.Detail)
+}
+
+func formatNavigateRequiresTarget(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: navigate requires target", issue.ScreenID, issue.Label)
+}
+
+func formatActionRejectsTarget(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: action %q does not accept target", issue.ScreenID, issue.Label, issue.Detail)
+}
+
+func formatTextRequiresContent(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: text requires content", issue.ScreenID, issue.Label)
+}
+
+func formatActionRejectsContent(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: action %q does not accept content", issue.ScreenID, issue.Label, issue.Detail)
+}
+
+func formatNavigateUnknownTarget(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: target %q does not exist", issue.ScreenID, issue.Label, issue.Detail)
 }
 
 // ScreenByID returns the screen with the given id.

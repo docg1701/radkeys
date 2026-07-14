@@ -678,3 +678,44 @@ target = "root"
 		t.Fatal("expected error for delete with target")
 	}
 }
+
+func TestIssueErrorPerKind(t *testing.T) {
+	kinds := []IssueKind{
+		IssueInvalidProtocol,
+		IssueUnsupportedLanguage,
+		IssueUnknownTheme,
+		IssueColumnsOutOfRange,
+		IssueRowsOutOfRange,
+		IssueNoScreens,
+		IssueEmptyScreenID,
+		IssueDuplicateScreenID,
+		IssueEmptyScreenName,
+		IssueEmptyLabel,
+		IssueOutOfGridRow,
+		IssueOutOfGridCol,
+		IssueDuplicatePosition,
+		IssueInvalidAction,
+		IssueNavigateRequiresTarget,
+		IssueActionRejectsTarget,
+		IssueTextRequiresContent,
+		IssueActionRejectsContent,
+		IssueNavigateUnknownTarget,
+	}
+	for _, kind := range kinds {
+		issue := Issue{Kind: kind, ScreenID: "root", Row: 1, Col: 2, Label: "X", Detail: "detail"}
+		err := issue.Error(6, 6)
+		if err == nil {
+			t.Errorf("Issue.Error(%q) = nil, want error", kind)
+			continue
+		}
+		if err.Error() == "" {
+			t.Errorf("Issue.Error(%q) returned empty message", kind)
+		}
+	}
+
+	// Unknown kind falls back to a non-empty default message.
+	unknown := Issue{Kind: "totally_unknown", ScreenID: "root", Row: 0, Col: 0}
+	if got := unknown.Error(6, 6).Error(); got == "" {
+		t.Fatal("unknown kind should still produce a message")
+	}
+}

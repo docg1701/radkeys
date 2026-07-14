@@ -187,6 +187,11 @@ func (u *appUI) currentScreen() config.Screen {
 // versus the physical HID keypad (which preserves the RIS focus).
 //
 // HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
+// press handles a button press at physical (row, col). fromUI reports whether
+// the press came from an on-screen button click (which gives RadKeys focus)
+// versus the physical HID keypad (which preserves the RIS focus).
+//
+// HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
 // focus the RadKeys window — the only permitted focus grab is the initial
 // w.ShowAndRun() at startup. ActionText/Copy/Navigate are silent (preview,
 // clipboard, internal state + renderGrid); the device-keyboard actions
@@ -205,41 +210,52 @@ func (u *appUI) press(row, col int, fromUI bool) {
 		}
 		return
 	}
-	switch b.Action {
-	case config.ActionText:
-		u.previewText = b.Content
-		u.preview.SetText(b.Content)
-	case config.ActionCopy:
-		u.a.Clipboard().SetContent(u.previewText)
-	case config.ActionPaste:
-		u.fireDeviceCommand(config.ActionPaste, hid.CmdFirePaste, byte(hid.ModifierForOS()), fromUI)
-	case config.ActionSelectAll:
-		u.fireDeviceCommand(config.ActionSelectAll, hid.CmdSelectAll, byte(hid.ModifierForOS()), fromUI)
-	case config.ActionSelectLine:
-		u.fireDeviceCommand(config.ActionSelectLine, hid.CmdSelectLine, 0x00, fromUI)
-	case config.ActionLineStart:
-		u.fireDeviceCommand(config.ActionLineStart, hid.CmdLineStart, 0x00, fromUI)
-	case config.ActionLineEnd:
-		u.fireDeviceCommand(config.ActionLineEnd, hid.CmdLineEnd, 0x00, fromUI)
-	case config.ActionBackspace:
-		u.fireDeviceCommand(config.ActionBackspace, hid.CmdBackspace, 0x00, fromUI)
-	case config.ActionDelete:
-		u.fireDeviceCommand(config.ActionDelete, hid.CmdDelete, 0x00, fromUI)
-	case config.ActionPrev:
-		if len(u.stack) > 0 {
-			u.current = u.stack[len(u.stack)-1]
-			u.stack = u.stack[:len(u.stack)-1]
-		}
-	case config.ActionHome:
-		u.current = u.cfg.Screens[0].ID
-		u.stack = u.stack[:0]
-	case config.ActionNavigate:
-		if b.Target != u.current {
-			u.stack = append(u.stack, u.current)
-			u.current = b.Target
+	if def, ok := deviceCommands[b.Action]; ok {
+		u.fireDeviceCommand(b.Action, def.cmd, def.arg(), fromUI)
+	} else {
+		switch b.Action {
+		case config.ActionText:
+			u.previewText = b.Content
+			u.preview.SetText(b.Content)
+		case config.ActionCopy:
+			u.a.Clipboard().SetContent(u.previewText)
+		case config.ActionPrev:
+			if len(u.stack) > 0 {
+				u.current = u.stack[len(u.stack)-1]
+				u.stack = u.stack[:len(u.stack)-1]
+			}
+		case config.ActionHome:
+			u.current = u.cfg.Screens[0].ID
+			u.stack = u.stack[:0]
+		case config.ActionNavigate:
+			if b.Target != u.current {
+				u.stack = append(u.stack, u.current)
+				u.current = b.Target
+			}
 		}
 	}
 	u.renderGrid()
+}
+
+// deviceCommand describes a keystroke command sent to the device's HID
+// keyboard interface. arg is a thunk so that OS-dependent modifiers are
+// resolved at call time (paste/select_all need Ctrl on Linux/Windows and
+// Cmd on macOS).
+type deviceCommand struct {
+	cmd hid.Command
+	arg func() byte
+}
+
+// deviceCommands maps device-keyboard actions to the command and dynamic
+// modifier sent to the firmware. It replaces the long switch in press().
+var deviceCommands = map[string]deviceCommand{
+	config.ActionPaste:      {cmd: hid.CmdFirePaste, arg: func() byte { return byte(hid.ModifierForOS()) }},
+	config.ActionSelectAll:  {cmd: hid.CmdSelectAll, arg: func() byte { return byte(hid.ModifierForOS()) }},
+	config.ActionSelectLine: {cmd: hid.CmdSelectLine, arg: func() byte { return 0x00 }},
+	config.ActionLineStart:  {cmd: hid.CmdLineStart, arg: func() byte { return 0x00 }},
+	config.ActionLineEnd:    {cmd: hid.CmdLineEnd, arg: func() byte { return 0x00 }},
+	config.ActionBackspace:  {cmd: hid.CmdBackspace, arg: func() byte { return 0x00 }},
+	config.ActionDelete:     {cmd: hid.CmdDelete, arg: func() byte { return 0x00 }},
 }
 
 // fireDeviceCommand sends a device-keyboard command (paste, select_all,
