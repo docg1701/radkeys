@@ -656,6 +656,15 @@ var messages = map[string]map[string]string{
 		"de":    "Ziel erforderlich für Navigieren-Aktionen.",
 		"it":    "Destinazione obbligatoria per le azioni Naviga.",
 	},
+	"editor.cannot_remove_root_screen": {
+		"en":    "The root layer cannot be removed.",
+		"pt-BR": "A camada raiz não pode ser removida.",
+		"pt-PT": "A camada raiz não pode ser removida.",
+		"es":    "La capa raíz no se puede eliminar.",
+		"fr":    "La couche racine ne peut pas être supprimée.",
+		"de":    "Die Root-Ebene kann nicht entfernt werden.",
+		"it":    "Il layer radice non può essere rimosso.",
+	},
 	"editor.last_screen": {
 		"en":    "At least one layer must remain.",
 		"pt-BR": "Pelo menos uma camada deve permanecer.",

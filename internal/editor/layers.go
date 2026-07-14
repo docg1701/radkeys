@@ -112,6 +112,12 @@ func (e *Editor) hasLayerID(id string) bool {
 
 // askRemoveLayer confirms before deleting the current layer.
 func (e *Editor) askRemoveLayer() {
+	if e.current == 0 {
+		d := dialog.NewInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_root_screen"), e.win)
+		d.Resize(fyne.NewSize(500, 200))
+		d.Show()
+		return
+	}
 	if len(e.cfg.Screens) <= 1 {
 		d := dialog.NewInformation(i18n.T("editor.problems_title"), i18n.T("editor.cannot_remove_last_screen"), e.win)
 		d.Resize(fyne.NewSize(500, 200))
