@@ -152,9 +152,18 @@ func TestDefaultConfigHasOneScreen(t *testing.T) {
 }
 
 func TestStartupPathUsesExecutableDir(t *testing.T) {
+	// Clear the env override so the fallback path is deterministic.
+	t.Setenv("RADKEYS_CONFIG", "")
 	// Fallback returns the relative filename when no executable-dir config exists.
 	if got := StartupPath(); got != "radkeys.config.toml" {
 		t.Fatalf("StartupPath fallback = %q, want radkeys.config.toml", got)
+	}
+}
+
+func TestStartupPathHonorsEnvOverride(t *testing.T) {
+	t.Setenv("RADKEYS_CONFIG", "/tmp/radkeys-test-override.toml")
+	if got := StartupPath(); got != "/tmp/radkeys-test-override.toml" {
+		t.Fatalf("StartupPath = %q, want /tmp/radkeys-test-override.toml", got)
 	}
 }
 

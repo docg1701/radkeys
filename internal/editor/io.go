@@ -137,6 +137,7 @@ func (e *Editor) saveConfigAs() {
 		if err != nil || rc == nil {
 			return
 		}
+		defer rc.Close()
 		path := rc.URI().Path()
 		if filepath.Ext(path) != ".toml" {
 			path += ".toml"
