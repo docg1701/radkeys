@@ -7,6 +7,7 @@ import (
 
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/i18n"
+	"github.com/docg1701/radkeys/internal/widgetutil"
 )
 
 // buildInspector creates the property inspector for the selected button.
@@ -62,7 +63,7 @@ func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 			e.updateButtonsTab()
 		})
 	}
-	return labeled(i18n.T("editor.label"), ent)
+	return widgetutil.Labeled(i18n.T("editor.label"), ent)
 }
 
 // actionField edits the button action.
@@ -73,7 +74,7 @@ func (e *Editor) actionField(b config.Button) fyne.CanvasObject {
 	sel.OnChanged = func(choice string) {
 		e.setButtonAction(e.actionFromLabel(choice))
 	}
-	return labeled(i18n.T("editor.action"), sel)
+	return widgetutil.Labeled(i18n.T("editor.action"), sel)
 }
 
 // contentField edits multi-line report text.
@@ -83,7 +84,7 @@ func (e *Editor) contentField(b config.Button) fyne.CanvasObject {
 	ent.OnChanged = e.setButtonContent
 	ent.Wrapping = fyne.TextWrapWord
 	ent.SetMinRowsVisible(12)
-	return labeled(i18n.T("editor.content"), ent)
+	return widgetutil.Labeled(i18n.T("editor.content"), ent)
 }
 
 // targetField edits the navigate target.
@@ -94,68 +95,22 @@ func (e *Editor) targetField(b config.Button) fyne.CanvasObject {
 	sel.OnChanged = func(choice string) {
 		e.setButtonTarget(e.targetFromName(choice))
 	}
-	return labeled(i18n.T("editor.target"), sel)
+	return widgetutil.Labeled(i18n.T("editor.target"), sel)
 }
 
 // actionOptions returns the human-readable labels for all 12 actions.
 func (e *Editor) actionOptions() []string {
-	return []string{
-		i18n.T("editor.action_text"),
-		i18n.T("button.copy"),
-		i18n.T("button.paste"),
-		i18n.T("button.back"),
-		i18n.T("button.home"),
-		i18n.T("editor.action_navigate"),
-		i18n.T("button.select_all"),
-		i18n.T("button.select_line"),
-		i18n.T("button.line_start"),
-		i18n.T("button.line_end"),
-		i18n.T("button.backspace"),
-		i18n.T("button.delete"),
-	}
+	return actionLabels()
 }
 
 // actionLabel returns the display label for an action id.
 func (e *Editor) actionLabel(action string) string {
-	labels := map[string]string{
-		config.ActionText:       i18n.T("editor.action_text"),
-		config.ActionCopy:       i18n.T("button.copy"),
-		config.ActionPaste:      i18n.T("button.paste"),
-		config.ActionPrev:       i18n.T("button.back"),
-		config.ActionHome:       i18n.T("button.home"),
-		config.ActionNavigate:   i18n.T("editor.action_navigate"),
-		config.ActionSelectAll:  i18n.T("button.select_all"),
-		config.ActionSelectLine: i18n.T("button.select_line"),
-		config.ActionLineStart:  i18n.T("button.line_start"),
-		config.ActionLineEnd:    i18n.T("button.line_end"),
-		config.ActionBackspace:  i18n.T("button.backspace"),
-		config.ActionDelete:     i18n.T("button.delete"),
-	}
-	if label, ok := labels[action]; ok {
-		return label
-	}
-	return action
+	return actionLabelByID(action)
 }
 
 // actionFromLabel maps a display label back to the action id.
 func (e *Editor) actionFromLabel(label string) string {
-	for _, a := range configActionOrder() {
-		if e.actionLabel(a) == label {
-			return a
-		}
-	}
-	return config.ActionText
-}
-
-// configActionOrder returns the canonical action ids in display order.
-func configActionOrder() []string {
-	return []string{
-		config.ActionText, config.ActionCopy, config.ActionPaste,
-		config.ActionPrev, config.ActionHome, config.ActionNavigate,
-		config.ActionSelectAll, config.ActionSelectLine,
-		config.ActionLineStart, config.ActionLineEnd,
-		config.ActionBackspace, config.ActionDelete,
-	}
+	return actionIDByLabel(label)
 }
 
 // targetOptions returns human-readable names for the target dropdown.
@@ -190,9 +145,4 @@ func (e *Editor) targetFromName(name string) string {
 		}
 	}
 	return ""
-}
-
-// labeled wraps an input under a label.
-func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
-	return container.NewVBox(widget.NewLabel(label), input)
 }

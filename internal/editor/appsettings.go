@@ -11,6 +11,7 @@ import (
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
+	"github.com/docg1701/radkeys/internal/widgetutil"
 )
 
 // buildAppSettings creates the first tab with app-wide fields.
@@ -43,14 +44,14 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	theme.OnChanged = func(choice string) {
 		e.setAppTheme(themeIDs[indexOf(themeNames, choice)])
 	}
-	return section(i18n.T("settings.group_appearance"),
+	return widgetutil.Section(i18n.T("settings.group_appearance"),
 		container.NewGridWithColumns(2,
-			labeled(i18n.T("editor.app_name"), name),
-			labeled(i18n.T("settings.radiologist"), rad),
+			widgetutil.Labeled(i18n.T("editor.app_name"), name),
+			widgetutil.Labeled(i18n.T("settings.radiologist"), rad),
 		),
 		container.NewGridWithColumns(2,
-			labeled(i18n.T("settings.language"), lang),
-			labeled(i18n.T("settings.theme"), theme),
+			widgetutil.Labeled(i18n.T("settings.language"), lang),
+			widgetutil.Labeled(i18n.T("settings.theme"), theme),
 		),
 	)
 }
@@ -82,10 +83,10 @@ func (e *Editor) buildGridGroup() fyne.CanvasObject {
 		}
 	}
 
-	return section(i18n.T("editor.grid_size"),
+	return widgetutil.Section(i18n.T("editor.grid_size"),
 		container.NewGridWithColumns(2,
-			labeled(i18n.T("settings.columns"), cols),
-			labeled(i18n.T("settings.rows"), rows),
+			widgetutil.Labeled(i18n.T("settings.columns"), cols),
+			widgetutil.Labeled(i18n.T("settings.rows"), rows),
 		),
 	)
 }
@@ -106,11 +107,11 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 	proto.SetSelected(e.cfg.App.Device.Protocol)
 	proto.OnChanged = e.setProtocol
 
-	return section(i18n.T("settings.group_device"),
+	return widgetutil.Section(i18n.T("settings.group_device"),
 		container.NewGridWithColumns(3,
-			labeled(i18n.T("settings.vid"), vid),
-			labeled(i18n.T("settings.pid"), pid),
-			labeled(i18n.T("settings.protocol"), proto),
+			widgetutil.Labeled(i18n.T("settings.vid"), vid),
+			widgetutil.Labeled(i18n.T("settings.pid"), pid),
+			widgetutil.Labeled(i18n.T("settings.protocol"), proto),
 		),
 	)
 }
@@ -118,15 +119,6 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 // gridSizes returns the allowed 1–6 values as strings.
 func gridSizes() []string {
 	return []string{"1", "2", "3", "4", "5", "6"}
-}
-
-// section creates a titled group box.
-func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
-	header := widget.NewLabel(title)
-	header.TextStyle = fyne.TextStyle{Bold: true}
-	items := []fyne.CanvasObject{header}
-	items = append(items, rows...)
-	return container.NewVBox(items...)
 }
 
 // indexOf returns the index of choice in options, or -1.

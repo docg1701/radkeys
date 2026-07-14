@@ -26,6 +26,7 @@ import (
 	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
+	"github.com/docg1701/radkeys/internal/widgetutil"
 )
 
 func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) error {
@@ -442,18 +443,18 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 
 func (u *appUI) buildSettingsSections(w *settingsWidgets) fyne.CanvasObject {
 	sections := container.NewVBox(
-		section(i18n.T("settings.group_config"),
+		widgetutil.Section(i18n.T("settings.group_config"),
 			container.NewGridWithColumns(3,
 				container.NewBorder(nil, nil, widget.NewLabel(i18n.T("settings.config_file")), nil, w.configLbl),
 				w.chooseBtn,
 				widget.NewLabel(""),
 			),
 		),
-		section(i18n.T("settings.group_appearance"),
+		widgetutil.Section(i18n.T("settings.group_appearance"),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.radiologist"), w.radEnt),
-				labeled(i18n.T("settings.language"), w.langSel),
-				labeled(i18n.T("settings.theme"), w.themeSel),
+				widgetutil.Labeled(i18n.T("settings.radiologist"), w.radEnt),
+				widgetutil.Labeled(i18n.T("settings.language"), w.langSel),
+				widgetutil.Labeled(i18n.T("settings.theme"), w.themeSel),
 			),
 			container.NewGridWithColumns(3,
 				widget.NewLabel(i18n.T("settings.icon")),
@@ -461,16 +462,16 @@ func (u *appUI) buildSettingsSections(w *settingsWidgets) fyne.CanvasObject {
 				w.iconBrowseBtn,
 			),
 		),
-		section(i18n.T("settings.group_device"),
+		widgetutil.Section(i18n.T("settings.group_device"),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.columns"), w.colsEnt),
-				labeled(i18n.T("settings.rows"), w.rowsEnt),
+				widgetutil.Labeled(i18n.T("settings.columns"), w.colsEnt),
+				widgetutil.Labeled(i18n.T("settings.rows"), w.rowsEnt),
 				widget.NewLabel(""),
 			),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.vid"), w.vidEnt),
-				labeled(i18n.T("settings.pid"), w.pidEnt),
-				labeled(i18n.T("settings.protocol"), w.protoSel),
+				widgetutil.Labeled(i18n.T("settings.vid"), w.vidEnt),
+				widgetutil.Labeled(i18n.T("settings.pid"), w.pidEnt),
+				widgetutil.Labeled(i18n.T("settings.protocol"), w.protoSel),
 			),
 		),
 	)
@@ -643,14 +644,6 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // Layout helpers
 // ---------------------------------------------------------------------------
 
-func section(title string, rows ...fyne.CanvasObject) fyne.CanvasObject {
-	header := widget.NewLabel(title)
-	header.TextStyle = fyne.TextStyle{Bold: true}
-	items := []fyne.CanvasObject{header}
-	items = append(items, rows...)
-	return container.NewVBox(items...)
-}
-
 // variantFor returns the theme variant to use for manual Color() lookups.
 // For RadKeys custom themes it is derived from the resolved background color,
 // so it needs no app/global state. For the adaptive system/DefaultTheme it
@@ -689,8 +682,4 @@ func hexUint16Validator(s string) error {
 		return fmt.Errorf("%s", i18n.T("settings.invalid_hex"))
 	}
 	return nil
-}
-
-func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
-	return container.NewVBox(widget.NewLabel(label), input)
 }
