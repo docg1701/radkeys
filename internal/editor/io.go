@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -18,15 +17,14 @@ import (
 
 // buildMenu creates the File menu.
 func (e *Editor) buildMenu() *fyne.MainMenu {
-	pad := func(s string) string { return s + strings.Repeat("\u00A0", 8) }
 	file := fyne.NewMenu(i18n.T("editor.file_menu"),
-		fyne.NewMenuItem(pad(i18n.T("editor.new")), e.newConfig),
-		fyne.NewMenuItem(pad(i18n.T("editor.open")), e.openConfig),
-		fyne.NewMenuItem(pad(i18n.T("editor.save")), e.saveConfig),
-		fyne.NewMenuItem(pad(i18n.T("editor.save_as")), e.saveConfigAs),
+		fyne.NewMenuItem(i18n.T("editor.new"), e.newConfig),
+		fyne.NewMenuItem(i18n.T("editor.open"), e.openConfig),
+		fyne.NewMenuItem(i18n.T("editor.save"), e.saveConfig),
+		fyne.NewMenuItem(i18n.T("editor.save_as"), e.saveConfigAs),
 		fyne.NewMenuItemSeparator(),
-		fyne.NewMenuItem(pad(i18n.T("editor.close_file")), e.closeFile),
-		fyne.NewMenuItem(pad(i18n.T("editor.quit")), e.onCloseIntercept),
+		fyne.NewMenuItem(i18n.T("editor.close_file"), e.closeFile),
+		fyne.NewMenuItem(i18n.T("editor.quit"), e.onCloseIntercept),
 	)
 	return fyne.NewMainMenu(file)
 }

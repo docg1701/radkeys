@@ -42,7 +42,7 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	theme := widget.NewSelect(themeNames, nil)
 	theme.SetSelected(i18n.T("theme." + e.cfg.App.Theme.Preset))
 	theme.OnChanged = func(choice string) {
-		e.setAppTheme(themeIDs[indexOf(themeNames, choice)])
+		e.setAppTheme(themeIDs[widgetutil.IndexOf(themeNames, choice)])
 	}
 	return widgetutil.Section(i18n.T("settings.group_appearance"),
 		container.NewGridWithColumns(2,
@@ -67,7 +67,7 @@ func (e *Editor) themeOptions() (ids, names []string) {
 
 // buildGridGroup groups the columns/rows steppers.
 func (e *Editor) buildGridGroup() fyne.CanvasObject {
-	cols := widget.NewSelect(gridSizes(), nil)
+	cols := widget.NewSelect(gridSizes, nil)
 	cols.SetSelected(strconv.Itoa(e.cfg.App.Layout.Columns))
 	cols.OnChanged = func(choice string) {
 		if v, err := strconv.Atoi(choice); err == nil {
@@ -75,7 +75,7 @@ func (e *Editor) buildGridGroup() fyne.CanvasObject {
 		}
 	}
 
-	rows := widget.NewSelect(gridSizes(), nil)
+	rows := widget.NewSelect(gridSizes, nil)
 	rows.SetSelected(strconv.Itoa(e.cfg.App.Layout.Rows))
 	rows.OnChanged = func(choice string) {
 		if v, err := strconv.Atoi(choice); err == nil {
@@ -116,17 +116,5 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 	)
 }
 
-// gridSizes returns the allowed 1–6 values as strings.
-func gridSizes() []string {
-	return []string{"1", "2", "3", "4", "5", "6"}
-}
-
-// indexOf returns the index of choice in options, or -1.
-func indexOf(options []string, choice string) int {
-	for i, o := range options {
-		if o == choice {
-			return i
-		}
-	}
-	return -1
-}
+// gridSizes is the allowed 1–6 values as strings.
+var gridSizes = []string{"1", "2", "3", "4", "5", "6"}

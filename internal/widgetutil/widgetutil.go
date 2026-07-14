@@ -7,6 +7,16 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// IndexOf returns the index of value in options, or -1 if not found.
+func IndexOf(options []string, value string) int {
+	for i, o := range options {
+		if o == value {
+			return i
+		}
+	}
+	return -1
+}
+
 // Labeled wraps an input under a label.
 func Labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {
 	return container.NewVBox(widget.NewLabel(label), input)

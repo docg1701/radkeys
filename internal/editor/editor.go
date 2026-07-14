@@ -77,6 +77,7 @@ func (e *Editor) rebuildTabs() {
 	)
 	e.tabs.SelectIndex(idx)
 	e.win.SetContent(e.tabs)
+	e.win.SetMainMenu(e.buildMenu())
 }
 
 // buildUI constructs the tab container and initial child widgets.
@@ -333,7 +334,7 @@ func (e *Editor) setAppName(name string) {
 // setVendorIDFromEntry parses the hex value in the entry and updates the
 // config vendor ID when valid. It marks the entry on parse failure.
 func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
-	v, err := parseHexUint16(strip0x(s))
+	v, err := parseHexUint16(strings.TrimPrefix(s, "0x"))
 	if err != nil {
 		entry.SetValidationError(err)
 		return
@@ -346,7 +347,7 @@ func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
 // setProductIDFromEntry parses the hex value in the entry and updates the
 // config product ID when valid. It marks the entry on parse failure.
 func (e *Editor) setProductIDFromEntry(entry *widget.Entry, s string) {
-	v, err := parseHexUint16(strip0x(s))
+	v, err := parseHexUint16(strings.TrimPrefix(s, "0x"))
 	if err != nil {
 		entry.SetValidationError(err)
 		return
@@ -369,9 +370,4 @@ func parseHexUint16(s string) (uint16, error) {
 func (e *Editor) setProtocol(p string) {
 	e.cfg.App.Device.Protocol = p
 	e.setDirty()
-}
-
-// strip0x removes a leading "0x" for hex parsing.
-func strip0x(s string) string {
-	return strings.TrimPrefix(strings.ToLower(s), "0x")
 }

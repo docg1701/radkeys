@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -20,12 +21,20 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.14.0"
+var Version = "0.14.1"
 
 const configFileName = "radkeys.config.toml"
 
+var flagConfig = flag.String("c", "", "Path to radkeys.config.toml")
+
 func main() {
-	path := configPath()
+	flag.StringVar(flagConfig, "config", "", "Path to radkeys.config.toml")
+	flag.Parse()
+
+	path := *flagConfig
+	if path == "" {
+		path = configPath()
+	}
 	if err := ensureConfig(path); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}

@@ -424,7 +424,7 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	ids, names := u.themeOptions()
 	w.themeIDs = ids
 	w.themeSel = widget.NewSelect(names, nil)
-	w.themeSel.SetSelectedIndex(indexOf(w.themeIDs, cfg.App.Theme.Preset))
+	w.themeSel.SetSelectedIndex(widgetutil.IndexOf(w.themeIDs, cfg.App.Theme.Preset))
 
 	w.colsEnt = widget.NewEntry()
 	w.colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
@@ -435,8 +435,16 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	w.configLbl.Wrapping = fyne.TextWrapWord
 	w.chooseBtn = widget.NewButton(i18n.T("settings.browse"), func() {
 		showFileDialog(u.win, []string{".toml"}, func(path string) {
+			cfg, err := config.Load(path)
+			if err != nil {
+				dialog.ShowError(err, u.win)
+				return
+			}
 			u.configPath = path
-			w.configLbl.SetText(path)
+			u.cfg = cfg
+			i18n.SetLanguage(cfg.App.Language)
+			u.applySettings(cfg)
+			u.rebuildTabs()
 		})
 	})
 	w.chooseBtn.Importance = widget.MediumImportance
@@ -625,15 +633,6 @@ func (u *appUI) themeOptions() (ids, names []string) {
 		names = append(names, i18n.T("theme."+p.ID()))
 	}
 	return ids, names
-}
-
-func indexOf(options []string, value string) int {
-	for i, o := range options {
-		if o == value {
-			return i
-		}
-	}
-	return -1
 }
 
 // ---------------------------------------------------------------------------
