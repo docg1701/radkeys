@@ -28,6 +28,16 @@ func TestFindPresetByName(t *testing.T) {
 	}
 }
 
+func TestFindPresetKnown(t *testing.T) {
+	p, ok := FindPreset("system")
+	if !ok {
+		t.Fatal("expected system preset to be found")
+	}
+	if p.ID() != "system" {
+		t.Fatalf("id = %q, want system", p.ID())
+	}
+}
+
 func TestFindPresetUnknown(t *testing.T) {
 	p, ok := FindPreset("nonexistent")
 	if ok {
@@ -38,15 +48,34 @@ func TestFindPresetUnknown(t *testing.T) {
 	}
 }
 
+func TestPresetsUnique(t *testing.T) {
+	seen := make(map[string]struct{}, len(Presets))
+	for _, p := range Presets {
+		if _, ok := seen[p.ID()]; ok {
+			t.Fatalf("duplicate preset id %q", p.ID())
+		}
+		seen[p.ID()] = struct{}{}
+	}
+}
+
+func presetOrFatal(t *testing.T, id string) preset {
+	t.Helper()
+	p, ok := FindPreset(id)
+	if !ok {
+		t.Fatalf("preset %q not found", id)
+	}
+	return p
+}
+
 func TestNewCustomThemeSystem(t *testing.T) {
-	th := NewCustomTheme(systemDefault)
+	th := NewCustomTheme(presetOrFatal(t, "system"))
 	if th != theme.DefaultTheme() {
 		t.Fatal("system preset should return DefaultTheme")
 	}
 }
 
 func TestNewCustomThemeDracula(t *testing.T) {
-	th := NewCustomTheme(dracula)
+	th := NewCustomTheme(presetOrFatal(t, "dracula"))
 	if th == nil {
 		t.Fatal("dracula theme is nil")
 	}
@@ -56,7 +85,7 @@ func TestNewCustomThemeDracula(t *testing.T) {
 }
 
 func TestDarkThemeColorsExist(t *testing.T) {
-	th := NewCustomTheme(dracula)
+	th := NewCustomTheme(presetOrFatal(t, "dracula"))
 	for _, name := range []fyne.ThemeColorName{
 		theme.ColorNameBackground,
 		theme.ColorNameButton,
@@ -79,7 +108,7 @@ func TestDarkThemeColorsExist(t *testing.T) {
 }
 
 func TestLightThemeColorsExist(t *testing.T) {
-	th := NewCustomTheme(solarizedLight)
+	th := NewCustomTheme(presetOrFatal(t, "solarized_light"))
 	for _, name := range []fyne.ThemeColorName{
 		theme.ColorNameBackground,
 		theme.ColorNameButton,
@@ -95,7 +124,7 @@ func TestLightThemeColorsExist(t *testing.T) {
 }
 
 func TestDarkOnlyThemeStaysDarkInLightVariant(t *testing.T) {
-	th := NewCustomTheme(dracula)
+	th := NewCustomTheme(presetOrFatal(t, "dracula"))
 	darkBg := th.Color(theme.ColorNameBackground, theme.VariantDark)
 	lightBg := th.Color(theme.ColorNameBackground, theme.VariantLight)
 	if darkBg != lightBg {
@@ -160,7 +189,7 @@ func TestShiftFactorLessThanNegativeOneSaturates(t *testing.T) {
 }
 
 func TestColorConcurrentNoRace(t *testing.T) {
-	th := NewCustomTheme(dracula)
+	th := NewCustomTheme(presetOrFatal(t, "dracula"))
 	const n = 100
 	done := make(chan struct{}, 2)
 	for i := 0; i < 2; i++ {
