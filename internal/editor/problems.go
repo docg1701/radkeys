@@ -44,13 +44,13 @@ func (e *Editor) hasBlockingIssues() bool {
 
 // buttonIssues filters the config issues to those on the current screen.
 func (e *Editor) buttonIssues() []config.Issue {
-	s := e.currentScreen()
-	if s == nil {
+	if e.selected == nil || e.selected.screen != e.current {
 		return nil
 	}
+	s := e.cfg.Screens[e.current]
 	var out []config.Issue
 	for _, issue := range e.cfg.Issues() {
-		if issue.ScreenID == s.ID {
+		if issue.ScreenID == s.ID && issue.Row == e.selected.row && issue.Col == e.selected.col {
 			out = append(out, issue)
 		}
 	}
