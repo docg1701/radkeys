@@ -810,6 +810,27 @@ var messages = map[string]map[string]string{
 		"fr": "Hex (ex. 0x1234)", "de": "Hex (z. B. 0x1234)",
 		"it": "Hex (es. 0x1234)",
 	},
+	"settings.invalid_hex": {
+		"en": "Invalid hex value", "pt-BR": "Valor hexadecimal inválido",
+		"pt-PT": "Valor hexadecimal inválido", "es": "Valor hexadecimal inválido",
+		"fr": "Valeur hexadécimale invalide", "de": "Ungültiger Hexadezimalwert",
+		"it": "Valore esadecimale non valido",
+	},
+	"device.not_found_title": {
+		"en": "Device not found", "pt-BR": "Dispositivo não encontrado",
+		"pt-PT": "Dispositivo não encontrado", "es": "Dispositivo no encontrado",
+		"fr": "Périphérique introuvable", "de": "Gerät nicht gefunden",
+		"it": "Dispositivo non trovato",
+	},
+	"device.not_found_message": {
+		"en":    "RadKeys could not find the configured USB device. The app is running in mock mode — click UI buttons to simulate events. Underlying error: %s",
+		"pt-BR": "O RadKeys não encontrou o dispositivo USB configurado. O app está em modo de simulação — clique nos botões para simular eventos. Erro: %s",
+		"pt-PT": "O RadKeys não encontrou o dispositivo USB configurado. A app está em modo de simulação — clique nos botões para simular eventos. Erro: %s",
+		"es":    "RadKeys no encontró el dispositivo USB configurado. La app está en modo simulación — haga clic en los botones para simular eventos. Error: %s",
+		"fr":    "RadKeys n'a pas trouvé le périphérique USB configuré. L'app fonctionne en mode simulation — cliquez sur les boutons pour simuler. Erreur : %s",
+		"de":    "RadKeys hat das konfigurierte USB-Gerät nicht gefunden. Die App läuft im Simulationsmodus — klicken Sie auf die Schaltflächen, um Ereignisse zu simulieren. Fehler: %s",
+		"it":    "RadKeys non ha trovato il dispositivo USB configurato. L'app è in modalità simulazione — clicca i pulsanti per simulare gli eventi. Errore: %s",
+	},
 }
 
 func init() {

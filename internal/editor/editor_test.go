@@ -191,3 +191,34 @@ name = "Home"
 		t.Fatalf("screen name = %q, want Home", cfg.Screens[0].Name)
 	}
 }
+
+func TestParseHexUint16Valid(t *testing.T) {
+	v, err := parseHexUint16("1234")
+	if err != nil {
+		t.Fatalf("parseHexUint16(1234) unexpected error: %v", err)
+	}
+	if v != 0x1234 {
+		t.Fatalf("parseHexUint16(1234) = 0x%04x, want 0x1234", v)
+	}
+	v, err = parseHexUint16("ABCD")
+	if err != nil {
+		t.Fatalf("parseHexUint16(ABCD) unexpected error: %v", err)
+	}
+	if v != 0xABCD {
+		t.Fatalf("parseHexUint16(ABCD) = 0x%04x, want 0xABCD", v)
+	}
+}
+
+func TestParseHexUint16Invalid(t *testing.T) {
+	_, err := parseHexUint16("xyz")
+	if err == nil {
+		t.Fatal("parseHexUint16(xyz) expected error, got nil")
+	}
+}
+
+func TestParseHexUint16Overflow(t *testing.T) {
+	_, err := parseHexUint16("12345")
+	if err == nil {
+		t.Fatal("parseHexUint16(12345) expected error, got nil")
+	}
+}

@@ -28,7 +28,7 @@ import (
 	themes "github.com/docg1701/radkeys/internal/theme"
 )
 
-func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool) error {
+func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) error {
 	a := app.New()
 
 	customTheme := resolveFullTheme(cfg)
@@ -84,6 +84,11 @@ func Run(cfg *config.Config, configPath string, dev hid.Device, version string, 
 
 	if u.mock {
 		u.setStatus(i18n.T("status.mock_mode"))
+	}
+
+	if mock && deviceOpenErr != nil {
+		msg := fmt.Sprintf(i18n.T("device.not_found_message"), deviceOpenErr.Error())
+		dialog.ShowInformation(i18n.T("device.not_found_title"), msg, w)
 	}
 
 	// Fyne detects the OS theme variant asynchronously, so the initial render
@@ -394,9 +399,11 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 	vidEnt := widget.NewEntry()
 	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
 	vidEnt.SetMinRowsVisible(1)
+	vidEnt.Validator = hexUint16Validator
 	pidEnt := widget.NewEntry()
 	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
 	pidEnt.SetMinRowsVisible(1)
+	pidEnt.Validator = hexUint16Validator
 	protoSel := widget.NewSelect([]string{config.ProtocolDIY}, nil)
 	protoSel.SetSelected(cfg.App.Device.Protocol)
 
@@ -441,9 +448,17 @@ func (u *appUI) buildSettings() fyne.CanvasObject {
 		}
 		if v, err := strconv.ParseUint(strings.TrimPrefix(vidEnt.Text, "0x"), 16, 16); err == nil {
 			cfg.App.Device.VendorID = uint16(v)
+			vidEnt.SetValidationError(nil)
+		} else {
+			vidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
+			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.vid"), err))
 		}
 		if v, err := strconv.ParseUint(strings.TrimPrefix(pidEnt.Text, "0x"), 16, 16); err == nil {
 			cfg.App.Device.ProductID = uint16(v)
+			pidEnt.SetValidationError(nil)
+		} else {
+			pidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
+			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.pid"), err))
 		}
 		cfg.App.Device.Protocol = protoSel.Selected
 
@@ -619,6 +634,14 @@ func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string
 	fd.SetFilter(storage.NewExtensionFileFilter(exts))
 	fd.Resize(fyne.NewSize(900, 650))
 	fd.Show()
+}
+
+func hexUint16Validator(s string) error {
+	_, err := strconv.ParseUint(strings.TrimPrefix(s, "0x"), 16, 16)
+	if err != nil {
+		return fmt.Errorf("%s", i18n.T("settings.invalid_hex"))
+	}
+	return nil
 }
 
 func labeled(label string, input fyne.CanvasObject) fyne.CanvasObject {

@@ -56,3 +56,26 @@ func TestVariantForLightBg(t *testing.T) {
 		t.Fatalf("light background should return VariantLight, got %v", v)
 	}
 }
+
+func TestHexUint16Validator(t *testing.T) {
+	cases := []struct {
+		input string
+		valid bool
+	}{
+		{"0x1234", true},
+		{"1234", true},
+		{"0xABCD", true},
+		{"0x12345", false},
+		{"xyz", false},
+		{"", false},
+	}
+	for _, c := range cases {
+		err := hexUint16Validator(c.input)
+		if c.valid && err != nil {
+			t.Errorf("hexUint16Validator(%q) unexpected error: %v", c.input, err)
+		}
+		if !c.valid && err == nil {
+			t.Errorf("hexUint16Validator(%q) expected error, got nil", c.input)
+		}
+	}
+}

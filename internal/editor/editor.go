@@ -3,11 +3,13 @@
 package editor
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
 	"github.com/docg1701/radkeys/internal/i18n"
@@ -317,20 +319,39 @@ func (e *Editor) setAppName(name string) {
 	e.setDirty()
 }
 
-// setVendorID parses a hex string and stores the USB vendor ID.
-func (e *Editor) setVendorID(s string) {
-	if v, err := strconv.ParseUint(strip0x(s), 16, 16); err == nil {
-		e.cfg.App.Device.VendorID = uint16(v)
-		e.setDirty()
+// setVendorIDFromEntry parses the hex value in the entry and updates the
+// config vendor ID when valid. It marks the entry on parse failure.
+func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
+	v, err := parseHexUint16(strip0x(s))
+	if err != nil {
+		entry.SetValidationError(err)
+		return
 	}
+	entry.SetValidationError(nil)
+	e.cfg.App.Device.VendorID = v
+	e.setDirty()
 }
 
-// setProductID parses a hex string and stores the USB product ID.
-func (e *Editor) setProductID(s string) {
-	if v, err := strconv.ParseUint(strip0x(s), 16, 16); err == nil {
-		e.cfg.App.Device.ProductID = uint16(v)
-		e.setDirty()
+// setProductIDFromEntry parses the hex value in the entry and updates the
+// config product ID when valid. It marks the entry on parse failure.
+func (e *Editor) setProductIDFromEntry(entry *widget.Entry, s string) {
+	v, err := parseHexUint16(strip0x(s))
+	if err != nil {
+		entry.SetValidationError(err)
+		return
 	}
+	entry.SetValidationError(nil)
+	e.cfg.App.Device.ProductID = v
+	e.setDirty()
+}
+
+// parseHexUint16 parses a hexadecimal string as a 16-bit unsigned integer.
+func parseHexUint16(s string) (uint16, error) {
+	v, err := strconv.ParseUint(s, 16, 16)
+	if err != nil {
+		return 0, fmt.Errorf("%s", i18n.T("settings.invalid_hex"))
+	}
+	return uint16(v), nil
 }
 
 // setProtocol stores the device protocol.

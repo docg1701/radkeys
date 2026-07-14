@@ -95,12 +95,12 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 	vid := widget.NewEntry()
 	vid.SetText(fmt.Sprintf("0x%04x", e.cfg.App.Device.VendorID))
 	vid.SetPlaceHolder(i18n.T("editor.hex_format"))
-	vid.OnChanged = e.setVendorID
+	vid.OnChanged = func(s string) { e.setVendorIDFromEntry(vid, s) }
 
 	pid := widget.NewEntry()
 	pid.SetText(fmt.Sprintf("0x%04x", e.cfg.App.Device.ProductID))
 	pid.SetPlaceHolder(i18n.T("editor.hex_format"))
-	pid.OnChanged = e.setProductID
+	pid.OnChanged = func(s string) { e.setProductIDFromEntry(pid, s) }
 
 	proto := widget.NewSelect([]string{config.ProtocolDIY}, nil)
 	proto.SetSelected(e.cfg.App.Device.Protocol)

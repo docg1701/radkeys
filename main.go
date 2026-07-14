@@ -20,7 +20,7 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.12.1"
+var Version = "0.13.0"
 
 const configFileName = "radkeys.config.toml"
 
@@ -35,15 +35,14 @@ func main() {
 		return
 	}
 
-	dev, err := hid.Open(cfg.App.Device)
-	isMock := false
-	if err != nil {
-		log.Printf("radkeys: %v", err)
+	dev, devOpenErr := hid.Open(cfg.App.Device)
+	isMock := devOpenErr != nil
+	if isMock {
+		log.Printf("radkeys: %v", devOpenErr)
 		dev = hid.NewMock()
-		isMock = true
 	}
 
-	if err := ui.Run(cfg, path, dev, Version, isMock); err != nil {
+	if err := ui.Run(cfg, path, dev, Version, isMock, devOpenErr); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
 }
