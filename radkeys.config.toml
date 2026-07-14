@@ -2,6 +2,11 @@
 # RadKeys — Configuration File (TOML)
 # =============================================================================
 #
+# NOTE: when `radkeys-config` or RadKeys saves this file, it first copies the
+# current version to `radkeys.config.toml.bak`, then rewrites this file. The
+# Go TOML encoder does not preserve comments, so the commented original is kept
+# in the `.bak` backup. Restore from that file if you need your comments back.
+#
 # This file defines everything: radiologist name, language, theme, USB device,
 # and the screen hierarchy with shortcut buttons.
 #
