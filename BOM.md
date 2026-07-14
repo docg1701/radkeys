@@ -89,14 +89,16 @@
 
 ## 8. 3D-printed case (optional)
 
-Print in PLA, PETG, or ABS. One 1 kg spool makes multiple cases (exact count TBD —
+Print in PETG or ABS. One 1 kg spool makes multiple cases (exact count TBD —
 case model is not finalized).
 
 | Material | 1 kg spool | Notes |
 |----------|-----------|-------|
-| PLA | ~R$ 55–80 | Easiest to print, no enclosure needed |
-| PETG | ~R$ 60–90 | Stronger, heat-resistant, ideal for final build |
-| ABS | ~R$ 55–85 | Requires heated enclosure, more warp-prone |
+| PETG | ~R$ 66–110 | Strong, heat-resistant, no enclosure needed — ideal for final build |
+| ABS | ~R$ 55–123 | Requires heated enclosure, more warp-prone |
+
+> Prices from Shopee and Mercado Livre (July 2026). Outlet/generic rolls at the low
+> end; Creality/eSUN at the high end.
 
 Alternatively, hire a printing service (~R$ 25–45 per case on Shopee/ML).
 
