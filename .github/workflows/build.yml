@@ -8,9 +8,9 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 8
     env:
       CGO_ENABLED: 1
     steps:
@@ -26,49 +26,20 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
 
-      - name: Build
-        run: go build -v ./...
-
-      - name: Test
-        run: go test -race -v ./...
-
       - name: Vet
         run: go vet ./...
 
-      - name: Build (flatpak tag)
-        run: go build -tags flatpak -v ./...
+      - name: Test
+        run: go test -race ./...
 
-      - name: Test (flatpak tag)
-        run: go test -tags flatpak ./...
-
-      - name: Vet (flatpak tag)
-        run: go vet -tags flatpak ./...
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.24.0"
-          cache: false
-
-      - name: Linux deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
-
-      - name: Install golangci-lint v1.64.8
+      - name: golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
             | sh -s -- -b "$(go env GOPATH)/bin" v1.64.8
-
-      - name: Lint
-        run: "$(go env GOPATH)/bin/golangci-lint run ./..."
+          "$(go env GOPATH)/bin/golangci-lint" run ./...
 
   release:
-    needs: [test, lint]
+    needs: [check]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -77,22 +48,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.24.0"
-          cache: false
-
-      - name: Linux deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libgl1-mesa-dev xorg-dev libudev-dev libxxf86vm-dev
-
-      - name: Build release binary
-        run: |
-          mkdir -p /tmp/assets
-          CGO_ENABLED=1 go build -tags flatpak -o /tmp/assets/radkeys-linux-amd64 .
-          cp radkeys.config.toml /tmp/assets/radkeys.config.toml
 
       - name: Build release notes
         env:
@@ -103,23 +58,18 @@ jobs:
 
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "${{ github.ref_name }}" | head -1 || true)
 
-          SUBTITLE=$(git tag -l --format='%(contents)' "${{ github.ref_name }}" | head -1 || true)
-          if [ -z "$SUBTITLE" ]; then
-            TITLE="${{ github.ref_name }}"
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="${{ github.ref_name }}"
+            GH_ARGS=""
           else
-            TITLE="${{ github.ref_name }}: $SUBTITLE"
+            RANGE="${PREV_TAG}..${{ github.ref_name }}"
+            GH_ARGS="--notes-start-tag $PREV_TAG"
           fi
 
           strip() { sed -E 's/^- [a-z]+(\([^)]*\))?: /- /'; }
 
           NOTES=/tmp/release-notes.md
           :> "$NOTES"
-
-          if [ -n "$PREV_TAG" ]; then
-            RANGE="${PREV_TAG}..${{ github.ref_name }}"
-          else
-            RANGE="${{ github.ref_name }}"
-          fi
 
           ADDED=$(git log --pretty=format:"- %s" $RANGE --grep="^feat" -E 2>/dev/null | strip || true)
           if [ -n "$ADDED" ]; then
@@ -141,7 +91,6 @@ jobs:
           fi
 
           gh release create ${{ github.ref_name }} \
-            --title "$TITLE" \
+            --title "${{ github.ref_name }}" \
             --notes-file "$NOTES" \
-            /tmp/assets/radkeys-linux-amd64 \
-            /tmp/assets/radkeys.config.toml
+            $GH_ARGS
