@@ -104,9 +104,7 @@ func (e *Editor) buildOutOfGridStrip(s *config.Screen) fyne.CanvasObject {
 func (e *Editor) outOfGridButton(b config.Button) fyne.CanvasObject {
 	msg := fmt.Sprintf(i18n.T("editor.out_of_grid"), b.Label)
 	btn := widget.NewButton(e.cellLabel(b), func() {
-		e.selected = &cellKey{screen: e.current, row: b.Row, col: b.Col}
-		e.refreshInspector()
-		e.refreshGrid()
+		e.selectCell(e.current, b.Row, b.Col)
 	})
 	btn.Importance = widget.DangerImportance
 	lbl := widget.NewLabel(msg)
@@ -120,7 +118,6 @@ func (e *Editor) refreshGrid() {
 		return
 	}
 	e.gridBox = e.buildGrid()
-	e.updateButtonsTab()
 }
 
 // updateButtonsTab replaces the Buttons tab content with the rebuilt grid.

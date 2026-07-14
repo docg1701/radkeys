@@ -48,14 +48,20 @@ func (e *Editor) buildInspector() fyne.CanvasObject {
 // refreshInspector rebuilds the property bar.
 func (e *Editor) refreshInspector() {
 	e.inspector = e.buildInspector()
-	e.updateButtonsTab()
 }
 
 // labelField edits the button label.
 func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 	ent := widget.NewEntry()
 	ent.SetText(b.Label)
-	ent.OnChanged = e.setButtonLabel
+	ent.OnChanged = func(label string) {
+		e.setButtonLabel(label)
+		e.labelDebouncer.Add(func() {
+			e.refreshGrid()
+			e.refreshProblems()
+			e.updateButtonsTab()
+		})
+	}
 	return labeled(i18n.T("editor.label"), ent)
 }
 

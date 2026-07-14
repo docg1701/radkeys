@@ -34,7 +34,6 @@ func helpLine(text string) fyne.CanvasObject {
 // refreshProblems rebuilds the validation strip.
 func (e *Editor) refreshProblems() {
 	e.problemsBox = e.buildProblems()
-	e.updateButtonsTab()
 }
 
 // hasBlockingIssues reports whether any issue blocks saving.

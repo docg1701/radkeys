@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -33,22 +34,24 @@ type Editor struct {
 	app      fyne.App
 	win      fyne.Window
 
-	tabs        *container.AppTabs
-	gridBox     fyne.CanvasObject
-	inspector   fyne.CanvasObject
-	layerBar    fyne.CanvasObject
-	problemsBox fyne.CanvasObject
-	appSettings fyne.CanvasObject
+	tabs           *container.AppTabs
+	gridBox        fyne.CanvasObject
+	inspector      fyne.CanvasObject
+	layerBar       fyne.CanvasObject
+	problemsBox    fyne.CanvasObject
+	appSettings    fyne.CanvasObject
+	labelDebouncer *debouncer
 }
 
 // NewEditor creates an Editor for the given config and file path.
 func NewEditor(a fyne.App, w fyne.Window, cfg *config.Config, path string) *Editor {
 	e := &Editor{
-		cfg:     cfg,
-		path:    path,
-		app:     a,
-		win:     w,
-		current: 0,
+		cfg:            cfg,
+		path:           path,
+		app:            a,
+		win:            w,
+		current:        0,
+		labelDebouncer: newDebouncer(200 * time.Millisecond),
 	}
 	e.buildUI()
 	return e
@@ -102,13 +105,16 @@ func (e *Editor) buildButtonsTab() fyne.CanvasObject {
 	return container.NewBorder(e.layerBar, nil, nil, nil, split)
 }
 
-// refresh updates all mutable UI surfaces and the window title.
+// refresh updates all mutable UI surfaces and the window title, then
+// performs a single rebuild of the Buttons tab. This is the only path
+// that should call updateButtonsTab() for a full mutation cycle.
 func (e *Editor) refresh() {
 	e.refreshTitle()
 	e.refreshGrid()
 	e.refreshInspector()
 	e.refreshLayerBar()
 	e.refreshProblems()
+	e.updateButtonsTab()
 }
 
 // refreshTitle adds an asterisk prefix when the config is dirty.
@@ -172,18 +178,17 @@ func (e *Editor) selectedButton() (config.Button, bool) {
 	return e.buttonAt(e.selected.screen, e.selected.row, e.selected.col)
 }
 
-// selectCell selects a cell and refreshes dependent widgets.
+// selectCell selects a cell and refreshes the dependent UI surfaces.
 func (e *Editor) selectCell(screen, row, col int) {
 	e.selected = &cellKey{screen: screen, row: row, col: col}
-	e.refreshInspector()
-	e.refreshGrid()
+	e.refresh()
 }
 
-// clearSelection clears the selected cell and refreshes dependent widgets.
+// clearSelection clears the selected cell and refreshes the dependent UI
+// surfaces.
 func (e *Editor) clearSelection() {
 	e.selected = nil
-	e.refreshInspector()
-	e.refreshGrid()
+	e.refresh()
 }
 
 // addButton creates a new Text button at (row, col) on the current screen.
@@ -200,7 +205,6 @@ func (e *Editor) addButton(row, col int) {
 	})
 	e.selectCell(e.current, row, col)
 	e.setDirty()
-	e.refresh()
 }
 
 // removeButton deletes the button at (row, col) on the current screen.
@@ -213,12 +217,12 @@ func (e *Editor) removeButton(row, col int) {
 	*btns = append((*btns)[:idx], (*btns)[idx+1:]...)
 	e.clearSelection()
 	e.setDirty()
-	e.refresh()
 }
 
 // moveButton moves the selected button to (row, col) on the current screen.
 
-// setButtonLabel updates the selected button's label.
+// setButtonLabel updates the selected button's label. It only mutates data
+// and the dirty flag; the UI refresh is debounced by labelField.
 func (e *Editor) setButtonLabel(label string) {
 	idx, ok := e.selectedIndex()
 	if !ok {
@@ -226,8 +230,6 @@ func (e *Editor) setButtonLabel(label string) {
 	}
 	e.cfg.Screens[e.current].Buttons[idx].Label = label
 	e.setDirty()
-	e.refreshGrid()
-	e.refreshProblems()
 }
 
 // setButtonAction updates the selected button's action and clears invalid fields.
@@ -248,6 +250,7 @@ func (e *Editor) setButtonAction(action string) {
 	e.refreshInspector()
 	e.refreshGrid()
 	e.refreshProblems()
+	e.updateButtonsTab()
 }
 
 // setButtonContent updates the selected button's content.
@@ -259,6 +262,7 @@ func (e *Editor) setButtonContent(content string) {
 	e.cfg.Screens[e.current].Buttons[idx].Content = content
 	e.setDirty()
 	e.refreshProblems()
+	e.updateButtonsTab()
 }
 
 // setButtonTarget updates the selected button's navigate target.
@@ -271,6 +275,7 @@ func (e *Editor) setButtonTarget(target string) {
 	e.setDirty()
 	e.refreshGrid()
 	e.refreshProblems()
+	e.updateButtonsTab()
 }
 
 // selectedIndex returns the index of the selected button on the current screen.
@@ -288,6 +293,7 @@ func (e *Editor) resizeGrid(cols, rows int) {
 	e.setDirty()
 	e.refreshGrid()
 	e.refreshProblems()
+	e.updateButtonsTab()
 }
 
 // setAppLanguage switches the editor UI language and rebuilds tabs.

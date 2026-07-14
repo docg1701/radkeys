@@ -40,7 +40,6 @@ func (e *Editor) buildLayerBar() fyne.CanvasObject {
 // refreshLayerBar rebuilds the layer management bar.
 func (e *Editor) refreshLayerBar() {
 	e.layerBar = e.buildLayerBar()
-	e.updateButtonsTab()
 }
 
 // layerOptions returns labels for every screen.
@@ -74,7 +73,6 @@ func (e *Editor) switchToLayer(idx int) {
 	}
 	e.current = idx
 	e.clearSelection()
-	e.refresh()
 }
 
 // addLayer appends a new screen with a generated id and name.
@@ -162,7 +160,6 @@ func (e *Editor) removeLayer() {
 	}
 	e.clearSelection()
 	e.setDirty()
-	e.refresh()
 }
 
 // askRenameLayer opens a dialog to rename the current layer.
