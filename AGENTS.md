@@ -15,6 +15,10 @@ all config in `radkeys.config.toml`, no host-side keystroke injection (the
 is a visual TOML editor. No hardware prototype yet — validation is static +
 mock + cross-compile; 1.0.0 only after approval on the prototype hardware.
 
+- Navigation is stack-based: `navigate` pushes the current screen id and
+  switches to the target; `prev` pops the stack and goes back one screen;
+  `home` clears the stack and goes to the root screen.
+
 ## Dev cycle (MANDATORY — follow every time)
 
 ```
@@ -88,7 +92,6 @@ go mod tidy
 - End the turn before CI release is published and all binaries are uploaded.
 - End the turn before the release has Linux + Windows binaries.
 - Build or upload a macOS binary — not our responsibility.
-- Screens are connected via `navigate` with `target`. Navigation is stack-based (`prev` goes back, `home` goes to root).
 - `[app.fixed_buttons]` — removed. `copy`/`paste`/`prev`/`home` are normal actions.
 - Firmware with fixed-size bitmap — use `(row, col)` 2-byte protocol.
 
