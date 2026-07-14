@@ -10,16 +10,16 @@ Do NOT buy "RP2040-Zero-M" — different pin count, firmware-incompatible.
 |----------|-------|--------------|
 | AliExpress original | ~R$ 12.89 | [aliexpress.com/item/1005009682636404](https://pt.aliexpress.com/item/1005009682636404.html) |
 | AliExpress generic | ~R$ 6.99 | [aliexpress.com/item/1005011886603196](https://pt.aliexpress.com/item/1005011886603196.html) |
-| Mercado Livre | ~R$ 42 | Search "RP2040-Zero Waveshare" on [mercadolivre.com.br](https://lista.mercadolivre.com.br/rp2040-zero) |
-| Shopee | ~R$ 25 | Search "RP2040 Zero" on [shopee.com.br](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
+| Mercado Livre | ~R$ 42 | [produto.mercadolivre.com.br/MLB-7167143866](https://produto.mercadolivre.com.br/MLB-7167143866--bby-placa-compativel-rp2040-zero-para-raspberry-pi-pico--_JM) |
+| Shopee | ~R$ 25 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
 
 ## 2. Push buttons 6×6mm 4-pin, 7–9mm height (×100)
 
 | Platform | Price | Product page |
 |----------|-------|--------------|
 | AliExpress | ~R$ 8.84 | [aliexpress.com/item/1005008683932324](https://pt.aliexpress.com/item/1005008683932324.html) |
-| Shopee | ~R$ 15 | Search "push button 6x6 4 pinos 100" on [shopee.com.br](https://shopee.com.br/list/Bot%C3%A3o/Liga%20Desliga) |
-| Mercado Livre | ~R$ 25 | Search "push button 6x6 100" on [mercadolivre.com.br](https://lista.mercadolivre.com.br) |
+| Mercado Livre | ~R$ 25 | [produto.mercadolivre.com.br/MLB-4444543388](https://produto.mercadolivre.com.br/MLB-4444543388-100-x-push-button-micro-chave-4-pinos-6x6-_JM) |
+| Shopee | ~R$ 15 | [shopee.com.br/list/Botão/Liga%20Desliga](https://shopee.com.br/list/Bot%C3%A3o/Liga%20Desliga) |
 
 ## 3. 1N4148 through-hole diodes DO-35 (×100)
 
@@ -37,8 +37,8 @@ cable (8 solid-color AWG 24 wires, free).
 | Platform | Item | Price | Product page |
 |----------|------|-------|--------------|
 | AliExpress | 40-pin M-M + M-F + F-F kit, 20 cm | ~R$ 1.94 | [aliexpress.com/item/1005012508436047](https://pt.aliexpress.com/item/1005012508436047.html) |
-| Shopee | 40 M-F jumpers, 20 cm | ~R$ 12 | Search "jumpers dupont macho femea 20cm" on [shopee.com.br](https://shopee.com.br/list/Conector/Femea) |
 | Mercado Livre | 60 M-F jumpers, 20 cm | ~R$ 12 | [produto.mercadolivre.com.br/MLB-1020024323](https://produto.mercadolivre.com.br/MLB-1020024323-kit-cabo-jumper-wire-20cm-60-pecas-p-arduino-veja-anuncio-_JM) |
+| Shopee | 40 M-F jumpers, 20 cm | ~R$ 12 | [shopee.com.br/list/Conector/Femea](https://shopee.com.br/list/Conector/Femea) |
 
 ## 5. Zip ties 2.5×100mm (×100)
 
