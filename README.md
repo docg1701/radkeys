@@ -159,6 +159,7 @@ No host-side software is needed for paste — the device is the USB keyboard.
 
 Firmware: [`firmware/rp2040-zero/`](firmware/rp2040-zero/)
 Assembly guide: [`BUILD.md`](BUILD.md)
+Bill of materials: [`BOM.md`](BOM.md) — links and prices across AliExpress, Mercado Livre, and Shopee
 
 ## Configuration
 

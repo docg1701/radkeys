@@ -1,150 +1,150 @@
-# RadKeys — Lista de Materiais (BOM)
+# RadKeys — Bill of Materials
 
-> Preços em R$ (julho/2026). Links verificados para AliExpress, Mercado Livre e Shopee.
-
----
-
-## 1. RP2040-Zero (1 unidade)
-
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **AliExpress** Waveshare original | ~R$ 12,89 | [aliexpress.com/item/1005009682636404](https://pt.aliexpress.com/item/1005009682636404.html) |
-| **AliExpress** Tenstar (genérico) | ~R$ 5,99 | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=RP2040-Zero) (buscar "RP2040-Zero") |
-| **Shopee** | ~R$ 13,40 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
-| **Mercado Livre** (com pinos soldados) | ~R$ 42 | [lista.mercadolivre.com.br/rp2040-zero](https://lista.mercadolivre.com.br/rp2040-zero) |
-
-> ⚠️ Mercado Livre tem preço maior (~R$ 42) mas entrega em 2-3 dias. AliExpress: frete grátis mas 15-30 dias. Shopee: entrega nacional ~7-15 dias.
+> Prices in BRL (July 2026). Verified links for AliExpress, Mercado Livre, and Shopee (Brazil).
 
 ---
 
-## 2. Push buttons 6×6mm 4 pinos — 36 unidades
+## 1. RP2040-Zero (×1)
 
-**Comprar kit de 100 peças** (sobra para reposição futura).
+| Platform | Price | Link |
+|----------|-------|------|
+| **AliExpress** Waveshare original | ~R$ 12.89 | [aliexpress.com/item/1005009682636404](https://pt.aliexpress.com/item/1005009682636404.html) |
+| **AliExpress** Tenstar (generic) | ~R$ 5.99 | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=RP2040-Zero) — search "RP2040-Zero" |
+| **Shopee** | ~R$ 13.40 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
+| **Mercado Livre** (pre-soldered pins) | ~R$ 42 | [lista.mercadolivre.com.br/rp2040-zero](https://lista.mercadolivre.com.br/rp2040-zero) |
 
-| Plataforma | Preço (100 pçs) | Link |
-|-----------|-----------------|------|
-| **Shopee** | ~R$ 15,06 | [shopee.com.br](https://shopee.com.br/list/Bot%C3%A3o/Liga%20Desliga) — buscar "100 Pçs Tátil Botão Switch 6x6 4 pinos" |
-| **Mercado Livre** | ~R$ 20-30 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — buscar "push button 6x6 100" |
-| **AliExpress** | ~R$ 8-12 | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=push+button+6x6+4+pin+100pcs) |
-
-> Escolha altura de 7mm ou 9mm (tecla mais alta = mais conforto). A de 5mm é muito baixa para teclado.
-
----
-
-## 3. Diodos 1N4148 through-hole — 36 unidades
-
-**Comprar kit de 50 ou 100 peças** (custo quase igual ao de 36 unidades avulsas).
-
-| Plataforma | Preço | Quantidade | Link |
-|-----------|-------|-----------|------|
-| **Mercado Livre** | R$ 27,80 | 100 un. | [produto.mercadolivre.com.br/MLB-1725170449](https://produto.mercadolivre.com.br/MLB-1725170449-1-kit-com-100-unidades-diodo-de-sinal-1n4148-_JM) |
-| **Shopee** | ~R$ 8-15 | 100 un. | [shopee.com.br](https://shopee.com.br) — buscar "1N4148 diodo 100" |
-| **AliExpress** | ~R$ 5-8 | 100 un. | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=1N4148+diode+100pcs) |
+> Mercado Livre is more expensive (~R$ 42) but delivers in 2–3 days. AliExpress: free shipping, 15–30 days. Shopee: domestic shipping, ~7–15 days.
 
 ---
 
-## 4. Kit de fios coloridos AWG 24-26
+## 2. Push buttons 6×6mm 4-pin — 36 units
 
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **AliExpress** | ~R$ 6,99 (120 peças, 6 cores) | [aliexpress.com/w/wholesale-wiring-kit](https://pt.aliexpress.com/w/wholesale-wiring-kit.html) |
-| **Mercado Livre** | ~R$ 15-25 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — buscar "kit fios jumpers 20cm" |
-| **Shopee** | ~R$ 10-18 | [shopee.com.br](https://shopee.com.br) — buscar "kit fios coloridos awg 24" |
+**Buy a 100-pack** (spares for future replacement).
 
-> Alternativa gratuita: cabo de rede (CAT5/6) tem 8 fios coloridos AWG 24. Com 2m de cabo você tem fio suficiente.
+| Platform | Price (100 pcs) | Link |
+|----------|-----------------|------|
+| **Shopee** | ~R$ 15.06 | [shopee.com.br](https://shopee.com.br/list/Bot%C3%A3o/Liga%20Desliga) — search "100 Pcs Tact Button Switch 6x6 4 pin" |
+| **Mercado Livre** | ~R$ 20–30 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — search "push button 6x6 100" |
+| **AliExpress** | ~R$ 8–12 | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=push+button+6x6+4+pin+100pcs) |
 
----
-
-## 5. Conectores Dupont fêmea + crimp (12 unidades)
-
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **Mercado Livre** Kit 620 peças | ~R$ 35-45 | [lista.mercadolivre.com.br/dupont](https://lista.mercadolivre.com.br/dupont) |
-| **Mercado Livre** Kit 60 peças (jumpers prontos) | ~R$ 12 | [produto.mercadolivre.com.br/MLB-1020024323](https://produto.mercadolivre.com.br/MLB-1020024323-kit-cabo-jumper-wire-20cm-60-pecas-p-arduino-veja-anuncio-_JM) |
-| **Shopee** | ~R$ 8,25 (10 conectores) | [shopee.com.br](https://shopee.com.br) — buscar "conector dupont fêmea kit" |
-
-> Se comprar o kit de jumpers prontos (Mercado Livre, R$ 12), corte os fios no meio e solde direto. O alicate crimpador é opcional.
+> Pick 7mm or 9mm height (taller = more comfortable). 5mm is too low for a keypad.
 
 ---
 
-## 6. Ferro de solda + estanho
+## 3. 1N4148 through-hole diodes — 36 units
 
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **Mercado Livre** Kit Hikari Power 60 (127V) | ~R$ 45-65 | [produto.mercadolivre.com.br/MLB-3253879179](https://produto.mercadolivre.com.br/MLB-3253879179-kit-ferro-solda-hikari-power-60-2-resist-4-pontas-127v-_JM) |
-| **Shopee** ferro simples 60W | ~R$ 20-30 | [shopee.com.br](https://shopee.com.br) — buscar "ferro de solda 60w" |
+**Buy a 50- or 100-pack** (cost is nearly the same as 36 loose units).
 
-> Já tem ferro de solda? Pule este item. O kit Hikari inclui pontas extras e resistência de reposição.
-
----
-
-## 7. Abraçadeiras (zip ties) pequenas
-
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **Shopee** 100 un. 2.5×100mm | ~R$ 6-10 | [shopee.com.br](https://shopee.com.br) — buscar "abraçadeira nylon 100" |
-| **Mercado Livre** 100 un. | ~R$ 10-15 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — buscar "abraçadeira 100" |
+| Platform | Price | Qty | Link |
+|----------|-------|-----|------|
+| **Mercado Livre** | R$ 27.80 | 100 pcs | [produto.mercadolivre.com.br/MLB-1725170449](https://produto.mercadolivre.com.br/MLB-1725170449-1-kit-com-100-unidades-diodo-de-sinal-1n4148-_JM) |
+| **Shopee** | ~R$ 8–15 | 100 pcs | [shopee.com.br](https://shopee.com.br) — search "1N4148 diode 100" |
+| **AliExpress** | ~R$ 5–8 | 100 pcs | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=1N4148+diode+100pcs) |
 
 ---
 
-## 8. Cabo USB-C (1 unidade)
+## 4. Colored wire kit AWG 24–26
 
-| Plataforma | Preço | Link |
-|-----------|-------|------|
-| **Shopee** | ~R$ 8-15 | [shopee.com.br](https://shopee.com.br) — buscar "cabo usb-c dados" |
-| **Mercado Livre** | ~R$ 12-20 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — buscar "cabo usb-c" |
+| Platform | Price | Link |
+|----------|-------|------|
+| **AliExpress** | ~R$ 6.99 (120 pcs, 6 colors) | [aliexpress.com/w/wholesale-wiring-kit](https://pt.aliexpress.com/w/wholesale-wiring-kit.html) |
+| **Mercado Livre** | ~R$ 15–25 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — search "kit jumper wires 20cm" |
+| **Shopee** | ~R$ 10–18 | [shopee.com.br](https://shopee.com.br) — search "colored wire kit awg 24" |
 
-> O RP2040-Zero já tem conector USB-C. Qualquer cabo USB-C com dados funciona (não precisa ser só carregador).
-
----
-
-## 9. Case 3D impresso (opcional)
-
-Imprimir em PLA ou contratar serviço de impressão 3D.
-
-| Fonte | Custo |
-|-------|-------|
-| Filamento PLA (~100g) | ~R$ 5 |
-| Serviço de impressão (Shopee/ML) | ~R$ 25-45 |
-
-Arquivos STL e FreeCAD: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/)
+> Free alternative: an Ethernet cable (CAT5/6) has 8 colored AWG 24 wires. 2m of cable gives you enough wire.
 
 ---
 
-## Resumo — Melhor custo-benefício por plataforma
+## 5. Female Dupont connectors + crimp terminals (×12)
 
-### 🛒 AliExpress (menor preço, frete grátis, ~20-30 dias)
-| Item | Qtd | Preço |
+| Platform | Price | Link |
+|----------|-------|------|
+| **Mercado Livre** 620-piece kit | ~R$ 35–45 | [lista.mercadolivre.com.br/dupont](https://lista.mercadolivre.com.br/dupont) |
+| **Mercado Livre** 60-piece pre-made jumper kit | ~R$ 12 | [produto.mercadolivre.com.br/MLB-1020024323](https://produto.mercadolivre.com.br/MLB-1020024323-kit-cabo-jumper-wire-20cm-60-pecas-p-arduino-veja-anuncio-_JM) |
+| **Shopee** | ~R$ 8.25 (10 connectors) | [shopee.com.br](https://shopee.com.br) — search "dupont female connector kit" |
+
+> If you buy the pre-made jumper kit (Mercado Livre, R$ 12), cut wires in half and solder directly. Crimping pliers are optional.
+
+---
+
+## 6. Soldering iron + solder
+
+| Platform | Price | Link |
+|----------|-------|------|
+| **Mercado Livre** Hikari Power 60 kit (127V) | ~R$ 45–65 | [produto.mercadolivre.com.br/MLB-3253879179](https://produto.mercadolivre.com.br/MLB-3253879179-kit-ferro-solda-hikari-power-60-2-resist-4-pontas-127v-_JM) |
+| **Shopee** basic 60W iron | ~R$ 20–30 | [shopee.com.br](https://shopee.com.br) — search "soldering iron 60w" |
+
+> Already have an iron? Skip. The Hikari kit includes spare tips and a replacement heating element.
+
+---
+
+## 7. Zip ties (small)
+
+| Platform | Price | Link |
+|----------|-------|------|
+| **Shopee** 100 pcs 2.5×100mm | ~R$ 6–10 | [shopee.com.br](https://shopee.com.br) — search "zip ties 100 2.5x100" |
+| **Mercado Livre** 100 pcs | ~R$ 10–15 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — search "zip tie 100" |
+
+---
+
+## 8. USB-C cable (×1)
+
+| Platform | Price | Link |
+|----------|-------|------|
+| **Shopee** | ~R$ 8–15 | [shopee.com.br](https://shopee.com.br) — search "usb-c data cable" |
+| **Mercado Livre** | ~R$ 12–20 | [lista.mercadolivre.com.br](https://lista.mercadolivre.com.br) — search "usb-c cable" |
+
+> The RP2040-Zero has a USB-C port on-board. Any USB-C data cable works (charge-only cables won't).
+
+---
+
+## 9. 3D-printed case (optional)
+
+Print in PLA or hire a 3D printing service.
+
+| Source | Cost |
+|--------|------|
+| PLA filament (~100 g) | ~R$ 5 |
+| Printing service (Shopee/ML) | ~R$ 25–45 |
+
+STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/)
+
+---
+
+## Summary — best value by platform
+
+### 🛒 AliExpress (lowest price, free shipping, ~20–30 days)
+| Item | Qty | Price |
 |------|-----|-------|
 | RP2040-Zero | 1 | R$ 6 |
-| Push buttons 6×6 (100 peças) | 1 kit | R$ 10 |
-| 1N4148 diodos (100 peças) | 1 kit | R$ 6 |
-| Fios coloridos kit | 1 | R$ 7 |
+| Push buttons 6×6 (100 pcs) | 1 kit | R$ 10 |
+| 1N4148 diodes (100 pcs) | 1 kit | R$ 6 |
+| Colored wire kit | 1 | R$ 7 |
 | **Total** | | **~R$ 29** |
 
-### 📦 Shopee (meio-termo, ~7-15 dias)
-| Item | Qtd | Preço |
+### 📦 Shopee (mid-range, ~7–15 days)
+| Item | Qty | Price |
 |------|-----|-------|
 | RP2040-Zero | 1 | R$ 14 |
-| Push buttons 6×6 (100 peças) | 1 kit | R$ 15 |
-| 1N4148 diodos (100 peças) | 1 kit | R$ 12 |
-| Fios + duponts | 1 kit | R$ 15 |
+| Push buttons 6×6 (100 pcs) | 1 kit | R$ 15 |
+| 1N4148 diodes (100 pcs) | 1 kit | R$ 12 |
+| Wires + Dupont kit | 1 | R$ 15 |
 | **Total** | | **~R$ 56** |
 
-### 🏠 Mercado Livre (mais caro, entrega rápida ~2-5 dias)
-| Item | Qtd | Preço |
+### 🏠 Mercado Livre (highest price, fast delivery ~2–5 days)
+| Item | Qty | Price |
 |------|-----|-------|
-| RP2040-Zero (com pinos) | 1 | R$ 42 |
-| Push buttons 6×6 (100 peças) | 1 kit | R$ 25 |
-| 1N4148 diodos (100 peças) | 1 kit | R$ 28 |
-| Kit jumpers Dupont 60 peças | 1 | R$ 12 |
+| RP2040-Zero (pre-soldered) | 1 | R$ 42 |
+| Push buttons 6×6 (100 pcs) | 1 kit | R$ 25 |
+| 1N4148 diodes (100 pcs) | 1 kit | R$ 28 |
+| Dupont jumper kit 60 pcs | 1 | R$ 12 |
 | **Total** | | **~R$ 107** |
 
-### Adicionais (ferramentas, se não tiver)
-| Item | Preço |
+### Tools (if you don't already own them)
+| Item | Price |
 |------|-------|
-| Ferro de solda + estanho | R$ 45-65 |
-| Abraçadeiras | R$ 6-10 |
-| Cabo USB-C | R$ 8-15 |
-| Case 3D (filamento) | R$ 5 |
-| **Subtotal ferramentas** | **~R$ 65-95** |
+| Soldering iron + solder | R$ 45–65 |
+| Zip ties | R$ 6–10 |
+| USB-C cable | R$ 8–15 |
+| 3D case (filament) | R$ 5 |
+| **Subtotal tools** | **~R$ 65–95** |

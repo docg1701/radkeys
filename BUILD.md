@@ -1,32 +1,12 @@
 # RadKeys — Hardware Assembly Guide
 
 > Physical 6×6 (36-key) keypad with custom Raw HID, point-to-point wiring, and Dupont connectors.
-> Total cost: ~R$ 55–70 (AliExpress).
+
+**Shopping list**: see [`BOM.md`](BOM.md) for component links, prices, and quantity recommendations across AliExpress, Mercado Livre, and Shopee.
 
 ---
 
-## 1. Shopping List (AliExpress)
-
-### 1.1 Electronics
-
-| Item | Qty | Search for |
-|------|-----|------------|
-| **RP2040-Zero** | 1 | "RP2040-Zero" — ~R$ 10 |
-| Push buttons SPST 4 pins 6×6mm | 36 | "push button 6x6 4 pin 100pcs" |
-| 1N4148 through-hole diodes | 36 | "1N4148 diode through hole" |
-| Colored flexible wires AWG 24-26 | kit | "wire kit awg 24" or use network cable |
-| Female Dupont terminals + crimping plier | 12+ | "dupont connector kit" |
-| Soldering iron, solder, cutting pliers | 1 each | — |
-| Small zip ties | ~10 | "zip tie small" |
-
-### 1.2 Enclosure
-
-| Item | Qty | Note |
-|------|-----|------|
-| 3D printed case — 6×6 grid | 1 | Square holes 6.2×6.2mm, 14mm center-to-center spacing |
-| 3D printed bottom cover | 1 | Protects the wiring |
-| M2 or M3 screws | 4-6 | Close the case |
-| USB-C cable | 1 | RP2040-Zero already has a USB-C connector |
+## 1. Components
 
 ---
 
@@ -183,14 +163,6 @@ Then: `sudo adduser $USER input` (log out / log in).
 
 ---
 
-## 6. Cost per Unit
+## 6. Cost
 
-| Item | Unit price (batch 1) | Unit price (batch 10+) |
-|------|----------------------|------------------------|
-| RP2040-Zero | R$ 10 | R$ 10 |
-| Push buttons ×36 | R$ 20 | R$ 12 |
-| 1N4148 diodes ×36 | R$ 5 | R$ 3 |
-| Wires + Duponts | R$ 12 | R$ 8 |
-| 3D case (filament) | R$ 5 | R$ 5 |
-| USB-C cable | R$ 5 | R$ 3 |
-| **Total** | **~R$ 57** | **~R$ 41** |
+See [`BOM.md`](BOM.md) for current prices across AliExpress, Mercado Livre, and Shopee, with per-platform summaries.
