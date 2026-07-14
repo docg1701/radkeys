@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -219,7 +220,9 @@ func (u *appUI) press(row, col int, fromUI bool) {
 			u.previewText = b.Content
 			u.preview.SetText(b.Content)
 		case config.ActionExec:
-			exec.Command("bash", "-c", b.Content).Start()
+			if err := runExec(b.Content); err != nil {
+				log.Printf("radkeys: exec failed: %v", err)
+			}
 		case config.ActionCopy:
 			u.a.Clipboard().SetContent(u.previewText)
 		case config.ActionPrev:
@@ -277,6 +280,18 @@ func (u *appUI) fireDeviceCommand(action string, cmd hid.Command, arg byte, from
 		u.flashStatus(fmt.Sprintf(i18n.T("status.device_command_failed"), err))
 		log.Printf("radkeys: %s failed: %v", action, err)
 	}
+}
+
+// runExec starts a shell command in the background. It picks the right
+// shell per OS: cmd /c on Windows, bash -c elsewhere.
+func runExec(command string) error {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", command)
+	} else {
+		cmd = exec.Command("bash", "-c", command)
+	}
+	return cmd.Start()
 }
 
 func (u *appUI) renderGrid() {
