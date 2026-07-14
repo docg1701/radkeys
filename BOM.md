@@ -106,33 +106,49 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 
 ---
 
-## Summary
+## Summary — per-device cost
+
+Each device needs: 1× RP2040-Zero, 36× push buttons, 36× diodes, 12× Dupont
+connectors, ~2 m of wire, 1× USB-C cable, ~10 zip ties, 1× case. Kits cover
+multiple devices; cost per device = kit price ÷ devices covered.
 
 ### 🛒 AliExpress (lowest price, free shipping, ~20–30 days)
-| Item | Qty | Price |
-|------|-----|-------|
-| RP2040-Zero | 1 | R$ 6 |
-| Push buttons 6×6 (100 pcs) | 1 kit | R$ 10 |
-| 1N4148 diodes (100 pcs) | 1 kit | R$ 6 |
-| Colored wire kit | 1 | R$ 7 |
-| **Total** | | **~R$ 29** |
+| Item | Kit qty | Kit price | Per device | Devices/kit |
+|------|---------|-----------|------------|-------------|
+| RP2040-Zero | 1 | R$ 6 | R$ 6.00 | 1 |
+| Push buttons 6×6 | 100 pcs | R$ 10 | R$ 3.60 | 2.7 |
+| 1N4148 diodes | 100 pcs | R$ 6 | R$ 2.16 | 2.7 |
+| Colored wire kit | 1 kit | R$ 7 | R$ 7.00 | 1 |
+| Dupont connectors | 1 kit | R$ 10 | R$ 10.00 | 1 |
+| Zip ties | 100 pcs | R$ 5 | R$ 0.50 | 10 |
+| USB-C cable | 1 | R$ 8 | R$ 8.00 | 1 |
+| **Total per device** | | | **~R$ 37** | |
 
 ### 📦 Shopee (mid-range, ~7–15 days)
-| Item | Qty | Price |
-|------|-----|-------|
-| RP2040-Zero | 1 | R$ 14 |
-| Push buttons 6×6 (100 pcs) | 1 kit | R$ 15 |
-| 1N4148 diodes (100 pcs) | 1 kit | R$ 12 |
-| Wires + Dupont kit | 1 | R$ 15 |
-| **Total** | | **~R$ 56** |
+| Item | Kit qty | Kit price | Per device | Devices/kit |
+|------|---------|-----------|------------|-------------|
+| RP2040-Zero | 1 | R$ 14 | R$ 14.00 | 1 |
+| Push buttons 6×6 | 100 pcs | R$ 15 | R$ 5.40 | 2.7 |
+| 1N4148 diodes | 100 pcs | R$ 12 | R$ 4.32 | 2.7 |
+| Wires + Dupont kit | 1 kit | R$ 15 | R$ 15.00 | 1 |
+| Zip ties | 100 pcs | R$ 6 | R$ 0.60 | 10 |
+| USB-C cable | 1 | R$ 10 | R$ 10.00 | 1 |
+| **Total per device** | | | **~R$ 49** | |
 
 ### 🏠 Mercado Livre (highest price, fast delivery ~2–5 days)
-| Item | Qty | Price |
-|------|-----|-------|
-| RP2040-Zero (pre-soldered) | 1 | R$ 42 |
-| Push buttons 6×6 (100 pcs) | 1 kit | R$ 25 |
-| 1N4148 diodes (100 pcs) | 1 kit | R$ 28 |
-| Dupont jumper kit 60 pcs | 1 | R$ 12 |
-| **Total** | | **~R$ 107** |
+| Item | Kit qty | Kit price | Per device | Devices/kit |
+|------|---------|-----------|------------|-------------|
+| RP2040-Zero (pre-soldered) | 1 | R$ 42 | R$ 42.00 | 1 |
+| Push buttons 6×6 | 100 pcs | R$ 25 | R$ 9.00 | 2.7 |
+| 1N4148 diodes | 100 pcs | R$ 28 | R$ 10.08 | 2.7 |
+| Dupont jumper kit | 60 pcs | R$ 12 | R$ 2.40 | 5 |
+| Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
+| USB-C cable | 1 | R$ 12 | R$ 12.00 | 1 |
+| **Total per device** | | | **~R$ 76** | |
 
-> Tools not included — the builder is expected to own a soldering iron, cutting pliers, and basic bench tools.
+> Case: PETG ~R$ 66–110/spool or ABS ~R$ 55–123/spool. One spool covers
+> multiple devices (exact count TBD — model not finalized). Add ~R$ 5–15 per
+> device depending on filament cost and case design.
+>
+> Tools not included — the builder is expected to own a soldering iron, cutting
+> pliers, and basic bench tools.
