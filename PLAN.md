@@ -190,6 +190,8 @@ The order below is the execution order, and it is not optional. Every step in th
     Host side: retry GET_VERSION 3 times on connect, accepting the first plausible reply. Mitigates the button-event race for single stray presses but does not eliminate it.
     **Firmware side NOT YET SHIPPED.** The root fix requires a distinct report ID or sentinel byte in the `GET_VERSION` IN report so the host can unambiguously distinguish version replies from `[row, col]` button events. Blocked on hardware availability — Galvani must flash + validate on RP2040-Zero.
     **Gate for 1.0.0:** firmware-side fix validated on hardware.
+    See `firmware/rp2040-zero/PROTOCOL_FUTURE.md` for the full implementation plan
+    (report IDs, descriptor changes, host-side receiver updates).
     Verify: `go test ./internal/hid/...` passes; `grep -n report.ID firmware/rp2040-zero/diy.ino` returns nothing (firmware fix pending).
 
 ---
