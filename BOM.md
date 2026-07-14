@@ -100,6 +100,3 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 | Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
 | USB-C cable | 1 pc | R$ 19 | R$ 19.00 | 1 |
 | **Total per device** | | | **R$ 82** | |
-
-> Case: add R$ 5–15 for filament, or R$ 25–45 for a printing service.
-> Tools (soldering iron, cutters) not included — builder's responsibility.
