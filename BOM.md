@@ -89,12 +89,16 @@
 
 ## 8. 3D-printed case (optional)
 
-Print in PLA or hire a 3D printing service.
+Print in PLA, PETG, or ABS. One 1 kg spool makes multiple cases (exact count TBD —
+case model is not finalized).
 
-| Source | Cost |
-|--------|------|
-| PLA filament (~100 g) | ~R$ 5 |
-| Printing service (Shopee/ML) | ~R$ 25–45 |
+| Material | 1 kg spool | Notes |
+|----------|-----------|-------|
+| PLA | ~R$ 55–80 | Easiest to print, no enclosure needed |
+| PETG | ~R$ 60–90 | Stronger, heat-resistant, ideal for final build |
+| ABS | ~R$ 55–85 | Requires heated enclosure, more warp-prone |
+
+Alternatively, hire a printing service (~R$ 25–45 per case on Shopee/ML).
 
 STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/)
 
