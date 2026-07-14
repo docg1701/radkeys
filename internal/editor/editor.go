@@ -219,8 +219,6 @@ func (e *Editor) removeButton(row, col int) {
 	e.setDirty()
 }
 
-// moveButton moves the selected button to (row, col) on the current screen.
-
 // setButtonLabel updates the selected button's label. It only mutates data
 // and the dirty flag; the UI refresh is debounced by labelField.
 func (e *Editor) setButtonLabel(label string) {
