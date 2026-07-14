@@ -2,12 +2,17 @@
 
 > Prices in BRL (July 2026). Product links for AliExpress, Mercado Livre, and Shopee (Brazil).
 
-## 1. RP2040-Zero (×1)
+## 1. RP2040-Zero (Waveshare, ×1)
+
+The firmware targets the **Waveshare RP2040-Zero** (2 MB flash, USB-C,
+29 GPIO). Clones with the same pinout work. Do NOT buy the "RP2040-Zero-M"
+(mini variant — different pin count).
 
 | Platform | Price | Link |
 |----------|-------|------|
-| AliExpress | ~R$ 12.89 | [aliexpress.com/item/1005009682636404](https://pt.aliexpress.com/item/1005009682636404.html) |
-| Shopee | ~R$ 13.40 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
+| AliExpress (Waveshare) | ~R$ 12.89 | [aliexpress.com/item/1005009682636404](https://pt.aliexpress.com/item/1005009682636404.html) |
+| AliExpress (generic) | ~R$ 5.99 | [aliexpress.com](https://pt.aliexpress.com/wholesale?SearchText=waveshare+RP2040-Zero) |
+| Shopee | ~R$ 25 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
 | Mercado Livre | ~R$ 42 | [lista.mercadolivre.com.br/rp2040-zero](https://lista.mercadolivre.com.br/rp2040-zero) |
 
 ## 2. Push buttons 6×6mm 4-pin (×100)
@@ -76,7 +81,7 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 ### 🛒 AliExpress (~20–30 days)
 | Item | Kit | Price | Per device | Covers |
 |------|-----|-------|------------|--------|
-| RP2040-Zero | 1 pc | R$ 13 | R$ 13.00 | 1 |
+| RP2040-Zero Waveshare | 1 pc | R$ 13 | R$ 13.00 | 1 |
 | Push buttons | 100 pcs | R$ 10 | R$ 3.60 | 2.7 |
 | 1N4148 diodes | 100 pcs | R$ 6 | R$ 2.16 | 2.7 |
 | M-F jumpers | 65 pcs | R$ 8 | R$ 0.74 | 10.8 |
@@ -87,13 +92,13 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 ### 📦 Shopee (~7–15 days)
 | Item | Kit | Price | Per device | Covers |
 |------|-----|-------|------------|--------|
-| RP2040-Zero | 1 pc | R$ 14 | R$ 14.00 | 1 |
+| RP2040-Zero | 1 pc | R$ 25 | R$ 25.00 | 1 |
 | Push buttons | 100 pcs | R$ 15 | R$ 5.40 | 2.7 |
 | 1N4148 diodes | 100 pcs | R$ 13.50 | R$ 4.86 | 2.7 |
 | M-F jumpers | 40 pcs | R$ 15 | R$ 2.25 | 6.6 |
 | Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
 | USB-C cable | 1 pc | R$ 12 | R$ 12.00 | 1 |
-| **Total per device** | | | **~R$ 40** | |
+| **Total per device** | | | **~R$ 51** | |
 
 ### 🏠 Mercado Livre (~2–5 days)
 | Item | Kit | Price | Per device | Covers |
