@@ -1,3 +1,4 @@
+
 # RadKeys — Current State, Architecture, Known Issues, and Correction Steps
 
 > Living document for the current main branch. Historical releases are in git log.
@@ -127,62 +128,62 @@ Real end-to-end paste/focus behavior is only verified once Galvani flashes the R
 
 ## Correction Steps
 
-Each step is a single conventional commit. Run `gofmt -w . && go vet ./... && go test ./...` before every non-docs commit.
+The order below is the execution order, and it is not optional. Every step in this list must be completed before the next release ships, in the order shown. The agent executing this plan must report completion of every step by number, with the resolved issue IDs and the output of the verification command. "Done" without per-step evidence is not acceptable. Conventional commits only; run `gofmt -w . && go vet ./... && go test ./...` before every non-docs commit. Severity is implicit in the position: the first steps fix user-visible failures and silent violations of the "fail loud" rule, the middle steps stabilize the codebase so later changes are safe, and the last step is firmware-only and must be validated by Galvani on the RP2040-Zero.
 
 1. **docs: replace PLAN.md with current state + architecture + known issues**
    Resolves: H6, H7, H8, H9, M7, L7, L8.
    Replace the obsolete 486-line `PLAN.md` with this document.
    Verify: `wc -l PLAN.md` is under 280 and no stale version strings remain.
 
-2. **docs: add .bak backup note to radkeys.config.toml header**
-   Resolves: L9.
-   Document that `config.Save` creates `radkeys.config.toml.bak` before rewriting.
-   Verify: `grep -n ".bak" radkeys.config.toml` returns a header comment.
-
-3. **docs: move navigation architecture statement out of AGENTS.md Never section**
-   Resolves: M4.
-   Relocate the `navigate`/`prev`/`home` sentence to the Project section or rephrase it as a rule.
-   Verify: `grep -n "navigate" AGENTS.md` no longer appears under the "Never" heading.
-
-4. **fix: remove orphaned moveButton comment and dead editor i18n keys**
-   Resolves: M1, M5, M6.
-   Delete the bodyless `moveButton` comment. Remove unused `editor.move_up`, `editor.move_down`, and all unused `editor.help.*` / `editor.preview_jump` / `editor.last_screen` / `editor.about_model` / `editor.confirm_remove_button` / `editor.no_button_selected` keys.
-   Verify: `grep -rn 'editor\.move_up\|editor\.help_toggle\|editor\.model_intro' internal/i18n/` returns nothing; `go test ./internal/i18n/` still passes.
-
-5. **fix: close URIWriteCloser in saveConfigAs and harden StartupPath test**
-   Resolves: M8, L10.
-   Add `defer rc.Close()` in `saveConfigAs`. Clear `RADKEYS_CONFIG` or run `StartupPath` from a temp directory in the test.
-   Verify: `go test ./internal/editor/...` passes with `RADKEYS_CONFIG=/tmp/fake.toml` set externally.
-
-6. **fix: surface hid.Open and VID/PID parse failures instead of silent fallback**
+2. **fix: surface hid.Open and VID/PID parse failures instead of silent fallback**
    Resolves: H5, H10, H11.
    Show a dialog when the device is not found and mock mode is entered. Mark invalid VID/PID entry values with DangerImportance and flash an error; do not silently keep the old value.
    Verify: `go test ./...` passes; manual run with a bogus VID produces a visible error state.
 
-7. **refactor: extract shared Fyne helpers and action definition table**
-   Resolves: H2, H3, H4.
-   Move `labeled()` and `section()` to a shared `internal/widgetutil` package. Replace the three action mappings in the editor with one ordered `actionDefs` slice.
-   Verify: `go test ./...` and both Linux/Windows builds pass; no duplicate `labeled`/`section` functions remain.
-
-8. **refactor: split Run and buildSettings into focused methods**
-   Resolves: H1, B2, L5, L6.
-   Extract `buildMainUI()`, `checkFirmware()`, `startHIDLoop()`, and `applySettings()` methods. Rebuild tabs by creating a new `AppTabs` container instead of mutating `Items` after `SetContent`.
-   Verify: `golangci-lint run ./...` clean; `Run` and `buildSettings` are each under 40 lines; mock-mode smoke test passes.
-
-9. **fix: decouple editor refreshes from updateButtonsTab**
+3. **fix: decouple editor refreshes from updateButtonsTab**
    Resolves: B1, M9, M10.
    Make each `refreshXxx` update only its own cached widget; defer a single `updateButtonsTab()` per mutation cycle. Debounce label OnChanged or make it update on focus loss. Reuse `selectCell()` in `outOfGridButton`.
    Verify: add/remove/select buttons in `radkeys-config` perform exactly one tab rebuild; no visual flicker.
 
-10. **refactor: table-driven press dispatch and Issue.Error formatter table**
-    Resolves: M2, L2.
-    Replace the 12-case action switch with a `map[string]deviceCommand` table. Replace nested `Issue.Error` switch functions with a `map[IssueKind]formatter` table.
-    Verify: `go test ./internal/config/...` and `go test ./internal/ui/...` pass; new table is covered by existing tests.
+4. **refactor: split Run and buildSettings into focused methods**
+   Resolves: H1, B2, L5, L6.
+   Extract `buildMainUI()`, `checkFirmware()`, `startHIDLoop()`, and `applySettings()` methods. Rebuild tabs by creating a new `AppTabs` container instead of mutating `Items` after `SetContent`.
+   Verify: `golangci-lint run ./...` clean; `Run` and `buildSettings` are each under 40 lines; mock-mode smoke test passes.
 
-11. **refactor: consolidate theme preset registry**
-    Resolves: L3.
-    Build `Presets` from a single slice literal or `init()` registry so adding a theme requires one edit.
-    Verify: `go test ./internal/theme/...` passes; adding a fake preset requires editing only one location.
+5. **refactor: extract shared Fyne helpers and action definition table**
+   Resolves: H2, H3, H4.
+   Move `labeled()` and `section()` to a shared `internal/widgetutil` package. Replace the three action mappings in the editor with one ordered `actionDefs` slice.
+   Verify: `go test ./...` and both Linux/Windows builds pass; no duplicate `labeled`/`section` functions remain.
+
+6. **fix: close URIWriteCloser in saveConfigAs and harden StartupPath test**
+   Resolves: M8, L10.
+   Add `defer rc.Close()` in `saveConfigAs`. Clear `RADKEYS_CONFIG` or run `StartupPath` from a temp directory in the test.
+   Verify: `go test ./internal/editor/...` passes with `RADKEYS_CONFIG=/tmp/fake.toml` set externally.
+
+7. **fix: remove orphaned moveButton comment and dead editor i18n keys**
+   Resolves: M1, M5, M6.
+   Delete the bodyless `moveButton` comment. Remove unused `editor.move_up`, `editor.move_down`, and all unused `editor.help.*` / `editor.preview_jump` / `editor.last_screen` / `editor.about_model` / `editor.confirm_remove_button` / `editor.no_button_selected` keys.
+   Verify: `grep -rn 'editor\.move_up\|editor\.help_toggle\|editor\.model_intro' internal/i18n/` returns nothing; `go test ./internal/i18n/` still passes.
+
+8. **refactor: table-driven press dispatch and Issue.Error formatter table**
+   Resolves: M2, L2.
+   Replace the 12-case action switch with a `map[string]deviceCommand` table. Replace nested `Issue.Error` switch functions with a `map[IssueKind]formatter` table.
+   Verify: `go test ./internal/config/...` and `go test ./internal/ui/...` pass; new table is covered by existing tests.
+
+9. **refactor: consolidate theme preset registry**
+   Resolves: L3.
+   Build `Presets` from a single slice literal or `init()` registry so adding a theme requires one edit.
+   Verify: `go test ./internal/theme/...` passes; adding a fake preset requires editing only one location.
+
+10. **docs: add .bak backup note to radkeys.config.toml header**
+    Resolves: L9.
+    Document that `config.Save` creates `radkeys.config.toml.bak` before rewriting.
+    Verify: `grep -n ".bak" radkeys.config.toml` returns a header comment.
+
+11. **docs: move navigation architecture statement out of AGENTS.md Never section**
+    Resolves: M4.
+    Relocate the `navigate`/`prev`/`home` sentence to the Project section or rephrase it as a rule.
+    Verify: `grep -n "navigate" AGENTS.md` no longer appears under the "Never" heading.
 
 12. **fix: disambiguate firmware version reply from button events**
     Resolves: L1.
