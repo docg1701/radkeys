@@ -102,23 +102,26 @@ The radiologist never touches the keyboard.
 
 ```bash
 # Linux
-CGO_ENABLED=1 go build -tags flatpak -o radkeys-linux-amd64 .
+CGO_ENABLED=1 go build -tags flatpak -o dist/radkeys-linux-amd64 .
+CGO_ENABLED=1 go build -tags flatpak -o dist/radkeys-config-linux-amd64 ./cmd/radkeys-config
 
 # Windows (on Windows, or cross-compile from Linux with mingw)
-CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o dist/radkeys-config-windows-amd64.exe ./cmd/radkeys-config
 
 # macOS Intel (on a Mac — cross-compile from Linux is impossible)
-CGO_ENABLED=1 go build -o radkeys-macos-amd64 .
+CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
 
 # macOS Apple Silicon (on a Mac)
-CGO_ENABLED=1 GOARCH=arm64 go build -o radkeys-macos-arm64 .
+CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
 ```
 
 ### Cross-compile from Linux (Windows only)
 
 ```bash
 sudo apt install -y gcc-mingw-w64
-CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o radkeys-windows-amd64.exe .
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o dist/radkeys-windows-amd64.exe .
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o dist/radkeys-config-windows-amd64.exe ./cmd/radkeys-config
 ```
 
 ### Test
