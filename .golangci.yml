@@ -36,6 +36,7 @@ linters-settings:
       - appareil
       - producto
       - Impossibile
+      - configurato
   prealloc:
     simple: true
     range-loops: true

@@ -58,9 +58,11 @@ func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 	ent.OnChanged = func(label string) {
 		e.setButtonLabel(label)
 		e.labelDebouncer.Add(func() {
-			e.refreshGrid()
-			e.refreshProblems()
-			e.updateButtonsTab()
+			fyne.Do(func() {
+				e.refreshGrid()
+				e.refreshProblems()
+				e.updateButtonsTab()
+			})
 		})
 	}
 	return widgetutil.Labeled(i18n.T("editor.label"), ent)

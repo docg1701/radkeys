@@ -137,7 +137,11 @@ func (e *Editor) saveConfigAs() {
 		if err != nil || rc == nil {
 			return
 		}
-		defer rc.Close()
+		defer func() {
+			if err := rc.Close(); err != nil {
+				log.Printf("radkeys-config: close save dialog writer: %v", err)
+			}
+		}()
 		path := rc.URI().Path()
 		if filepath.Ext(path) != ".toml" {
 			path += ".toml"

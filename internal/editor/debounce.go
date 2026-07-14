@@ -1,12 +1,15 @@
 package editor
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // debouncer coalesces rapid callbacks into a single delayed execution.
 // Each call to Add resets the timer, so only the last callback in the
-// burst fires after the delay. It is safe for use on a single goroutine
-// (the Fyne UI goroutine in this project).
+// burst fires after the delay. It is safe for concurrent use.
 type debouncer struct {
+	mu     sync.Mutex
 	delay  time.Duration
 	timer  *time.Timer
 	latest func()
@@ -23,13 +26,19 @@ func (d *debouncer) Add(fn func()) {
 	if d == nil {
 		return
 	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	if d.timer != nil {
 		d.timer.Stop()
 	}
 	d.latest = fn
 	d.timer = time.AfterFunc(d.delay, func() {
-		if d.latest != nil {
-			d.latest()
+		d.mu.Lock()
+		latest := d.latest
+		d.latest = nil
+		d.mu.Unlock()
+		if latest != nil {
+			latest()
 		}
 	})
 }
