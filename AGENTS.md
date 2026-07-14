@@ -78,6 +78,8 @@ go mod tidy
   ```
 
 ### 🚫 Never
+- Run `go build .` or `go build -tags flatpak .` without `-o` — always
+  `-o dist/<name>` so binaries land in the gitignored dist/ dir, never in root.
 - Keyboard HID (F13-F24) macro input — rejected by product. The device's HID keyboard interface sends paste (Ctrl/Cmd+V) and 6 editing keystrokes (select_all, select_line, line_start, line_end, backspace, delete); F13-F24 macro input is still rejected.
 - Hardcoded UI strings — use `i18n.T()`.
 - Hardcoded version numbers in config or other Go files: version lives ONLY in `var Version` in `main.go` and is bumped there per release (dev cycle step 3). It is NOT injected via `-ldflags` — the build embeds the source literal directly. Test fixtures use `"0.0.0-test"`, which the TOML decoder ignores since `Config` has no `Version` field.
