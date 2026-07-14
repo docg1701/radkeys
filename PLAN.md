@@ -109,7 +109,7 @@ Real end-to-end paste/focus behavior is only verified once Galvani flashes the R
 
 - `internal/ui/ui.go:197` — `press()` dispatches 12 actions via a long switch with repeated `u.fireDeviceCommand(action, cmd, arg, fromUI)` calls; only `cmd` and `arg` vary. Acceptable for 6 device-keyboard cases but should become table-driven if more actions are added. (M2)
 - `AGENTS.md:91` — the architectural statement "Screens are connected via `navigate` with `target`. Navigation is stack-based (`prev` goes back, `home` goes to root)." sits in the "🚫 Never" section, where prohibitions belong. (M4)
-- `internal/hid/reader_cgo.go:168` — `readFirmwareVersion` writes `GET_VERSION` then reads 2 bytes. If a button is pressed during the 500ms version-read window, the `[row, col]` IN report could arrive before the version reply and be misinterpreted as `[major, minor]`. The protocol uses no report ID to distinguish them. Low risk today (version read happens once at connect before the event loop). (L1)
+- `internal/hid/reader_cgo.go:168` — `readFirmwareVersion` writes `GET_VERSION` then reads 2 bytes. If a button is pressed during the 500ms version-read window, the `[row, col]` IN report could arrive before the version reply and be misinterpreted as `[major, minor]`. The protocol uses no report ID to distinguish them. Host-side retry (3 attempts) mitigates but does not eliminate the race — the real fix requires a distinct report ID or sentinel in the firmware IN report, which cannot be validated without hardware. **PENDING: firmware validation by Galvani on RP2040-Zero before 1.0.0.** (L1)
 - `internal/config/config.go:289` — `Issue.Error()` dispatches through six nested switch functions (`appError` → `layoutError` → `screenError` → `buttonError` → `positionError` / `actionFieldError`) for what is essentially a `map[IssueKind]formatter`. (L2)
 - `internal/theme/theme.go:218` — 13 theme preset globals plus a separate `Presets` slice; adding a 14th theme requires two edits. (L3)
 
@@ -185,10 +185,12 @@ The order below is the execution order, and it is not optional. Every step in th
     Relocate the `navigate`/`prev`/`home` sentence to the Project section or rephrase it as a rule.
     Verify: `grep -n "navigate" AGENTS.md` no longer appears under the "Never" heading.
 
-12. **fix: disambiguate firmware version reply from button events**
-    Resolves: L1.
-    Firmware step: use a distinct report ID or sentinel for `GET_VERSION` replies, or host step: retry the version read when the result looks like a button event. **This step requires Galvani to flash + test on the RP2040-Zero — no I-tested-it-without-Galvani claims.**
-    Verify: static review of `diy.ino` + `PROTOCOL.md` coherence; host mock tests still pass.
+12. **fix: disambiguate firmware version reply from button events (HOST SIDE ONLY)**
+    Resolves: L1 (partial — host side only).
+    Host side: retry GET_VERSION 3 times on connect, accepting the first plausible reply. Mitigates the button-event race for single stray presses but does not eliminate it.
+    **Firmware side NOT YET SHIPPED.** The root fix requires a distinct report ID or sentinel byte in the `GET_VERSION` IN report so the host can unambiguously distinguish version replies from `[row, col]` button events. Blocked on hardware availability — Galvani must flash + validate on RP2040-Zero.
+    **Gate for 1.0.0:** firmware-side fix validated on hardware.
+    Verify: `go test ./internal/hid/...` passes; `grep -n report.ID firmware/rp2040-zero/diy.ino` returns nothing (firmware fix pending).
 
 ---
 
@@ -197,3 +199,4 @@ The order below is the execution order, and it is not optional. Every step in th
 - No release history is kept here; use `git log --oneline` and `git tag -l` for that.
 - The dev cycle, build commands, and release checklist remain in `AGENTS.md`.
 - Firmware changes always require Galvani to flash and validate the RP2040-Zero prototype; until then they are considered statically reviewed only.
+- L1 (firmware version vs button event ambiguity) is the only known issue with a hardware gate. The host-side retry is a mitigation; the firmware-side fix (report ID or sentinel) blocks 1.0.0.
