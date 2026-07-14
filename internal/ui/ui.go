@@ -29,23 +29,30 @@ import (
 )
 
 func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) error {
+	u, err := buildMainUI(cfg, configPath, dev, version, mock, deviceOpenErr)
+	if err != nil {
+		return err
+	}
+
+	u.a.Settings().AddListener(u.osThemeSettledListener)
+	u.checkFirmware(u.win)
+	if err := u.startHIDLoop(); err != nil {
+		return err
+	}
+	u.win.ShowAndRun()
+	return nil
+}
+
+// buildMainUI creates the Fyne app, window, and initial tab layout.
+func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) (*appUI, error) {
 	a := app.New()
-
-	customTheme := resolveFullTheme(cfg)
-	a.Settings().SetTheme(customTheme)
-
-	iconRes := fyne.NewStaticResource("icon.png", appIconData(cfg))
-	a.SetIcon(iconRes)
-
+	a.Settings().SetTheme(resolveFullTheme(cfg))
+	a.SetIcon(fyne.NewStaticResource("icon.png", appIconData(cfg)))
 	i18n.SetLanguage(cfg.App.Language)
 
-	title := fmt.Sprintf("RadKeys — %s", cfg.App.Radiologist)
-	w := a.NewWindow(title)
+	w := a.NewWindow(fmt.Sprintf("RadKeys — %s", cfg.App.Radiologist))
 	w.Resize(fyne.NewSize(1280, 800))
-	w.SetIcon(iconRes)
-
-	cols := cfg.App.Layout.Columns
-	rows := cfg.App.Layout.Rows
+	w.SetIcon(a.Icon())
 
 	u := &appUI{
 		cfg:        cfg,
@@ -54,8 +61,8 @@ func Run(cfg *config.Config, configPath string, dev hid.Device, version string, 
 		a:          a,
 		win:        w,
 		titleBase:  appName(cfg),
-		cols:       cols,
-		rows:       rows,
+		cols:       cfg.App.Layout.Columns,
+		rows:       cfg.App.Layout.Rows,
 		version:    version,
 		mock:       mock,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
@@ -63,77 +70,66 @@ func Run(cfg *config.Config, configPath string, dev hid.Device, version string, 
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
 	u.preview.TextStyle = fyne.TextStyle{Monospace: true}
-
-	u.keypad = container.NewGridWithColumns(cols)
-
-	previewArea := u.previewBox()
-	keypadArea := container.NewPadded(u.keypad)
-	split := container.NewVSplit(previewArea, keypadArea)
-
-	tabs := container.NewAppTabs(
-		container.NewTabItem(i18n.T("tab.shortcuts"), split),
-		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
-		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
-	)
-	u.tabs = tabs
+	u.keypad = container.NewGridWithColumns(u.cols)
 	u.status = widget.NewLabel("")
 	u.status.Hide()
-	content := container.NewBorder(u.status, nil, nil, nil, tabs)
-	w.SetContent(content)
-	u.renderGrid()
+
+	u.rebuildTabs()
 
 	if u.mock {
 		u.setStatus(i18n.T("status.mock_mode"))
 	}
-
 	if mock && deviceOpenErr != nil {
 		msg := fmt.Sprintf(i18n.T("device.not_found_message"), deviceOpenErr.Error())
 		dialog.ShowInformation(i18n.T("device.not_found_title"), msg, w)
 	}
+	return u, nil
+}
 
-	// Fyne detects the OS theme variant asynchronously, so the initial render
-	// may use the wrong variant (e.g. dark on a light OS). Re-apply the theme
-	// colors when settings change — Fyne fires this once the variant settles,
-	// which fixes the system-default "black background on reopen" regression
-	// without requiring the user to re-select and save the theme.
-	u.a.Settings().AddListener(func(s fyne.Settings) {
-		th := s.Theme()
-		if _, ok := th.(themes.CustomThemeMarker); ok {
-			return // deterministic; no OS settling needed
-		}
-		v := variantFor(th, u.a.Settings().ThemeVariant())
-		if u.previewBg != nil {
-			u.previewBg.FillColor = th.Color(fyneTheme.ColorNameBackground, v)
-			canvas.Refresh(u.previewBg)
-		}
-		u.renderGrid()
-	})
-
-	// One-shot firmware version check at connect (before the event loop).
-	// Warns the user once if the firmware is outdated or its version is
-	// unknown. Shown at startup — NOT on the HID event path.
-	fwMaj, fwMin, fwErr := dev.Version()
-	if hid.FirmwareOutdated(fwMaj, fwMin, fwErr == nil) {
-		var fwMsg string
-		if fwErr != nil {
-			fwMsg = fmt.Sprintf(i18n.T("firmware.unknown_message"), hid.MinFirmwareMajor, hid.MinFirmwareMinor)
-		} else {
-			fwMsg = fmt.Sprintf(i18n.T("firmware.outdated_message"), fwMaj, fwMin, hid.MinFirmwareMajor, hid.MinFirmwareMinor)
-		}
-		dialog.ShowInformation(i18n.T("firmware.outdated_title"), fwMsg, w)
+// osThemeSettledListener re-applies theme colors once Fyne settles the OS
+// variant, fixing the system-default "black background on reopen" regression.
+func (u *appUI) osThemeSettledListener(s fyne.Settings) {
+	th := s.Theme()
+	if _, ok := th.(themes.CustomThemeMarker); ok {
+		return // deterministic; no OS settling needed
 	}
+	v := variantFor(th, u.a.Settings().ThemeVariant())
+	if u.previewBg != nil {
+		u.previewBg.FillColor = th.Color(fyneTheme.ColorNameBackground, v)
+		canvas.Refresh(u.previewBg)
+	}
+	u.renderGrid()
+}
 
-	if err := dev.Open(); err != nil {
+// checkFirmware warns the user once if the firmware is outdated or unknown.
+// It is called at startup — NOT on the HID event path.
+func (u *appUI) checkFirmware(w fyne.Window) {
+	fwMaj, fwMin, fwErr := u.device.Version()
+	if !hid.FirmwareOutdated(fwMaj, fwMin, fwErr == nil) {
+		return
+	}
+	var fwMsg string
+	if fwErr != nil {
+		fwMsg = fmt.Sprintf(i18n.T("firmware.unknown_message"), hid.MinFirmwareMajor, hid.MinFirmwareMinor)
+	} else {
+		fwMsg = fmt.Sprintf(i18n.T("firmware.outdated_message"), fwMaj, fwMin, hid.MinFirmwareMajor, hid.MinFirmwareMinor)
+	}
+	dialog.ShowInformation(i18n.T("firmware.outdated_title"), fwMsg, w)
+}
+
+// startHIDLoop opens the device, starts the event loop, and wires the close
+// handler. The pollHID path must preserve the HID_FOCUS_INVARIANT.
+func (u *appUI) startHIDLoop() error {
+	if err := u.device.Open(); err != nil {
 		return fmt.Errorf("hid: open: %w", err)
 	}
 	go u.pollHID()
-	w.SetOnClosed(func() {
+	u.win.SetOnClosed(func() {
 		u.closing.Store(true)
-		if err := dev.Close(); err != nil {
+		if err := u.device.Close(); err != nil {
 			log.Printf("radkeys: device close failed: %v", err)
 		}
 	})
-	w.ShowAndRun()
 	return nil
 }
 
@@ -157,7 +153,7 @@ type appUI struct {
 	cols        int
 	rows        int
 	keypad      *fyne.Container
-	previewBg   *canvas.Rectangle
+	previewBg   *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 }
 
 // appName returns the configured app name, defaulting to "RadKeys".
@@ -357,201 +353,252 @@ func (u *appUI) flashStatus(msg string) {
 // Settings tab — modern card-based layout with visual groups
 // ---------------------------------------------------------------------------
 
+// settingsWidgets holds the editable controls created by buildSettings.
+type settingsWidgets struct {
+	radEnt         *widget.Entry
+	langSel        *widget.Select
+	themeSel       *widget.Select
+	themeIDs       []string
+	colsEnt        *widget.Entry
+	rowsEnt        *widget.Entry
+	configLbl      *widget.Label
+	chooseBtn      *widget.Button
+	vidEnt         *widget.Entry
+	pidEnt         *widget.Entry
+	protoSel       *widget.Select
+	iconPreview    *canvas.Image
+	iconBrowseBtn  *widget.Button
+	customIconPath *string
+}
+
 func (u *appUI) buildSettings() fyne.CanvasObject {
+	w := u.buildSettingsWidgets()
+	return u.buildSettingsSections(w)
+}
+
+func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	cfg := u.cfg
+	w := &settingsWidgets{}
 
-	radEnt := widget.NewEntry()
-	radEnt.SetText(cfg.App.Radiologist)
+	w.radEnt = widget.NewEntry()
+	w.radEnt.SetText(cfg.App.Radiologist)
 
-	langSel := widget.NewSelect(i18n.Supported, nil)
-	langSel.SetSelected(cfg.App.Language)
+	w.langSel = widget.NewSelect(i18n.Supported, nil)
+	w.langSel.SetSelected(cfg.App.Language)
 
-	themeIDs := make([]string, len(themes.Presets))
-	themeNames := make([]string, len(themes.Presets))
-	for i, p := range themes.Presets {
-		themeIDs[i] = p.ID()
-		themeNames[i] = i18n.T("theme." + p.ID())
-	}
-	themeSel := widget.NewSelect(themeNames, nil)
-	for i, id := range themeIDs {
-		if id == cfg.App.Theme.Preset {
-			themeSel.SetSelectedIndex(i)
-			break
-		}
-	}
+	ids, names := u.themeOptions()
+	w.themeIDs = ids
+	w.themeSel = widget.NewSelect(names, nil)
+	w.themeSel.SetSelectedIndex(indexOf(w.themeIDs, cfg.App.Theme.Preset))
 
-	colsEnt := widget.NewEntry()
-	colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
+	w.colsEnt = widget.NewEntry()
+	w.colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
+	w.rowsEnt = widget.NewEntry()
+	w.rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
 
-	rowsEnt := widget.NewEntry()
-	rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
-
-	configLbl := widget.NewLabel(u.configPath)
-	configLbl.Wrapping = fyne.TextWrapWord
-	chooseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
+	w.configLbl = widget.NewLabel(u.configPath)
+	w.configLbl.Wrapping = fyne.TextWrapWord
+	w.chooseBtn = widget.NewButton(i18n.T("settings.browse"), func() {
 		showFileDialog(u.win, []string{".toml"}, func(path string) {
 			u.configPath = path
-			configLbl.SetText(path)
+			w.configLbl.SetText(path)
 		})
 	})
-	chooseBtn.Importance = widget.MediumImportance
+	w.chooseBtn.Importance = widget.MediumImportance
 
-	vidEnt := widget.NewEntry()
-	vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
-	vidEnt.SetMinRowsVisible(1)
-	vidEnt.Validator = hexUint16Validator
-	pidEnt := widget.NewEntry()
-	pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
-	pidEnt.SetMinRowsVisible(1)
-	pidEnt.Validator = hexUint16Validator
-	protoSel := widget.NewSelect([]string{config.ProtocolDIY}, nil)
-	protoSel.SetSelected(cfg.App.Device.Protocol)
+	w.vidEnt = widget.NewEntry()
+	w.vidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.VendorID))
+	w.vidEnt.SetMinRowsVisible(1)
+	w.vidEnt.Validator = hexUint16Validator
+	w.pidEnt = widget.NewEntry()
+	w.pidEnt.SetText(fmt.Sprintf("0x%04x", cfg.App.Device.ProductID))
+	w.pidEnt.SetMinRowsVisible(1)
+	w.pidEnt.Validator = hexUint16Validator
+
+	w.protoSel = widget.NewSelect([]string{config.ProtocolDIY}, nil)
+	w.protoSel.SetSelected(cfg.App.Device.Protocol)
 
 	customIconPath := cfg.App.Theme.Icon
-	iconPreview := canvas.NewImageFromResource(fyne.NewStaticResource("icon.png", appIconData(cfg)))
-	iconPreview.SetMinSize(fyne.NewSize(48, 48))
-	iconPreview.FillMode = canvas.ImageFillContain
-
-	iconBrowseBtn := widget.NewButton(i18n.T("settings.browse"), func() {
+	w.customIconPath = &customIconPath
+	w.iconPreview = canvas.NewImageFromResource(fyne.NewStaticResource("icon.png", appIconData(cfg)))
+	w.iconPreview.SetMinSize(fyne.NewSize(48, 48))
+	w.iconPreview.FillMode = canvas.ImageFillContain
+	w.iconBrowseBtn = widget.NewButton(i18n.T("settings.browse"), func() {
 		showFileDialog(u.win, []string{".png"}, func(path string) {
-			customIconPath = path
+			*w.customIconPath = path
 			data, err := os.ReadFile(path)
 			if err != nil {
 				log.Printf("radkeys: cannot read icon %q: %v", path, err)
 				return
 			}
-			iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
-			iconPreview.Refresh()
+			w.iconPreview.Resource = fyne.NewStaticResource("custom.png", data)
+			w.iconPreview.Refresh()
 		})
 	})
-	iconBrowseBtn.Importance = widget.MediumImportance
+	w.iconBrowseBtn.Importance = widget.MediumImportance
 
-	save := func() {
-		cfg.App.Radiologist = radEnt.Text
-		cfg.App.Language = langSel.Selected
-		cfg.App.Theme.Icon = customIconPath
-		selIdx := themeSel.SelectedIndex()
-		if selIdx >= 0 && selIdx < len(themeIDs) {
-			cfg.App.Theme.Preset = themeIDs[selIdx]
-		}
-		if v, err := strconv.Atoi(colsEnt.Text); err == nil && v > 0 && v <= 6 {
-			cfg.App.Layout.Columns = v
-		} else {
-			cfg.App.Layout.Columns = 1
-			colsEnt.SetText("1")
-		}
-		if v, err := strconv.Atoi(rowsEnt.Text); err == nil && v > 0 && v <= 6 {
-			cfg.App.Layout.Rows = v
-		} else {
-			cfg.App.Layout.Rows = 1
-			rowsEnt.SetText("1")
-		}
-		if v, err := strconv.ParseUint(strings.TrimPrefix(vidEnt.Text, "0x"), 16, 16); err == nil {
-			cfg.App.Device.VendorID = uint16(v)
-			vidEnt.SetValidationError(nil)
-		} else {
-			vidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
-			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.vid"), err))
-		}
-		if v, err := strconv.ParseUint(strings.TrimPrefix(pidEnt.Text, "0x"), 16, 16); err == nil {
-			cfg.App.Device.ProductID = uint16(v)
-			pidEnt.SetValidationError(nil)
-		} else {
-			pidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
-			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.pid"), err))
-		}
-		cfg.App.Device.Protocol = protoSel.Selected
+	return w
+}
 
-		if err := u.cfg.Save(u.configPath); err != nil {
-			dialog.ShowError(err, u.win)
-			return
-		}
-
-		i18n.SetLanguage(cfg.App.Language)
-		u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
-
-		iconRes := fyne.NewStaticResource("icon.png", appIconData(cfg))
-		u.a.SetIcon(iconRes)
-		u.win.SetIcon(iconRes)
-
-		newTheme := resolveFullTheme(cfg)
-		u.a.Settings().SetTheme(newTheme)
-		if u.previewBg != nil {
-			u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme, u.a.Settings().ThemeVariant()))
-			canvas.Refresh(u.previewBg)
-		}
-
-		// Refresh tab labels and content.
-		tabs := u.tabs
-		tabs.Items[0].Text = i18n.T("tab.shortcuts")
-		tabs.Items[1].Text = i18n.T("tab.settings")
-		tabs.Items[2].Text = i18n.T("tab.about")
-		tabs.Items[1].Content = u.buildSettings()
-		tabs.Items[2].Content = u.buildAbout()
-		tabs.Refresh()
-
-		if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
-			u.cols = cfg.App.Layout.Columns
-			u.rows = cfg.App.Layout.Rows
-			u.keypad = container.NewGridWithColumns(u.cols)
-			previewArea := u.previewBox()
-			keypadArea := container.NewPadded(u.keypad)
-			split := container.NewVSplit(previewArea, keypadArea)
-			tabs.Items[0] = container.NewTabItem(i18n.T("tab.shortcuts"), split)
-			tabs.Items[0].Content = split
-		}
-		tabs.Refresh()
-
-		u.current = u.cfg.Screens[0].ID
-		u.stack = u.stack[:0]
-		u.renderGrid()
-	}
-
-	saveBtn := widget.NewButton(i18n.T("settings.save"), save)
-	saveBtn.Importance = widget.HighImportance
-
+func (u *appUI) buildSettingsSections(w *settingsWidgets) fyne.CanvasObject {
 	sections := container.NewVBox(
 		section(i18n.T("settings.group_config"),
 			container.NewGridWithColumns(3,
-				container.NewBorder(nil, nil, widget.NewLabel(i18n.T("settings.config_file")), nil, configLbl),
-				chooseBtn,
+				container.NewBorder(nil, nil, widget.NewLabel(i18n.T("settings.config_file")), nil, w.configLbl),
+				w.chooseBtn,
 				widget.NewLabel(""),
 			),
 		),
 		section(i18n.T("settings.group_appearance"),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.radiologist"), radEnt),
-				labeled(i18n.T("settings.language"), langSel),
-				labeled(i18n.T("settings.theme"), themeSel),
+				labeled(i18n.T("settings.radiologist"), w.radEnt),
+				labeled(i18n.T("settings.language"), w.langSel),
+				labeled(i18n.T("settings.theme"), w.themeSel),
 			),
 			container.NewGridWithColumns(3,
 				widget.NewLabel(i18n.T("settings.icon")),
-				iconPreview,
-				iconBrowseBtn,
+				w.iconPreview,
+				w.iconBrowseBtn,
 			),
 		),
 		section(i18n.T("settings.group_device"),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.columns"), colsEnt),
-				labeled(i18n.T("settings.rows"), rowsEnt),
+				labeled(i18n.T("settings.columns"), w.colsEnt),
+				labeled(i18n.T("settings.rows"), w.rowsEnt),
 				widget.NewLabel(""),
 			),
 			container.NewGridWithColumns(3,
-				labeled(i18n.T("settings.vid"), vidEnt),
-				labeled(i18n.T("settings.pid"), pidEnt),
-				labeled(i18n.T("settings.protocol"), protoSel),
+				labeled(i18n.T("settings.vid"), w.vidEnt),
+				labeled(i18n.T("settings.pid"), w.pidEnt),
+				labeled(i18n.T("settings.protocol"), w.protoSel),
 			),
 		),
 	)
 
 	footer := container.NewGridWithColumns(3,
 		widget.NewLabel(""),
-		saveBtn,
+		widget.NewButton(i18n.T("settings.save"), u.makeSaveHandler(w)),
 		widget.NewLabel(""),
 	)
 
-	content := container.NewVBox(sections, footer)
-	return container.NewVScroll(container.NewPadded(content))
+	return container.NewVScroll(container.NewPadded(container.NewVBox(sections, footer)))
+}
+
+func (u *appUI) makeSaveHandler(w *settingsWidgets) func() {
+	return func() {
+		cfg := u.cfg
+		cfg.App.Radiologist = w.radEnt.Text
+		cfg.App.Language = w.langSel.Selected
+		cfg.App.Theme.Icon = *w.customIconPath
+		if selIdx := w.themeSel.SelectedIndex(); selIdx >= 0 && selIdx < len(w.themeIDs) {
+			cfg.App.Theme.Preset = w.themeIDs[selIdx]
+		}
+		if v, err := strconv.Atoi(w.colsEnt.Text); err == nil && v > 0 && v <= 6 {
+			cfg.App.Layout.Columns = v
+		} else {
+			cfg.App.Layout.Columns = 1
+			w.colsEnt.SetText("1")
+		}
+		if v, err := strconv.Atoi(w.rowsEnt.Text); err == nil && v > 0 && v <= 6 {
+			cfg.App.Layout.Rows = v
+		} else {
+			cfg.App.Layout.Rows = 1
+			w.rowsEnt.SetText("1")
+		}
+		if v, err := strconv.ParseUint(strings.TrimPrefix(w.vidEnt.Text, "0x"), 16, 16); err == nil {
+			cfg.App.Device.VendorID = uint16(v)
+			w.vidEnt.SetValidationError(nil)
+		} else {
+			w.vidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
+			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.vid"), err))
+		}
+		if v, err := strconv.ParseUint(strings.TrimPrefix(w.pidEnt.Text, "0x"), 16, 16); err == nil {
+			cfg.App.Device.ProductID = uint16(v)
+			w.pidEnt.SetValidationError(nil)
+		} else {
+			w.pidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
+			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.pid"), err))
+		}
+		cfg.App.Device.Protocol = w.protoSel.Selected
+
+		if err := u.cfg.Save(u.configPath); err != nil {
+			dialog.ShowError(err, u.win)
+			return
+		}
+
+		u.applySettings(u.cfg)
+		u.rebuildTabs()
+	}
+}
+
+// applySettings re-applies language, theme, icon, title, and grid layout after
+// the user saves the settings tab.
+func (u *appUI) applySettings(cfg *config.Config) {
+	u.cfg = cfg
+	i18n.SetLanguage(cfg.App.Language)
+	u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
+
+	iconRes := fyne.NewStaticResource("icon.png", appIconData(cfg))
+	u.a.SetIcon(iconRes)
+	u.win.SetIcon(iconRes)
+
+	newTheme := resolveFullTheme(cfg)
+	u.a.Settings().SetTheme(newTheme)
+	if u.previewBg != nil {
+		u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme, u.a.Settings().ThemeVariant()))
+		canvas.Refresh(u.previewBg)
+	}
+
+	if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
+		u.cols = cfg.App.Layout.Columns
+		u.rows = cfg.App.Layout.Rows
+		u.keypad = container.NewGridWithColumns(u.cols)
+	}
+
+	u.current = cfg.Screens[0].ID
+	u.stack = u.stack[:0]
+	u.renderGrid()
+}
+
+// rebuildTabs creates a fresh AppTabs container and replaces the window
+// content. This avoids the fragile pattern of mutating tabs.Items after
+// SetContent.
+func (u *appUI) rebuildTabs() {
+	selectedIdx := 0
+	if u.tabs != nil {
+		selectedIdx = u.tabs.SelectedIndex()
+	}
+
+	previewArea := u.previewBox()
+	keypadArea := container.NewPadded(u.keypad)
+	split := container.NewVSplit(previewArea, keypadArea)
+
+	u.tabs = container.NewAppTabs(
+		container.NewTabItem(i18n.T("tab.shortcuts"), split),
+		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
+		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
+	)
+	u.tabs.SelectIndex(selectedIdx)
+	u.win.SetContent(container.NewBorder(u.status, nil, nil, nil, u.tabs))
+}
+
+// themeOptions returns theme IDs and their localized names for the settings
+// dropdown.
+func (u *appUI) themeOptions() (ids, names []string) {
+	for _, p := range themes.Presets {
+		ids = append(ids, p.ID())
+		names = append(names, i18n.T("theme."+p.ID()))
+	}
+	return ids, names
+}
+
+func indexOf(options []string, value string) int {
+	for i, o := range options {
+		if o == value {
+			return i
+		}
+	}
+	return -1
 }
 
 // ---------------------------------------------------------------------------

@@ -57,6 +57,16 @@ func TestVariantForLightBg(t *testing.T) {
 	}
 }
 
+func TestIndexOf(t *testing.T) {
+	options := []string{"a", "b", "c"}
+	if got := indexOf(options, "b"); got != 1 {
+		t.Fatalf("indexOf(..., \"b\") = %d, want 1", got)
+	}
+	if got := indexOf(options, "z"); got != -1 {
+		t.Fatalf("indexOf(..., \"z\") = %d, want -1", got)
+	}
+}
+
 func TestHexUint16Validator(t *testing.T) {
 	cases := []struct {
 		input string
