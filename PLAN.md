@@ -118,6 +118,10 @@ Real end-to-end paste/focus behavior is only verified once Galvani flashes the R
 - `radkeys.config.toml` — header does not mention that `config.Save` strips comments (BurntSushi/toml limitation) and creates a `.bak` backup before rewriting, so users who hand-edit the file are surprised when their comments vanish. (L9)
 - `internal/editor/editor_test.go:154` — `TestStartupPathUsesExecutableDir` expects the fallback `"radkeys.config.toml"`, but `StartupPath()` checks `RADKEYS_CONFIG` first, then the executable directory. If either is set, the test fails — environment-dependent. (L10)
 
+### Planned feature
+
+- **`exec` action** — new button action that executes an arbitrary bash command with user permissions. `content` holds the shell command. Pressing the button runs `bash -c "<content>"` as a subprocess (same user as the RadKeys host process). Enables buttons for screenshot, audio playback, opening apps, etc. No device-keyboard involvement — host-side only, like `copy`. Validation: `content` must be non-empty when action is `exec`; `target` is rejected. The `exec` action must appear in the editor action dropdown between `text` and `copy` in display order. **NOT YET IMPLEMENTED.** (F1)
+
 ### Verified correct (kept in the list for completeness, no change needed)
 
 - `internal/ui/ui.go:305` — `pollHID` wraps every event in `fyne.Do()`; required because `press()` touches Fyne widgets, and correct Fyne usage. No change. (M3)
@@ -194,6 +198,12 @@ The order below is the execution order, and it is not optional. Every step in th
     (report IDs, descriptor changes, host-side receiver updates).
     Verify: `go test ./internal/hid/...` passes; `grep -n report.ID firmware/rp2040-zero/diy.ino` returns nothing (firmware fix pending).
 
+13. **feat: add `exec` action for arbitrary bash commands**
+    Resolves: F1.
+    Add `ActionExec = "exec"` to the action constants, `validActions`, and the `actionDefs` table (between `text` and `copy` in display order). `content` holds the command; validation allows non-empty content for `exec` as well as `text`. Reject `target` when action is `exec`. In `press()`, run `exec.Command("bash", "-c", b.Content).Start()` — fire-and-forget, no stdout capture, no blocking. Add i18n key `button.exec` in 7 languages (en: "Execute command", pt-BR: "Executar comando", pt-PT: "Executar comando", es: "Ejecutar comando", fr: "Exécuter commande", de: "Befehl ausführen", it: "Esegui comando") and `editor.action_exec` (same translations).
+    The command runs with the same user permissions as the RadKeys process — no privilege escalation. No shell injection risk because `exec.Command` bypasses the shell by default (the path is `bash` with `-c` as arg, not string interpolation).
+    Verify: `go test ./...` passes; a new unit test `TestExecActionRunsCommand` spawns `echo radkeys-test` and confirms exit code 0; `go build -tags flatpak -o dist/radkeys-linux-amd64 .` succeeds.
+
 ---
 
 ## Notes
@@ -202,3 +212,4 @@ The order below is the execution order, and it is not optional. Every step in th
 - The dev cycle, build commands, and release checklist remain in `AGENTS.md`.
 - Firmware changes always require Galvani to flash and validate the RP2040-Zero prototype; until then they are considered statically reviewed only.
 - L1 (firmware version vs button event ambiguity) is the only known issue with a hardware gate. The host-side retry is a mitigation; the firmware-side fix (report ID or sentinel) blocks 1.0.0.
+- F1 (`exec` action for arbitrary bash commands) is the only planned feature not yet implemented.
