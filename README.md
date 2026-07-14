@@ -53,8 +53,10 @@ Get the latest release from [Releases](../../releases). Each release includes:
 
 | File | Platform |
 |------|----------|
-| `radkeys-linux-amd64` | Linux x86_64 |
-| `radkeys-windows-amd64.exe` | Windows x86_64 |
+| `radkeys-linux-amd64` | Linux x86_64 (main app) |
+| `radkeys-windows-amd64.exe` | Windows x86_64 (main app) |
+| `radkeys-config-linux-amd64` | Linux x86_64 (config editor) |
+| `radkeys-config-windows-amd64.exe` | Windows x86_64 (config editor) |
 | `radkeys.config.toml` | Config template (all platforms) |
 
 **macOS**: binary not provided (cross-compile from Linux is impossible — needs
@@ -63,6 +65,10 @@ Mac following the instructions below. Paste is cross-platform via the device
 (no per-OS keystroke injection), so macOS works the same as Linux/Windows.
 
 Put the binary and `radkeys.config.toml` in the same directory and run.
+Use `-c` to specify a different config path:
+```bash
+./radkeys-linux-amd64 -c ~/my-config.toml
+```
 
 Without a hardware device, the app runs in mock mode — the UI works via mouse
 clicks.
@@ -115,9 +121,11 @@ CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o di
 
 # macOS Intel (on a Mac — cross-compile from Linux is impossible)
 CGO_ENABLED=1 go build -o dist/radkeys-macos-amd64 .
+CGO_ENABLED=1 go build -o dist/radkeys-config-macos-amd64 ./cmd/radkeys-config
 
 # macOS Apple Silicon (on a Mac)
 CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-macos-arm64 .
+CGO_ENABLED=1 GOARCH=arm64 go build -o dist/radkeys-config-macos-arm64 ./cmd/radkeys-config
 ```
 
 ### Cross-compile from Linux (Windows only)
