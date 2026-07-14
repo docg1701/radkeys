@@ -13,3 +13,6 @@ RadKeys.app/
 # Windows build artifact
 radkeys.exe
 dist/
+
+# Working plans created by subagents (not part of the project)
+/plans/
