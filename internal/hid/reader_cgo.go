@@ -131,10 +131,13 @@ func (b *deviceBase) emit(e Event) {
 }
 
 const (
-	diyReportLen       = 2
-	cmdGetVersion      = 0x02 // GET_VERSION: host->device, expects a 2-byte version IN reply (not a keyboard command)
-	reportIDNone       = 0x00
-	versionReadTimeout = 500 * time.Millisecond
+	diyReportLen          = 2
+	cmdGetVersion         = 0x02 // GET_VERSION: host->device, expects a 2-byte version IN reply (not a keyboard command)
+	reportIDNone          = 0x00
+	versionReadTimeout    = 500 * time.Millisecond
+	versionReadAttempts   = 3
+	versionPlausibleMajor = 10 // reject replies with major >= 10 as likely button events (rows/cols are 0..5)
+	versionPlausibleMinor = 100
 )
 
 // diyDevice implements the RadKeys DIY protocol: input report = 2 bytes
@@ -173,19 +176,37 @@ func (d *diyDevice) FireCommand(cmd Command, arg byte) error {
 }
 
 // readFirmwareVersion sends CMD_GET_VERSION to the device and reads the
-// 2-byte [major, minor] response. Returns known=false on any error or
-// timeout. Must be called before the event loop starts (no concurrent reader).
+// 2-byte [major, minor] response. It retries a few times if the first reply
+// looks like a stray button event (row, col). Returns known=false on any
+// error or timeout. Must be called before the event loop starts (no concurrent
+// reader).
 func readFirmwareVersion(dev hidDevice) (major, minor byte, known bool) {
 	out := []byte{reportIDNone, cmdGetVersion, 0x00}
-	if _, err := dev.Write(out); err != nil {
-		return 0, 0, false
+	var last [2]byte
+	for attempt := 0; attempt < versionReadAttempts; attempt++ {
+		if _, err := dev.Write(out); err != nil {
+			return 0, 0, false
+		}
+		buf := make([]byte, 2)
+		n, err := dev.ReadWithTimeout(buf, versionReadTimeout)
+		if err != nil || n < 2 {
+			return 0, 0, false
+		}
+		last[0], last[1] = buf[0], buf[1]
+		if isPlausibleVersion(buf[0], buf[1]) {
+			return buf[0], buf[1], true
+		}
 	}
-	buf := make([]byte, 2)
-	n, err := dev.ReadWithTimeout(buf, versionReadTimeout)
-	if err != nil || n < 2 {
-		return 0, 0, false
-	}
-	return buf[0], buf[1], true
+	return last[0], last[1], true
+}
+
+// isPlausibleVersion rejects replies that are clearly not a version reply.
+// Button events carry row and col in [0, 5], which overlaps with small
+// version numbers, so the heuristic uses a loose upper bound: major < 10 and
+// minor < 100. This filters high-value bytes (e.g. 0xFF from a noisy line)
+// while accepting current and near-future firmware versions.
+func isPlausibleVersion(major, minor byte) bool {
+	return major < versionPlausibleMajor && minor < versionPlausibleMinor
 }
 
 func (d *diyDevice) loop() {

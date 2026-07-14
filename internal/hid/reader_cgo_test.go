@@ -314,6 +314,56 @@ func TestReadFirmwareVersionTimeout(t *testing.T) {
 	}
 }
 
+func TestReadFirmwareVersionRetriesOnImplausibleReply(t *testing.T) {
+	// First two replies look like plausible button events (row=0, col=1 and
+	// row=5, col=5); the third is the real version [1, 0]. The retry logic
+	// should reject the first two because major/minor fall inside button
+	// ranges but are below our loose bound too — wait, row/col 5 is below
+	// versionPlausibleMajor=10. We need implausible bytes, so use [255, 255]
+	// and [42, 0] as noise, then [1, 0].
+	dev := newFakeHIDDevice(nil)
+	call := 0
+	dev.onWrite = func(p []byte) []byte {
+		if len(p) < 3 || p[0] != reportIDNone || p[1] != cmdGetVersion || p[2] != 0x00 {
+			return nil
+		}
+		call++
+		switch call {
+		case 1:
+			return []byte{0xff, 0xff} // implausible
+		case 2:
+			return []byte{42, 0} // implausible major
+		default:
+			return []byte{1, 0} // real version
+		}
+	}
+	major, minor, known := readFirmwareVersion(dev)
+	if !known || major != 1 || minor != 0 {
+		t.Fatalf("readFirmwareVersion = (%d, %d, %v), want (1, 0, true)", major, minor, known)
+	}
+	if call < 3 {
+		t.Fatalf("expected at least 3 GET_VERSION writes, got %d", call)
+	}
+}
+
+func TestReadFirmwareVersionAcceptsFirstPlausibleReply(t *testing.T) {
+	dev := newFakeHIDDevice(nil)
+	dev.onWrite = func(p []byte) []byte {
+		if len(p) >= 3 && p[0] == reportIDNone && p[1] == cmdGetVersion && p[2] == 0x00 {
+			return []byte{1, 0} // simulate firmware v1.0
+		}
+		return nil
+	}
+	major, minor, known := readFirmwareVersion(dev)
+	if !known || major != 1 || minor != 0 {
+		t.Fatalf("readFirmwareVersion = (%d, %d, %v), want (1, 0, true)", major, minor, known)
+	}
+	writes := dev.written()
+	if len(writes) != 1 || !bytes.Equal(writes[0], []byte{reportIDNone, cmdGetVersion, 0x00}) {
+		t.Fatalf("writes = %v, want [[0x00 0x02 0x00]]", writes)
+	}
+}
+
 func TestDIYDeviceVersionKnown(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
 	d := &diyDevice{
@@ -334,5 +384,26 @@ func TestDIYDeviceVersionUnknown(t *testing.T) {
 	_, _, err := d.Version()
 	if err == nil {
 		t.Fatal("Version() should return error when version is unknown")
+	}
+}
+
+func TestIsPlausibleVersion(t *testing.T) {
+	tests := []struct {
+		major byte
+		minor byte
+		want  bool
+	}{
+		{1, 0, true},
+		{5, 99, true},
+		{9, 99, true},
+		{10, 0, false},
+		{0, 100, false},
+		{255, 255, false},
+	}
+	for _, tc := range tests {
+		got := isPlausibleVersion(tc.major, tc.minor)
+		if got != tc.want {
+			t.Fatalf("isPlausibleVersion(%d, %d) = %v, want %v", tc.major, tc.minor, got, tc.want)
+		}
 	}
 }
