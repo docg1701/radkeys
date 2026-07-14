@@ -218,6 +218,11 @@ var messages = map[string]map[string]string{
 		"en": "Delete", "pt-BR": "Delete", "pt-PT": "Delete",
 		"es": "Suprimir", "fr": "Supprimer", "de": "Entf", "it": "Canc",
 	},
+	"button.exec": {
+		"en": "Execute command", "pt-BR": "Executar comando", "pt-PT": "Executar comando",
+		"es": "Ejecutar comando", "fr": "Exécuter commande", "de": "Befehl ausführen",
+		"it": "Esegui comando",
+	},
 	"device_action.via_keypad_hint": {
 		"en":    "Use the physical keypad for %s — clicking here would send the keystroke into RadKeys itself.",
 		"pt-BR": "Use o teclado físico para %s — clicar aqui enviaria a tecla para o próprio RadKeys.",
@@ -450,6 +455,11 @@ var messages = map[string]map[string]string{
 		"en": "Navigate", "pt-BR": "Navegar", "pt-PT": "Navegar", "es": "Navegar",
 		"fr": "Naviguer", "de": "Navigieren", "it": "Naviga",
 	},
+	"editor.action_exec": {
+		"en": "Execute command", "pt-BR": "Executar comando", "pt-PT": "Executar comando",
+		"es": "Ejecutar comando", "fr": "Exécuter commande", "de": "Befehl ausführen",
+		"it": "Esegui comando",
+	},
 	"editor.empty_cell": {
 		"en": "+", "pt-BR": "+", "pt-PT": "+", "es": "+", "fr": "+",
 		"de": "+", "it": "+",
@@ -492,6 +502,20 @@ var messages = map[string]map[string]string{
 	"editor.unsaved_title": {
 		"en": "*", "pt-BR": "*", "pt-PT": "*", "es": "*", "fr": "*", "de": "*",
 		"it": "*",
+	},
+	"editor.unsaved": {
+		"en": "unsaved", "pt-BR": "não salvo", "pt-PT": "não guardado",
+		"es": "sin guardar", "fr": "non enregistré", "de": "ungespeichert",
+		"it": "non salvato",
+	},
+	"editor.close_file": {
+		"en": "Close file", "pt-BR": "Fechar arquivo", "pt-PT": "Fechar ficheiro",
+		"es": "Cerrar archivo", "fr": "Fermer le fichier", "de": "Datei schließen",
+		"it": "Chiudi file",
+	},
+	"editor.quit": {
+		"en": "Quit", "pt-BR": "Sair", "pt-PT": "Sair", "es": "Salir",
+		"fr": "Quitter", "de": "Beenden", "it": "Esci",
 	},
 	"editor.confirm_discard": {
 		"en":    "Discard unsaved changes?",

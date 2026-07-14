@@ -698,6 +698,7 @@ func TestIssueErrorPerKind(t *testing.T) {
 		IssueNavigateRequiresTarget,
 		IssueActionRejectsTarget,
 		IssueTextRequiresContent,
+		IssueExecRequiresContent,
 		IssueActionRejectsContent,
 		IssueNavigateUnknownTarget,
 	}

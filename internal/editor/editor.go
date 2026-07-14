@@ -117,13 +117,20 @@ func (e *Editor) refresh() {
 	e.updateButtonsTab()
 }
 
-// refreshTitle adds an asterisk prefix when the config is dirty.
+// refreshTitle adds an asterisk prefix when the config is dirty and
+// includes the current file path (or "unsaved" label when no path).
 func (e *Editor) refreshTitle() {
 	prefix := ""
 	if e.dirty {
 		prefix = i18n.T("editor.unsaved_title") + " "
 	}
-	e.win.SetTitle(prefix + i18n.T("editor.title"))
+	title := i18n.T("editor.title")
+	if e.path != "" {
+		title = fmt.Sprintf("%s — %s", title, e.path)
+	} else {
+		title = fmt.Sprintf("%s — %s", title, i18n.T("editor.unsaved"))
+	}
+	e.win.SetTitle(prefix + title)
 }
 
 // setDirty marks the config as changed and refreshes the title.
@@ -238,7 +245,7 @@ func (e *Editor) setButtonAction(action string) {
 	}
 	b := &e.cfg.Screens[e.current].Buttons[idx]
 	b.Action = action
-	if action != config.ActionText {
+	if action != config.ActionText && action != config.ActionExec {
 		b.Content = ""
 	}
 	if action != config.ActionNavigate {

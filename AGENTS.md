@@ -92,7 +92,7 @@ go mod tidy
 - End the turn before CI release is published and all binaries are uploaded.
 - End the turn before the release has Linux + Windows binaries.
 - Build or upload a macOS binary — not our responsibility.
-- `[app.fixed_buttons]` — removed. `copy`/`paste`/`prev`/`home` are normal actions.
+- `[app.fixed_buttons]` — removed. `copy`/`paste`/`prev`/`home`/`exec` are normal actions.
 - Firmware with fixed-size bitmap — use `(row, col)` 2-byte protocol.
 
 ## Release checklist (agent MUST complete)

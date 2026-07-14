@@ -225,6 +225,22 @@ func TestParseHexUint16Invalid(t *testing.T) {
 	}
 }
 
+func TestCloseFileResetsConfig(t *testing.T) {
+	cfg := defaultConfig()
+	if cfg == nil {
+		t.Fatal("defaultConfig returned nil")
+	}
+	if len(cfg.Screens) != 1 {
+		t.Fatalf("default config screens = %d, want 1", len(cfg.Screens))
+	}
+	if cfg.Screens[0].ID != "root" {
+		t.Fatalf("expected root screen, got %q", cfg.Screens[0].ID)
+	}
+	if cfg.App.Name != "RadKeys" {
+		t.Fatalf("expected RadKeys name, got %q", cfg.App.Name)
+	}
+}
+
 func TestParseHexUint16Overflow(t *testing.T) {
 	_, err := parseHexUint16("12345")
 	if err == nil {

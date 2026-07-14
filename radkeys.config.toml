@@ -18,6 +18,7 @@
 #
 # Actions:
 #   text        — loads the content into the preview (requires content)
+#   exec        — runs a bash command from content (requires content)
 #   copy        — copies the preview text to clipboard
 #   paste       — sends Ctrl/Cmd+V to the focused window (the RIS) via the device
 #                 keyboard, pasting the clipboard there (RadKeys never steals focus)

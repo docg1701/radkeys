@@ -22,7 +22,7 @@ func (e *Editor) buildInspector() fyne.CanvasObject {
 
 	var specific fyne.CanvasObject
 	switch b.Action {
-	case config.ActionText:
+	case config.ActionText, config.ActionExec:
 		specific = e.contentField(b)
 	case config.ActionNavigate:
 		specific = e.targetField(b)

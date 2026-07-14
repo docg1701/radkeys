@@ -9,8 +9,8 @@ import (
 
 func TestActionOptionsCount(t *testing.T) {
 	labels := actionLabels()
-	if len(labels) != 12 {
-		t.Fatalf("expected 12 action labels, got %d", len(labels))
+	if len(labels) != len(actionDefs) {
+		t.Fatalf("expected %d action labels, got %d", len(actionDefs), len(labels))
 	}
 }
 

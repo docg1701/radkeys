@@ -31,6 +31,7 @@ const (
 	ActionLineEnd    = "line_end"
 	ActionBackspace  = "backspace"
 	ActionDelete     = "delete"
+	ActionExec       = "exec"
 )
 
 // IssueKind identifies a class of validation problem for machine translation.
@@ -54,6 +55,7 @@ const (
 	IssueNavigateRequiresTarget IssueKind = "navigate_requires_target"
 	IssueActionRejectsTarget    IssueKind = "action_rejects_target"
 	IssueTextRequiresContent    IssueKind = "text_requires_content"
+	IssueExecRequiresContent    IssueKind = "exec_requires_content"
 	IssueActionRejectsContent   IssueKind = "action_rejects_content"
 	IssueNavigateUnknownTarget  IssueKind = "navigate_unknown_target"
 )
@@ -82,6 +84,7 @@ var validActions = map[string]bool{
 	ActionLineEnd:    true,
 	ActionBackspace:  true,
 	ActionDelete:     true,
+	ActionExec:       true,
 }
 
 // Config is the root of radkeys.config.toml.
@@ -245,10 +248,14 @@ func (c *Config) Issues() []Issue {
 			if b.Action != ActionNavigate && b.Target != "" {
 				issues = append(issues, Issue{Kind: IssueActionRejectsTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
-			if b.Action == ActionText && b.Content == "" {
-				issues = append(issues, Issue{Kind: IssueTextRequiresContent, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+			if (b.Action == ActionText || b.Action == ActionExec) && b.Content == "" {
+				kind := IssueTextRequiresContent
+				if b.Action == ActionExec {
+					kind = IssueExecRequiresContent
+				}
+				issues = append(issues, Issue{Kind: kind, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
 			}
-			if b.Action != ActionText && b.Content != "" {
+			if b.Action != ActionText && b.Action != ActionExec && b.Content != "" {
 				issues = append(issues, Issue{Kind: IssueActionRejectsContent, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
 		}
@@ -307,6 +314,7 @@ var issueFormatters = map[IssueKind]issueFormatter{
 	IssueNavigateRequiresTarget: formatNavigateRequiresTarget,
 	IssueActionRejectsTarget:    formatActionRejectsTarget,
 	IssueTextRequiresContent:    formatTextRequiresContent,
+	IssueExecRequiresContent:    formatExecRequiresContent,
 	IssueActionRejectsContent:   formatActionRejectsContent,
 	IssueNavigateUnknownTarget:  formatNavigateUnknownTarget,
 }
@@ -364,7 +372,7 @@ func formatDuplicatePosition(issue Issue, _, _ int) error {
 }
 
 func formatInvalidAction(issue Issue, _, _ int) error {
-	return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete)", issue.ScreenID, issue.Label, issue.Detail)
+	return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete, exec)", issue.ScreenID, issue.Label, issue.Detail)
 }
 
 func formatNavigateRequiresTarget(issue Issue, _, _ int) error {
@@ -377,6 +385,10 @@ func formatActionRejectsTarget(issue Issue, _, _ int) error {
 
 func formatTextRequiresContent(issue Issue, _, _ int) error {
 	return fmt.Errorf("screen %q, button %q: text requires content", issue.ScreenID, issue.Label)
+}
+
+func formatExecRequiresContent(issue Issue, _, _ int) error {
+	return fmt.Errorf("screen %q, button %q: exec requires content", issue.ScreenID, issue.Label)
 }
 
 func formatActionRejectsContent(issue Issue, _, _ int) error {

@@ -24,6 +24,7 @@ Everything else (icon, translations, themes) is embedded in the binary.
 ## Features
 
 - 36 configurable buttons (6×6) organized in navigable screens
+- 13 actions: text templates, clipboard, navigation, editing keystrokes, and bash command execution
 - Paste via the device's USB keyboard — no focus stealing, no host-side software
 - 7 languages, 13 color themes, custom icon
 - Single binary per OS (Linux + Windows; macOS builds from source)
@@ -81,6 +82,9 @@ clicks.
    line_end, backspace, delete) are also sent by the device keyboard — they
    go to the currently focused window without stealing focus. No host-side
    software is needed — the device is the keyboard. RadKeys never steals focus.
+
+   Press an `exec` button to run an arbitrary bash command (fire-and-forget, user
+   permissions).
 
    To configure the keypad visually, use the `radkeys-config` binary instead of
    hand-editing the TOML file.

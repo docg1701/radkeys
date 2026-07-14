@@ -17,6 +17,7 @@ type actionDef struct {
 // editor display order. To add a 13th action, append one line here.
 var actionDefs = []actionDef{
 	{config.ActionText, "editor.action_text"},
+	{config.ActionExec, "editor.action_exec"},
 	{config.ActionCopy, "button.copy"},
 	{config.ActionPaste, "button.paste"},
 	{config.ActionPrev, "button.back"},

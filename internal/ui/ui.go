@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -217,6 +218,8 @@ func (u *appUI) press(row, col int, fromUI bool) {
 		case config.ActionText:
 			u.previewText = b.Content
 			u.preview.SetText(b.Content)
+		case config.ActionExec:
+			exec.Command("bash", "-c", b.Content).Start()
 		case config.ActionCopy:
 			u.a.Clipboard().SetContent(u.previewText)
 		case config.ActionPrev:
