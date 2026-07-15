@@ -1,29 +1,70 @@
 RadKeys Source-Available License v1.0
 
-Permission is granted to any person to use, copy, modify, study, and repair this
-software, firmware, and hardware design for personal, educational, or hobby
-use, free of charge.
+Copyright (c) 2026 Galvani Filho <galvani4987@gmail.com>.
 
-Commercial use of this work is not permitted without a separate written license
-from the author. Commercial use includes, but is not limited to:
+1. Free use
 
-- selling, reselling, or distributing the device, kits, components, or software;
-- offering the software as a hosted or SaaS service for a fee;
-- manufacturing the device or derivatives for sale;
-- using the work in any business activity.
+You may use, copy, modify, study, repair, and redistribute this work and any
+modifications for personal, educational, or hobby purposes, free of charge.
+Repair is encouraged, including repairing devices for yourself and for others,
+without payment or restriction.
 
-The author may grant commercial licenses on any terms, including royalties, flat
-fees, or no fee.
+2. What is covered
 
-Consulting, support, or training services provided for a product that has already
-been built and is in use by the customer do not require a commercial license,
-provided the service does not include selling, distributing, or replicating the
-work itself.
+"This work" means the software, firmware, hardware design files, documentation,
+and any other materials distributed in this repository or release by the author.
+A "derivative work" means any modification, adaptation, or work based on this
+work that would, without this license, infringe the author's rights.
 
-This license is not an open source license. The author reserves all rights not
-expressly granted.
+3. Commercial use requires written authorization
 
-THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+Any commercial use of this work requires a separate written license from the
+author. Commercial use includes, but is not limited to:
+
+- selling, reselling, or distributing this work or any part of it;
+- manufacturing the device, kits, components, or accessories for sale;
+- offering the software or firmware as a hosted or SaaS service for a fee;
+- creating a derivative work whose primary value comes from this work and
+  offering it commercially;
+- using this work as part of a commercial product or service that you sell or
+  distribute.
+
+Using this work as a tool inside your own business or profession is allowed
+without charge, provided you do not sell, resell, or redistribute the work
+itself.
+
+4. Consulting and support
+
+You may provide independent consulting, support, or training related to a
+product that has already been built and is in use by the customer, as long as
+the service does not include selling, distributing, or replicating this work or
+any derivative.
+
+5. Patent grant
+
+The author grants you a royalty-free patent license to use this work for any
+purpose permitted by this license. This grant does not apply if you make any
+claim that this work infringes your patents.
+
+6. Trademarks
+
+This license does not grant you any rights to the name "RadKeys" or associated
+logos or branding. Those remain with the author.
+
+7. Termination
+
+If you violate any term of this license, your rights under it end immediately.
+If you correct the violation within 30 days of receiving notice, the author may
+restore your rights at the author's sole discretion.
+
+8. Not open source
+
+This is not an open source license. The author reserves all rights not expressly
+granted here.
+
+9. Disclaimer
+
+THIS WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
 PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THIS WORK.
