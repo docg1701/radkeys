@@ -61,8 +61,5 @@ agreement is negotiated case by case.
   an OSHWA-certified "open source hardware" license. It is a source-available /
   community license designed to keep the project open for personal users while
   protecting the author's commercial rights.
-- Previous releases of RadKeys that were published under the MIT License remain
-  available under MIT for those specific versions. New releases are under
-  OCL v1.1.
 - Nothing in this notice grants you any trademark rights to the name "RadKeys" or
   associated logos. Those are reserved by the author.

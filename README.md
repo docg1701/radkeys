@@ -197,6 +197,3 @@ requires a separate written license — see [COMMERCIAL-LICENSE.md](COMMERCIAL-L
 
 This is a source-available / community license, not an OSI-approved open-source
 license or OSHWA-certified open-source hardware license.
-
-Previous releases published under the MIT License remain under MIT; new releases
-are under OCL v1.1.
