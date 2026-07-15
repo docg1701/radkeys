@@ -196,5 +196,3 @@ educational, and hobby use. You may modify, share, and repair freely, as long
 as the use is non-commercial. Any commercial use requires a separate written
 license — see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) or email
 **galvani4987@gmail.com**.
-
-This is not an open source license.

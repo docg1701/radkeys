@@ -46,5 +46,4 @@ commercial license request"** and include:
 ## Notes
 
 - This document is a summary. The actual license terms are in [LICENSE](LICENSE).
-- This is not an open source license.
 - Nothing in this document grants trademark rights to the name "RadKeys".
