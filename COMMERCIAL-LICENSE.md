@@ -19,6 +19,10 @@ You need a separate written commercial license from the author before you:
 - Create a derivative product whose value derives substantially from RadKeys and
   sell it or offer it commercially.
 
+This requirement exists so that anyone monetizing the RadKeys product itself
+shares revenue with the author. The author may choose to charge royalties, a
+flat fee, or nothing at all, but the authorization must be granted in writing.
+
 ## What does NOT require a commercial license
 
 You do **not** need to contact us if you:
@@ -31,6 +35,10 @@ You do **not** need to contact us if you:
 - Share modifications publicly under the same OCL v1.1 + Micro v1 terms, without
   selling them.
 - Repair your own device or help someone repair theirs.
+- Provide independent consulting, support, or training for a RadKeys product that
+  is already built and in use by the customer, as long as the service does not
+  include selling, distributing, or replicating RadKeys hardware, firmware, or
+  software.
 
 ## How to request a commercial license
 
