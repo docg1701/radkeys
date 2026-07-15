@@ -352,9 +352,9 @@ var messages = map[string]map[string]string{
 		"it": "Autore: docg1701",
 	},
 	"about.license": {
-		"en": "License: MIT", "pt-BR": "Licença: MIT", "pt-PT": "Licença: MIT",
-		"es": "Licencia: MIT", "fr": "Licence : MIT", "de": "Lizenz: MIT",
-		"it": "Licenza: MIT",
+		"en": "License: OCL v1.1 + Micro v1", "pt-BR": "Licença: OCL v1.1 + Micro v1", "pt-PT": "Licença: OCL v1.1 + Micro v1",
+		"es": "Licencia: OCL v1.1 + Micro v1", "fr": "Licence : OCL v1.1 + Micro v1", "de": "Lizenz: OCL v1.1 + Micro v1",
+		"it": "Licenza: OCL v1.1 + Micro v1",
 	},
 	"about.repository": {
 		"en": "Repository: ", "pt-BR": "Repositório: ", "pt-PT": "Repositório: ",

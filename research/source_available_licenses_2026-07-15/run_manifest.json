@@ -1,0 +1,20 @@
+{
+  "version": "3.0.0",
+  "query": "Source-available and fair-code licenses for combined hardware+software projects, focusing on 3D printing, that allow community access while restricting commercial sale without separate agreement",
+  "mode": "standard",
+  "started_at": "2026-07-15T17:39:36.377980+00:00",
+  "finished_at": null,
+  "assumptions": [],
+  "provider_config": {
+    "primary": "search-cli",
+    "scholarly": null
+  },
+  "report_dir": "/home/galvani/dev/radkeys/research/source_available_licenses_2026-07-15",
+  "artifact_paths": {
+    "sources": "sources.jsonl",
+    "evidence": "evidence.jsonl",
+    "claims": "claims.jsonl",
+    "report": "report.md"
+  },
+  "continuation": null
+}

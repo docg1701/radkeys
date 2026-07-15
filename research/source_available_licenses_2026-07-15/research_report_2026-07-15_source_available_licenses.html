@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source-Available Licenses for Combined Hardware-Software Projects - Deep Research Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #1a1a1a;
+            background: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            background: #003d5c;
+            color: white;
+            padding: 25px 40px;
+            border-bottom: 3px solid #002840;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-meta {
+            font-size: 13px;
+            color: #b8d4e6;
+            display: flex;
+            gap: 25px;
+        }
+
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0;
+            border-bottom: 2px solid #003d5c;
+        }
+
+        .metric {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-right: 1px solid #d1d5db;
+            text-align: center;
+        }
+
+        .metric:last-child {
+            border-right: none;
+        }
+
+        .metric-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #003d5c;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 30px 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #003d5c;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #003d5c;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            line-height: 1.3;
+        }
+
+        .subsection-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 24px 0 12px 0;
+            line-height: 1.4;
+        }
+
+        .executive-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #003d5c;
+        }
+
+        .executive-summary p {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        p {
+            margin-bottom: 14px;
+            line-height: 1.7;
+            text-align: left;
+        }
+
+        /* Better paragraph spacing in content sections */
+        .content > p,
+        .section p {
+            margin-bottom: 16px;
+        }
+
+        .findings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .finding-card {
+            background: #f8f9fa;
+            padding: 18px;
+            border-left: 3px solid #003d5c;
+        }
+
+        .finding-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #003d5c;
+            margin-bottom: 10px;
+        }
+
+        .finding-card p {
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: #003d5c;
+            color: white;
+            padding: 10px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        ul, ol {
+            margin: 16px 0 16px 28px;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding-left: 8px;
+        }
+
+        /* Nested lists */
+        li ul, li ol {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Better bullet/number spacing */
+        ol {
+            list-style-position: outside;
+            padding-left: 0;
+        }
+
+        ul {
+            list-style-position: outside;
+            padding-left: 0;
+        }
+
+        .key-insight {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-left: 3px solid #003d5c;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .key-insight strong {
+            color: #003d5c;
+            font-weight: 600;
+        }
+
+        .citation {
+            color: #003d5c;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            position: relative;
+            padding: 2px 4px;
+            background: #f0f7fc;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .citation:hover {
+            background: #003d5c;
+            color: white;
+        }
+
+        /* Attribution Gradients (2025 Enhancement) */
+        .citation-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #003d5c;
+            box-shadow: 0 4px 12px rgba(0, 61, 92, 0.15);
+            padding: 12px;
+            min-width: 300px;
+            max-width: 500px;
+            z-index: 1000;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .citation:hover .citation-tooltip {
+            display: block;
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            color: #003d5c;
+            margin-bottom: 8px;
+            font-size: 13px;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 6px;
+        }
+
+        .tooltip-source {
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .tooltip-claim {
+            background: #f8f9fa;
+            padding: 8px;
+            margin-top: 8px;
+            border-left: 3px solid #003d5c;
+            font-size: 11px;
+        }
+
+        .tooltip-claim-label {
+            font-weight: 600;
+            color: #003d5c;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .evidence-chain {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #d1d5db;
+        }
+
+        .evidence-chain-label {
+            font-weight: 600;
+            color: #003d5c;
+            font-size: 11px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .evidence-step {
+            padding: 6px;
+            background: #f8f9fa;
+            margin-bottom: 4px;
+            font-size: 11px;
+            border-left: 2px solid #d1d5db;
+            padding-left: 8px;
+        }
+
+        .bibliography {
+            background: #f8f9fa;
+            padding: 30px;
+            margin-top: 40px;
+            border-left: 4px solid #003d5c;
+        }
+
+        .bibliography-content {
+            background: #f8f9fa;
+            padding: 20px 0;
+        }
+
+        .bib-entry {
+            margin-bottom: 18px;
+            padding-left: 50px;
+            text-indent: -50px;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .bib-number {
+            color: #003d5c;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .bib-entry a {
+            color: #003d5c;
+            word-wrap: break-word;
+            text-decoration: none;
+        }
+
+        .bib-entry a:hover {
+            text-decoration: underline;
+        }
+
+        .compact-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .compact-list li {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-box {
+            background: white;
+            border: 1px solid #d1d5db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-box h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #003d5c;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .highlight-stat {
+            font-weight: 700;
+            color: #003d5c;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        @media print {
+            .container {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .findings-grid {
+                grid-template-columns: 1fr;
+            }
+            .compact-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Source-Available Licenses for Combined Hardware-Software Projects</h1>
+            <div class="header-meta">
+                <span>2026-07-15</span>
+                <span>•</span>
+                <span>16 Sources</span>
+            </div>
+        </div>
+
+        <div class="metrics-dashboard">
+    <div class="metric"><span class="metric-number">16</span><span class="metric-label">Sources</span></div>
+    <div class="metric"><span class="metric-number">6</span><span class="metric-label">Findings</span></div>
+    <div class="metric"><span class="metric-number">1</span><span class="metric-label">Recommended License</span></div>
+    <div class="metric"><span class="metric-number">High</span><span class="metric-label">Confidence</span></div>
+</div>
+
+        <div class="content">
+            <h1>Source-Available Licenses for Combined Hardware-Software Projects</h1>
+<p><strong>Research Date:</strong> 2026-07-15<br />
+<strong>Mode:</strong> Standard<br />
+<strong>Question:</strong> Which source-available or fair-code license allows a combined hardware + software project (similar to 3D printers) to remain publicly accessible for community use while preventing third parties from copying and selling the product or software without the author's authorization?</p>
+<hr />
+<h2>Executive Summary</h2>
+<ul>
+<li><strong>Key Finding 1:</strong> The <strong>Open Community License (OCL) v1.1</strong>, created by Prusa Research for its CORE One 3D printer line, is the only modern public license explicitly drafted to cover <strong>both hardware and software</strong> under a single instrument while restricting commercial sale of the product or derivatives without a separate business license <span class="citation">[1]</span><span class="citation">[2]</span>.</li>
+<li><strong>Key Finding 2:</strong> No non-commercial or sale-restricted license qualifies as "open source" under the OSI Open Source Definition or the OSHWA Open Source Hardware Definition, because both require the right to <strong>make, sell, and distribute</strong> derivatives without field-of-use restrictions <span class="citation">[4]</span><span class="citation">[14]</span>.</li>
+<li><strong>Key Finding 3:</strong> For software-only portions, <strong>PolyForm Noncommercial 1.0.0</strong> and <strong>Commons Clause</strong> are mature source-available alternatives, but neither covers physical hardware designs <span class="citation">[5]</span><span class="citation">[7]</span>.</li>
+<li><strong>Key Finding 4:</strong> Traditional open hardware licenses such as <strong>CERN OHL</strong> (all variants) and <strong>TAPR OHL</strong> are designed for hardware documentation and either permit commercial sale outright (CERN-OHL-P) or require reciprocity but still allow sale (CERN-OHL-S/W, TAPR OHL); they therefore do not block third-party cloning <span class="citation">[8]</span><span class="citation">[9]</span>.</li>
+<li><strong>Key Finding 5:</strong> Relicensing an existing MIT project requires <strong>consent from all copyright holders</strong> unless the new terms are compatible with MIT; previous releases remain under MIT in perpetuity <span class="citation">[10]</span><span class="citation">[14]</span>.</li>
+</ul>
+<p><strong>Primary Recommendation:</strong> Adopt <strong>OCL v1.1</strong> for the combined hardware-software RadKeys project, add the <strong>Micro Business plugin</strong> to allow small companies free internal use, publish a separate <strong>commercial licensing contact procedure</strong>, and clearly avoid calling the project "open source" in the strict OSI/OSHWA sense.</p>
+<p><strong>Confidence Level:</strong> High for factual descriptions of each license; Medium for enforceability predictions, because OCL is new and untested in courts.</p>
+<hr />
+<h2>Introduction</h2>
+<h3>Research Question</h3>
+<p>The RadKeys project currently uses the MIT License. The author wants to keep the repository publicly accessible to attract a community, but prevent third parties from manufacturing, selling, or distributing the product (hardware + firmware + host software) without explicit authorization. The desired model is to negotiate commercial agreements with companies, influencers, and resellers in exchange for royalties or commissions. The research therefore asks: <strong>which public license is used by hardware-software projects (notably 3D printing) to achieve exactly this balance?</strong></p>
+<h3>Scope &amp; Methodology</h3>
+<p>This research investigates publicly available licenses that (a) cover combined hardware and software, (b) allow non-commercial community access, modification, and repair, and (c) restrict third-party commercial sale of the product or its derivatives without a separate agreement. The investigation focused on the 3D-printing ecosystem because it is the most visible hardware-software domain that recently produced a license matching these requirements.</p>
+<p>Methods used:
+- Web search across general, news, and academic indexes for "3D printer non-commercial hardware-software license", "Open Community License Prusa", "source available hardware license", and related terms.
+- Direct reading of primary license texts and authoritative repositories (OCL, PolyForm, Commons Clause, CERN OHL, TAPR OHL, OSHWA definition, MIT).
+- Legal commentary and practitioner analysis from licensing attorneys and community critics.
+- Academic survey paper on open hardware licensing.</p>
+<p><strong>Sources consulted:</strong> 16 primary and secondary sources, spanning license stewards, project maintainers, legal analysts, and standard-setting organizations. Date range: 2007 (TAPR NCL) to June 2026 (Prusa OCL v1.1 announcement).</p>
+<h3>Key Assumptions</h3>
+<ul>
+<li><strong>Assumption 1:</strong> The goal is to restrict <em>sale of the product/software as a product</em>, not to block all commercial use (e.g., internal business use as a tool may remain allowed).</li>
+<li><strong>Assumption 2:</strong> The project is willing to abandon the "open source" label in the strict OSI/OSHWA sense, since any non-commercial or sale restriction violates those definitions.</li>
+<li><strong>Assumption 3:</strong> The author either owns all copyrights or can secure contributor consent before relicensing.</li>
+<li><strong>Assumption 4:</strong> The hardware is a tangible device with firmware running on it and a host configurator application, so a single license covering both hardware documentation and software is preferable to dual licensing.</li>
+</ul>
+<hr />
+<h2>Main Analysis</h2>
+<h3>Finding 1: Open Community License v1.1 Is the Closest Match</h3>
+<p>Prusa Research introduced the Open Community License (OCL) in 2025 alongside the CORE One 3D printer CAD files, then released <strong>OCL v1.1</strong> on 24 June 2026 with a modular plugin system <span class="citation">[2]</span>. The license was explicitly created because traditional open source licenses "left gaps" when applied to physical hardware: they allowed competitors to copy and sell machines without sharing revenue or contributing back <span class="citation">[16]</span>.</p>
+<p>The OCL repository states that the license "pertains to intellectual property applied in licensor's product (licensed item - hardware and/or software) and/or its components which is distributed as is under OCL, including copyright, registered design or design patent, and (utility) patent" <span class="citation">[1]</span>. This is unusual: most public licenses cover either software (copyright + patent) or hardware documentation, but OCL explicitly combines both in one instrument <span class="citation">[3]</span>.</p>
+<p>For non-commercial end users, OCL grants broad rights: "use, copy, modify, hack the product and/or its components as you wish" <span class="citation">[1]</span>. Derivatives distributed publicly must remain under OCL, preventing license fragmentation <span class="citation">[2]</span>. For business users, OCL allows internal business use and internal production, but prohibits copying or replicating the product or its derivatives for any commercial purpose without a separate business or repair license <span class="citation">[1]</span>.</p>
+<p>The v1.1 plugin system adds four optional modules <span class="citation">[2]</span>:
+- <strong>GAtt v1</strong> — general attribution requirements for derivatives.
+- <strong>SWAtt v1</strong> — software-specific attribution in UI and source code.
+- <strong>Micro v1</strong> — permits free commercial internal use for entities with annual gross revenue under €1 million, including affiliates.
+- <strong>RnD v1</strong> — restricts business use to research and development; manufacturing requires a separate agreement.</p>
+<p>For RadKeys, the <strong>Micro v1</strong> plugin is particularly relevant: it would let small businesses, startups, and individual makers use the device internally without friction, while triggering a licensing conversation only once a reseller or manufacturer reaches meaningful scale <span class="citation">[2]</span>.</p>
+<p>Practical examples published by Prusa clarify that using an OCL-licensed machine as a tool to manufacture one's own products is allowed; only copying or replicating the OCL-licensed design for sale is restricted <span class="citation">[2]</span>. This aligns with the RadKeys use case: radiologists can use the device, hobbyists can build one, but a company cannot clone and sell the keypad or configurator without permission.</p>
+<p><strong>Sources:</strong> <span class="citation">[1]</span>, <span class="citation">[2]</span>, <span class="citation">[3]</span>, <span class="citation">[16]</span></p>
+<hr />
+<h3>Finding 2: OCL Is Not "Open Source" Under OSI/OSHWA Definitions</h3>
+<p>A critical limitation of OCL is that it cannot be called "open source" in the sense recognized by the Open Source Initiative or the Open Source Hardware Association. The OSHWA definition requires a license to "allow for the manufacture, sale, distribution, and use of products created from the design files, the design files themselves, and derivatives thereof" <span class="citation">[4]</span>. OCL explicitly restricts sale of products and derivatives for commercial purposes without a separate license, which directly contradicts this requirement.</p>
+<p>OSHWA also states that licenses carrying restrictions against commercial use or derivative works are "strictly incompatible with open source" <span class="citation">[4]</span>. The OCL repository itself acknowledges that OCL is "designed to allow open access to the relevant community" and promote "fair competition," but it does not claim OSI or OSHWA approval <span class="citation">[1]</span>.</p>
+<p>Legal analyst Kyle Mitchell reviewed OCL v1 and concluded that the combination of commercial/non-commercial segmentation plus share-alike terms makes it "particularly complex, functionally speaking," and noted the lack of definitions for "commercial" or "non-commercial" as a drafting weakness <span class="citation">[3]</span>. Mitchell's practical takeaway: "I probably wouldn't hesitate to rely on this license as a hobbyist doing things no one would confuse for business. Everyone else should have a look and think twice" <span class="citation">[3]</span>.</p>
+<p>4Additive summarized the community view: OCL "allows free use and modification for non-commercial purposes, but limits companies to internal production only, prohibiting the sale of derivatives. The community considers it incompatible with open source hardware standards" <span class="citation">[15]</span>.</p>
+<p>This means RadKeys must be careful with marketing language. Terms such as <strong>source-available</strong>, <strong>community license</strong>, <strong>fair-code hardware</strong>, or <strong>open design</strong> are more accurate than "open source" if OCL is adopted.</p>
+<p><strong>Sources:</strong> <span class="citation">[3]</span>, <span class="citation">[4]</span>, <span class="citation">[15]</span></p>
+<hr />
+<h3>Finding 3: Software-Only Source-Available Licenses Do Not Cover Hardware</h3>
+<p>If RadKeys were to split licensing by artifact type, several well-established source-available licenses exist for the software portions, but none are designed for hardware designs.</p>
+<p><strong>PolyForm Noncommercial 1.0.0</strong> is a plain-language software license that permits any noncommercial purpose, personal use, and use by charitable, educational, public research, public safety, health, environmental, and government institutions regardless of funding source <span class="citation">[5]</span>. It explicitly grants copyright and patent licenses, but only for noncommercial purposes. PolyForm is maintained by experienced licensing lawyers and is listed on SPDX <span class="citation">[5]</span>.</p>
+<p><strong>Commons Clause</strong> is a short condition that can be appended to an OSI-approved license such as Apache 2.0. It removes the right to "Sell" the software, defined as providing a product or service whose value derives "entirely or substantially" from the software's functionality, for a fee <span class="citation">[7]</span>. The Commons Clause FAQ explicitly states: "Is this 'Open Source'? No" <span class="citation">[7]</span>. It also notes that Commons Clause is narrower than Creative Commons NonCommercial because it restricts only one kind of commercial use rather than all commercial use <span class="citation">[7]</span>.</p>
+<p><strong>Fair-code</strong> is not a license but a model describing software that is free to use and modify, has source available, and is commercially restricted by its authors <span class="citation">[6]</span>. Fair-code-compatible licenses include the Business Source License, Commons Clause, Confluent Community License, Elastic License 2.0, Server Side Public License, and Sustainable Use License <span class="citation">[6]</span>. These are used by companies such as MongoDB, Elastic, HashiCorp, n8n, and Sentry <span class="citation">[6]</span>.</p>
+<p>However, none of these software licenses clearly cover hardware documentation, CAD files, PCB layouts, or physical products. Applying them to hardware would create legal uncertainty. Therefore, they are best viewed as complements (for a software-only submodule) rather than replacements for a hardware-covering license.</p>
+<p><strong>Sources:</strong> <span class="citation">[5]</span>, <span class="citation">[6]</span>, <span class="citation">[7]</span></p>
+<hr />
+<h3>Finding 4: Traditional Open Hardware Licenses Permit Sale and Cloning</h3>
+<p>The most widely used hardware-specific licenses — CERN OHL v2 and TAPR OHL — were designed to maximize sharing and reuse, not to block commercial cloning.</p>
+<p>CERN OHL v2 comes in three variants <span class="citation">[8]</span>:
+- <strong>CERN-OHL-P (permissive):</strong> allows proprietary derivatives, does not require source disclosure, and permits commercial sale.
+- <strong>CERN-OHL-W (weakly reciprocal):</strong> requires sharing modifications to the licensed design, but allows larger works to remain proprietary.
+- <strong>CERN-OHL-S (strongly reciprocal):</strong> requires sharing derivatives under the same license, similar to GPL for hardware.</p>
+<p>All three explicitly allow commercial use. The SPDX summary for CERN-OHL-S lists "Commercial use, Distribution, Modification, Patent use, Private use" as permissions <span class="citation">[8]</span>. None of them restrict sale of products based on the design.</p>
+<p>TAPR OHL v1.0 is a reciprocal hardware license. Its preamble states: "You may use products for any legal purpose without limitation" and "You may distribute products you make to third parties" <span class="citation">[9]</span>. TAPR also previously offered a <strong>Noncommercial Hardware License (NCL)</strong>, but it has been <strong>deprecated</strong> <span class="citation">[9]</span>. A Crabgrass group note records that TAPR deprecated the NCL after issues were communicated by Bruce Perens, making TAPR "100% Open Hardware now" <span class="citation">[9]</span>. Even when active, the TAPR NCL was designed for hardware documentation and did not clearly cover firmware or software loaded into programmable devices.</p>
+<p>The Turing Way summarizes the landscape: CERN OHL v2 provides strongly reciprocal, weakly reciprocal, and permissive alternatives; TAPR OHL is also reciprocal; and Solderpad is permissive <span class="citation">[13]</span>. None of these provide a non-commercial or sale-restriction option.</p>
+<p>For RadKeys, choosing CERN-OHL-S would keep derivatives open, but would explicitly allow competitors to manufacture and sell clones as long as they shared their own design files. That is the opposite of the desired protection.</p>
+<p><strong>Sources:</strong> <span class="citation">[8]</span>, <span class="citation">[9]</span>, <span class="citation">[13]</span></p>
+<hr />
+<h3>Finding 5: Relicensing from MIT Requires Contributor Consent</h3>
+<p>The current RadKeys repository is under MIT. Changing to OCL or any source-available license is legally possible only if the copyright holder(s) agree. The MIT License grants broad rights — including the right to "sell copies of the Software" — and those rights are perpetual for any version already released <span class="citation">[14]</span>.</p>
+<p>Open Source Stack Exchange consensus is clear: a sole author can relicense unilaterally; if there are multiple contributors, all must agree, or their contributions must be removed, or the new license must be compatible with the old one <span class="citation">[10]</span>. One answer notes that the Eclipse Foundation took more than a year to secure approvals when changing from CPL to EPL <span class="citation">[10]</span>. Another points out that even if one contributor refuses, their code cannot be relicensed without removal <span class="citation">[10]</span>.</p>
+<p>This has practical consequences for RadKeys:
+- If the author is the only contributor, the switch is straightforward for future releases.
+- If any third-party code exists under MIT, that code can remain under MIT in old releases; only new releases can be under OCL.
+- Any MIT-licensed dependencies used by RadKeys are unaffected, because OCL explicitly states that components provided under incompatible licenses remain unaffected <span class="citation">[1]</span>.</p>
+<p>The author should document the license change prominently and retain evidence of sole authorship or contributor consent.</p>
+<p><strong>Sources:</strong> <span class="citation">[10]</span>, <span class="citation">[14]</span></p>
+<hr />
+<h3>Finding 6: Commercial Licensing Models and Practical Implementation</h3>
+<p>Restricting sale is only half of the strategy; the other half is creating a clear path for authorized commercial use. Several projects illustrate the model.</p>
+<p><strong>Open Source Ecology (OSE)</strong> publishes a template licensing agreement under which OSE grants a non-exclusive global license to use its technology and brand, subject to branding guidelines [web search result, not registered].</p>
+<p><strong>SMUPI</strong> separates licensing into two streams: component manufacturers and module builders, with geographic exclusivity and quality standards [web search result, not registered].</p>
+<p><strong>TetherIA's Aero Hand Open</strong> uses a tripartite approach: software/firmware under Apache 2.0, hardware files under CC BY-NC-SA 4.0, and physical units governed by Terms of Sale plus a "Commercial Integration Permission" [web search result, not registered].</p>
+<p>For RadKeys, a practical commercial licensing page should include:
+1. <strong>What is restricted:</strong> manufacturing, assembly, distribution, or sale of the device, firmware, or configurator; offering them as a paid service; or creating derivatives for sale.
+2. <strong>What is allowed without negotiation:</strong> personal use, internal business use, right-to-repair, modifications kept private, and derivatives shared under OCL without sale.
+3. <strong>How to request a license:</strong> a contact email or form, required information (company, territory, expected volume, derivative or exact clone), and typical terms (royalty percentage, minimum guarantee, attribution, quality standards).
+4. <strong>Micro-business carve-out:</strong> using OCL's Micro v1 plugin, free internal use below €1M annual gross revenue.</p>
+<p>The arXiv survey on open hardware licensing notes that hybrid approaches with dual licenses — open for non-commercial sharing, proprietary for commercial uses — are common strategies for retaining business value <span class="citation">[11]</span>. OCL's plugin system effectively formalizes this hybrid approach in a single license family.</p>
+<p><strong>Sources:</strong> <span class="citation">[2]</span>, <span class="citation">[11]</span></p>
+<hr />
+<h2>Synthesis &amp; Insights</h2>
+<h3>Patterns Identified</h3>
+<p><strong>Pattern 1: The "source-available hardware" gap.</strong> The 3D-printing industry has produced a new license category because neither software source-available licenses nor traditional open hardware licenses solved the cloning problem. Software licenses do not cover physical designs; hardware licenses permit sale. OCL is an attempt to bridge this gap.</p>
+<p><strong>Pattern 2: Community acceptance trades off against commercial protection.</strong> Every license that restricts commercial sale is explicitly excluded from the OSI/OSHWA "open source" definition. Projects adopting such licenses must choose their marketing vocabulary carefully.</p>
+<p><strong>Pattern 3: Plugin modularity is emerging as a best practice.</strong> OCL v1.1's plugin system reflects a broader trend: one core license with optional conditions (attribution, revenue thresholds, R&amp;D-only) lets creators tailor terms without drafting custom licenses from scratch.</p>
+<h3>Novel Insights</h3>
+<p><strong>Insight 1: OCL is less about "non-commercial" and more about "no cloning."</strong> Unlike CC BY-NC-SA, which broadly restricts commercial use, OCL allows businesses to <em>use</em> the product internally and even manufacture their own parts for internal production. The restriction is on <em>replicating and selling the design or product</em>. This is closer to a no-cloning rule than a pure non-commercial rule, making it more compatible with real business adoption.</p>
+<p><strong>Insight 2: The Micro v1 plugin solves the "small business" objection.</strong> A common criticism of non-commercial licenses is that they harm tiny businesses and side hustles. By setting a €1M revenue threshold, OCL Micro lets small actors operate freely while reserving large-scale commercialization for negotiation.</p>
+<p><strong>Insight 3: For RadKeys, the hardware-software unity matters more than for most projects.</strong> Because the RP2040-Zero firmware and the Go/Fyne configurator are deeply coupled to the physical 36-button deck, a single license covering hardware, firmware, and software reduces legal fragmentation and user confusion.</p>
+<h3>Implications</h3>
+<p><strong>For RadKeys:</strong> Adopting OCL v1.1 + Micro v1 would:
+- Keep the repository public and attract community contributors and testers.
+- Allow individuals and small businesses to build and use the device freely.
+- Block unlicensed manufacturers, resellers, and influencers from selling clones.
+- Create a negotiation framework for authorized commercial partnerships.
+- Require abandoning the strict "open source" label.</p>
+<p><strong>Broader Implications:</strong> If OCL gains adoption beyond Prusa, it could become a de facto standard for "open design, restricted sale" hardware-software products. However, its enforceability in court remains unproven, and its drafting ambiguities (noted by Mitchell) may create litigation risk.</p>
+<p><strong>Second-Order Effects:</strong> Competitors may still reverse-engineer the device and implement a clean-room alternative under a different license. OCL protects the <em>design files and software</em> but cannot protect the underlying idea, functionality, or unpatented hardware concepts. Trademark protection for the RadKeys name and logo remains important regardless of license choice.</p>
+<hr />
+<h2>Limitations &amp; Caveats</h2>
+<h3>Counterevidence Register</h3>
+<p><strong>Contradictory Finding 1: OCL drafting is immature.</strong> Kyle Mitchell identified multiple ambiguities in OCL v1: undefined "commercial" and "non-commercial," awkward phrasing of "internal production use," and unclear status of the anti-data-mining paragraph <span class="citation">[3]</span>. These issues could weaken enforcement in court.
+- Impact on conclusions: Moderate. OCL is still the best available option for the stated goals, but the author should expect to iterate and possibly seek legal review.</p>
+<p><strong>Contradictory Finding 2: Some community voices reject OCL as neither open nor community-friendly.</strong> Adafruit's legal analysis (cited in search results, 403-blocked from direct fetch) argues that calling a non-commercial restriction "Open Community License" is misleading. 4Additive reports that the community considers OCL incompatible with open hardware standards <span class="citation">[15]</span>.
+- Impact on conclusions: Moderate. Marketing and communication strategy must manage this reputational risk.</p>
+<p><strong>Contradictory Finding 3: TAPR NCL was deprecated.</strong> The existence of a prior non-commercial hardware license that was abandoned suggests the model has historical weaknesses, including possible incompatibility with community norms and enforcement difficulties <span class="citation">[9]</span>.
+- Impact on conclusions: Low. OCL differs from TAPR NCL by covering software and offering a plugin system; it is a more modern attempt.</p>
+<h3>Known Gaps</h3>
+<ul>
+<li><strong>Gap 1: No court decisions interpreting OCL.</strong> Because OCL is new, there is no case law on enforceability, jurisdiction, or remedies. Predictions about how courts will interpret it are speculative.</li>
+<li><strong>Gap 2: No direct comparison of OCL to Brazilian law.</strong> The author is in Brazil; OCL's enforceability under Brazilian copyright, industrial design, and contract law has not been analyzed in this research.</li>
+<li><strong>Gap 3: Patent and trademark strategy.</strong> A license alone does not prevent competitors from designing around the product. The research did not assess patentability of the RadKeys hardware or the strength of trademark protection.</li>
+</ul>
+<h3>Assumptions Revisited</h3>
+<ul>
+<li><strong>Assumption 1 (restrict sale, not all use):</strong> Supported. OCL's structure aligns with this assumption.</li>
+<li><strong>Assumption 2 (willing to abandon "open source" label):</strong> Required. All evidence confirms that any sale restriction disqualifies the project from OSI/OSHWA definitions.</li>
+<li><strong>Assumption 3 (sole authorship or consent):</strong> Must be verified by the author before proceeding.</li>
+<li><strong>Assumption 4 (single license preferred):</strong> Supported. OCL is the only identified single-license solution.</li>
+</ul>
+<h3>Areas of Uncertainty</h3>
+<ul>
+<li>How Brazilian courts would treat a non-commercial restriction in a public license.</li>
+<li>Whether OCL's anti-data-mining clause is enforceable against AI training under local fair-use or text-and-data-mining exceptions.</li>
+<li>The exact boundary between "internal business use" and "commercial purpose" for a medical device used in a hospital or clinic.</li>
+</ul>
+<hr />
+<h2>Recommendations</h2>
+<h3>Immediate Actions</h3>
+<ol>
+<li><strong>Verify authorship and obtain any necessary consent.</strong></li>
+<li>What: Audit the Git history to confirm whether RadKeys has any third-party contributions under MIT.</li>
+<li>Why: Relicensing requires consent from all copyright holders <span class="citation">[10]</span>.</li>
+<li>How: Run <code>git shortlog -sne</code> and review <code>git log --stat</code>. If contributors exist, email them for written consent or remove their code.</li>
+<li>
+<p>Timeline: Before changing any license file.</p>
+</li>
+<li>
+<p><strong>Adopt OCL v1.1 + Micro v1 plugin.</strong></p>
+</li>
+<li>What: Replace <code>LICENSE</code> with the OCL v1.1 text and add <code>OCL v1.1 + Micro v1</code> to project metadata.</li>
+<li>Why: This is the only identified license that covers hardware + software and restricts commercial sale while allowing small-business internal use <span class="citation">[1]</span><span class="citation">[2]</span>.</li>
+<li>How: Copy the authoritative text from the OCL repository <span class="citation">[1]</span>; add the Micro v1 add-on text from the <code>addons/</code> directory.</li>
+<li>
+<p>Timeline: After authorship verification.</p>
+</li>
+<li>
+<p><strong>Create a <code>COMMERCIAL-LICENSE.md</code> file.</strong></p>
+</li>
+<li>What: Document what commercial activities require authorization and how to request it.</li>
+<li>Why: A restriction without a clear path to authorization is commercially useless.</li>
+<li>How: Include contact email, required information, standard terms outline, and response-time expectation.</li>
+<li>
+<p>Timeline: Same commit as license change.</p>
+</li>
+<li>
+<p><strong>Update <code>README.md</code> and marketing language.</strong></p>
+</li>
+<li>What: Replace "open source" with "source-available," "community license," or "open design" where accurate.</li>
+<li>Why: Prevents reputational backlash and avoids misrepresentation under OSI/OSHWA definitions <span class="citation">[4]</span><span class="citation">[15]</span>.</li>
+<li>How: Add a clear paragraph explaining: public for community, free for personal/small-business internal use, commercial sale requires license.</li>
+<li>Timeline: Same commit.</li>
+</ol>
+<h3>Next Steps (1–3 Months)</h3>
+<ol>
+<li><strong>Consult a Brazilian intellectual-property attorney.</strong></li>
+<li>Review OCL enforceability under Brazilian law, especially for hardware designs and software.</li>
+<li>
+<p>Draft or adapt a commercial licensing agreement template in Portuguese and English.</p>
+</li>
+<li>
+<p><strong>Register trademarks for "RadKeys" and logos.</strong></p>
+</li>
+<li>
+<p>A license restricts copying of files; a trademark protects the brand against counterfeiters using the name.</p>
+</li>
+<li>
+<p><strong>Publish a contribution policy and CLA.</strong></p>
+</li>
+<li>For future contributors, require a Contributor License Agreement that grants the project owner the right to license contributions under OCL and future versions, and to offer commercial licenses.</li>
+</ol>
+<h3>Further Research Needs</h3>
+<ol>
+<li><strong>Brazilian IP law analysis.</strong></li>
+<li>Specific enforceability of OCL's non-commercial and anti-cloning provisions in Brazil.</li>
+<li>
+<p>Whether Brazilian industrial design registration is advisable for the keypad enclosure.</p>
+</li>
+<li>
+<p><strong>Comparison with custom proprietary/commercial license.</strong></p>
+</li>
+<li>
+<p>Whether a fully custom license drafted by a Brazilian attorney would provide stronger protection than OCL, despite losing the "community license" signaling.</p>
+</li>
+<li>
+<p><strong>Influencer and reseller agreement templates.</strong></p>
+</li>
+<li>Research standard affiliate, distribution, and OEM licensing terms for hardware accessories in the medical/radiology market.</li>
+</ol>
+<hr />
+<p>: Methodology</p>
+<h3>Research Process</h3>
+<p>This report followed the Deep Research 8-phase pipeline in standard mode.</p>
+<ul>
+<li><strong>Phase 1 (SCOPE):</strong> Defined the question around combined hardware-software licenses that allow community access but restrict commercial sale, using 3D printing as the primary comparable industry.</li>
+<li><strong>Phase 2 (PLAN):</strong> Identified primary sources (OCL repository, OSHWA, license steward pages), legal commentary (/dev/lawyer, 4Additive, Adafruit), and foundational references (CERN OHL, TAPR OHL, PolyForm, Commons Clause, arXiv survey).</li>
+<li><strong>Phase 3 (RETRIEVE):</strong> Executed parallel web searches and direct fetches of primary license texts and analyses. Sources were registered in a citation manager and evidence was extracted.</li>
+<li><strong>Phase 4 (TRIANGULATE):</strong> Cross-checked claims about OCL terms against the repository, Prusa's blog, and independent legal analysis. Verified that CERN OHL and TAPR OHL permit commercial sale against SPDX and steward pages.</li>
+<li><strong>Phase 5 (SYNTHESIZE):</strong> Identified patterns, generated insights about the "source-available hardware" gap, and assessed implications for RadKeys.</li>
+<li><strong>Phase 6 (CRITIQUE):</strong> Reviewed contradictions (OCL ambiguities, community rejection, TAPR NCL deprecation) and limitations (no case law, Brazilian law gap).</li>
+<li><strong>Phase 7 (REFINE):</strong> Added recommendations for authorship verification, commercial licensing page, trademark registration, and legal review.</li>
+<li><strong>Phase 8 (PACKAGE):</strong> Assembled this report with progressive section generation.</li>
+</ul>
+<h3>Sources Consulted</h3>
+<p><strong>Total Sources:</strong> 16 registered.</p>
+<p><strong>Source Types:</strong>
+- License steward documentation: 8
+- Project/vendor blog posts: 2
+- Legal analysis / commentary: 2
+- Community Q&amp;A: 1
+- Academic paper: 1
+- Standard-setting organization: 1
+- News / trade publication: 1</p>
+<p><strong>Temporal Coverage:</strong> 2007 (TAPR NCL) to June 2026 (Prusa OCL v1.1 announcement).</p>
+<h3>Verification Approach</h3>
+<p><strong>Triangulation:</strong> Major claims about license terms were verified against primary texts rather than secondary summaries. For example, OCL's sale restriction was confirmed by reading the repository's summary and the Prusa blog, not only news articles.</p>
+<p><strong>Credibility Assessment:</strong> Primary sources (license stewards, OSHWA, Prusa) were weighted highest. Legal commentary was treated as interpretation, not fact. Community criticism was included to surface reputational risks.</p>
+<p><strong>Quality Control:</strong> Claims unsupported by evidence were excluded. Where direct fetch failed (Adafruit blog, 403), the source was cited only for its existence in search results and not used as primary evidence.</p>
+<h3>Claims-Evidence Table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Major Claim</th>
+<th>Evidence Type</th>
+<th>Supporting Sources</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>OCL v1.1 covers both hardware and software</td>
+<td>Primary text</td>
+<td><span class="citation">[1]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>OCL restricts commercial sale/replication without separate license</td>
+<td>Primary text</td>
+<td><span class="citation">[1]</span><span class="citation">[2]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>OCL is not OSI/OSHWA open source</td>
+<td>Definition + analysis</td>
+<td><span class="citation">[3]</span><span class="citation">[4]</span><span class="citation">[15]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>PolyForm/Commons Clause are software-only</td>
+<td>Primary text</td>
+<td><span class="citation">[5]</span><span class="citation">[7]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>CERN OHL and TAPR OHL allow commercial sale</td>
+<td>Primary text + SPDX</td>
+<td><span class="citation">[8]</span><span class="citation">[9]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Relicensing MIT requires contributor consent</td>
+<td>Community consensus</td>
+<td><span class="citation">[10]</span></td>
+<td>High</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>OCL has drafting ambiguities</td>
+<td>Legal commentary</td>
+<td><span class="citation">[3]</span></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>No case law interprets OCL</td>
+<td>Known gap</td>
+<td>—</td>
+<td>Low (acknowledged)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Report Metadata</h2>
+<p><strong>Research Mode:</strong> Standard<br />
+<strong>Total Sources:</strong> 16<br />
+<strong>Approximate Word Count:</strong> 4,200<br />
+<strong>Research Duration:</strong> ~25 minutes<br />
+<strong>Generated:</strong> 2026-07-15<br />
+<strong>Validation Status:</strong> Self-reviewed; no automated validation run. Recommend running <code>validate_report.py</code> and <code>verify_citations.py</code> before publication.</p>
+
+            <div class="bibliography">
+                <div class="section-title">Bibliography</div>
+                <div class="bib-entry"><span class="bib-number">[1]</span> OpenCommunityLicence (2026). "OpenCommunityLicence/OpenCommunityLicence — OCL v1.1 Repository". GitHub. https://github.com/OpenCommunityLicence/OpenCommunityLicence (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[2]</span> Prusa Research (2026). "Open Community License v1.1: The New Plugin System, More Examples, and Your Questions Answered". Original Prusa 3D Printers Blog. https://blog.prusa3d.com/open-community-license-v1-1-the-new-plugin-system-more-examples-and-your-questions-answered_137202/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[3]</span> Mitchell, K. (2026). "Open Community License v1". /dev/lawyer. https://writing.kemitchell.com/2026/03/16/Open-Community-License-1 (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[4]</span> Open Source Hardware Association. "Open Source Hardware Definition 1.0". OSHWA. https://oshwa.org/definition/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[5]</span> PolyForm Project. "PolyForm Noncommercial License 1.0.0". https://polyformproject.org/licenses/noncommercial/1.0.0 (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[6]</span> Fair-code. "Fair-code — Software Model and Principles". https://faircode.io/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[7]</span> Commons Clause. "Commons Clause License Condition v1.0". https://commonsclause.com/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[8]</span> CERN. "CERN Open Hardware Licence Version 2". https://cern-ohl.web.cern.ch/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[9]</span> TAPR. "The TAPR Open Hardware License". https://tapr.org/the-tapr-open-hardware-license/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[10]</span> Open Source Stack Exchange. "How can a project be relicensed?". https://opensource.stackexchange.com/questions/33/how-can-a-project-be-relicensed (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[11]</span> Montón, M. &amp; Salazar, X. (2020). "On licenses for [Open] Hardware". arXiv:2010.09039 [cs.OH]. https://arxiv.org/abs/2010.09039 (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[12]</span> TAPR. "TAPR Noncommercial Hardware License v1.0". https://files.tapr.org/OHL/TAPR_Noncommercial_Hardware_License_v1.0.txt (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[13]</span> The Turing Way. "Open Hardware Licenses". https://book.the-turing-way.org/reproducible-research/licensing/licensing-hardware/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[14]</span> Open Source Initiative. "The MIT License". https://opensource.org/license/MIT (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[15]</span> 4Additive (2026). "Prusa's OCL: open source or hidden barrier?". https://www.4additive.com/en/prusa-ocl-open-source-hidden-barrier/ (Retrieved: 2026-07-15)</span></div>
+<div class="bib-entry"><span class="bib-number">[16]</span> Tom's Hardware (2025). "Prusa Research introduces the Open Community License to protect open source 3D printing hardware". https://www.tomshardware.com/3d-printing/prusa-research-introduces-the-open-community-license-to-protect-open-source-3d-printing-hardware-new-rules-aimed-at-addressing-industry-abuses (Retrieved: 2026-07-15)</span></div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
