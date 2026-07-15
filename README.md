@@ -5,7 +5,7 @@ the clipboard without stealing focus from the RIS/PACS.
 
 ![RadKeys Screenshot](screenshot.png)
 
-[![License](https://img.shields.io/badge/license-OCL%20v1.1-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-RadKeys%20Source--Available%20License%20v1.0-blue)](LICENSE)
 
 ## What it is
 
@@ -188,12 +188,11 @@ CI auto-release), and project conventions.
 
 ## License
 
-RadKeys is distributed under the **Open Community License v1.1** ([OCL v1.1](LICENSE)).
+RadKeys is distributed under the **RadKeys Source-Available License v1.0**
+([LICENSE](LICENSE)).
 
-The hardware design, firmware, and host software are publicly available for
-personal use, community modification, and right-to-repair. Any commercial use,
-including internal business use, manufacturing, resale, or SaaS offering,
-requires a separate written license — see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md).
+The hardware design, firmware, and host software are free for personal,
+educational, and hobby use. Any commercial use requires a separate written
+license — see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md).
 
-This is a source-available / community license, not an OSI-approved open-source
-license or OSHWA-certified open-source hardware license.
+This is not an open source license.

@@ -352,9 +352,9 @@ var messages = map[string]map[string]string{
 		"it": "Autore: docg1701",
 	},
 	"about.license": {
-		"en": "License: OCL v1.1", "pt-BR": "Licença: OCL v1.1", "pt-PT": "Licença: OCL v1.1",
-		"es": "Licencia: OCL v1.1", "fr": "Licence : OCL v1.1", "de": "Lizenz: OCL v1.1",
-		"it": "Licenza: OCL v1.1",
+		"en": "License: RadKeys Source-Available v1.0", "pt-BR": "Licença: RadKeys Source-Available v1.0", "pt-PT": "Licença: RadKeys Source-Available v1.0",
+		"es": "Licencia: RadKeys Source-Available v1.0", "fr": "Licence : RadKeys Source-Available v1.0", "de": "Lizenz: RadKeys Source-Available v1.0",
+		"it": "Licenza: RadKeys Source-Available v1.0",
 	},
 	"about.repository": {
 		"en": "Repository: ", "pt-BR": "Repositório: ", "pt-PT": "Repositório: ",

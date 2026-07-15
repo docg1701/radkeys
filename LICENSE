@@ -1,68 +1,31 @@
-Open Community License (OCL v1.1)
+RadKeys Source-Available License v1.0
 
 Copyright (c) 2026 Not a dev.
 
-This RadKeys distribution is licensed under the Open Community License v1.1.
+Permission is granted to any person to use, copy, modify, study, and repair this
+software, firmware, and hardware design for personal, educational, or hobby
+use, free of charge.
 
----------------------------------------------------------------------------
-Open Community License (OCL v1.1)
----------------------------------------------------------------------------
+Commercial use of this work is not permitted without a separate written license
+from the author. Commercial use includes, but is not limited to:
 
-OCL pertains to intellectual property applied in licensor's product (licensed
-item - hardware and/or software) and/or its components which is distributed as
-is under OCL, including copyright, registered design or design patent, and
-(utility) patent.
+- selling, reselling, or distributing the device, kits, components, or software;
+- offering the software as a hosted or SaaS service for a fee;
+- manufacturing the device or derivatives for sale;
+- using the work in any business activity.
 
-All licensor's copyrights, designs, and patents as far as relevant to products
-and/or its components under OCL are COMMUNITY-OPEN, as the aim of OCL is to
-allow open access to relevant community including the essential right, the
-right-to-repair, by giving users complete freedom of use, copy, modification,
-and hack, while promoting a fair competition by securing intellectual property
-rights to prevent vendor lock-in and patent trolling.
+The author may grant commercial licenses on any terms, including royalties, flat
+fees, or no fee.
 
-NOTE that any component provided under a license incompatible with OCL and as
-such included in or distributed alongside the product and/or its component
-remains unaffected by OCL.
+Consulting, support, or training services provided for a product that has already
+been built and is in use by the customer do not require a commercial license,
+provided the service does not include selling, distributing, or replicating the
+work itself.
 
-Also NOTE that OCL does not override imperative exceptions and limitations under
-applicable law.
+This license is not an open source license. The author reserves all rights not
+expressly granted.
 
-As a non-commercial END USER
-
-YOU MAY use, copy, modify, hack the product and/or its components as you wish!
-
-YOU SHOULD support the community by sharing your creations and modifications.
-
-If you distribute your creations, modifications, or any such derivatives YOU
-MUST do so under OCL allowing other community members to do everything that YOU
-MAY. This does not concern your creations and modifications that are not derived
-from the product and/or its components.
-
-As a commercial BUSINESS USER
-
-YOU MAY use the product and modify it to your use case solely for your internal
-business use (including internal production), but only after obtaining a separate
-written business license from the licensor.
-
-YOU MUST NOT copy or in any way replicate the product and/or its components
-and/or its derivatives for any commercial purpose excluding your internal
-right-to-repair without obtaining a separate business license or repair license.
-
-Licensor's products and/or its components under OCL MUST NOT BE subject to any
-systematic or automated text and/or data mining or other text and/or data
-collection activity in relation to the product without explicit permission.
-
-Licensor may expand conditions of OCL distribution only by including add-on
-conditions (one or more) defined and provided in OCL repository. Any
-distribution under OCL requires clear reference to an OCL version and applicable
-add-on conditions and their version. Any allowed distribution of derivatives
-must retain applicable add-on conditions.
-
-To promote ease of understanding of OCL licensor may keep and update a database
-of products and/or its components licensed under OCL and good practice.
-
-For practical examples of how this license applies, see the examples/
-directory. For available add-on conditions, see the addons/ directory.
-
-Authoritative OCL texts and add-ons are published at:
-https://github.com/OpenCommunityLicence/OpenCommunityLicence
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
