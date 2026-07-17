@@ -158,9 +158,8 @@ type appUI struct {
 	keypad          *fyne.Container
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
-	mapSplit        *container.Split // cached HSplit for the side panel
-	mapVisible      bool             // true when panel is shown
-	mapToggle       *widget.Button   // ◀ / ▶ collapse button
+	mapVisible      bool              // true when panel is shown
+	mapScroll       *container.Scroll // cached VScroll wrapping navMap
 	breadcrumbLabel *widget.Label
 }
 
@@ -641,35 +640,48 @@ func (u *appUI) rebuildTabs() {
 	u.win.SetContent(container.NewBorder(u.headerBar(), nil, nil, nil, u.tabs))
 }
 
-// shortcutsTab wraps the existing preview/keypad split with the
-// collapsible map panel on the right. The collapse button lives on
-// the right edge of the main panel so it stays visible when the map
-// is hidden.
+// shortcutsTab returns the shortcuts tab content: the preview/keypad
+// vertical split, optionally with the map panel on the right.
 func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.navMap == nil {
 		u.navMap = newMapWidget(u.cfg)
+		u.mapScroll = container.NewVScroll(u.navMap)
 	}
 	th, v := u.a.Settings().Theme(), u.a.Settings().ThemeVariant()
 	u.navMap.SetTheme(th, v)
 
-	if u.mapSplit == nil {
-		// Button lives on the left panel's right edge — survives collapse.
-		u.mapToggle = widget.NewButton("\u25C0", func() {
-			u.mapVisible = !u.mapVisible
-			if u.mapVisible {
-				u.mapSplit.Offset = mapOffsetExpanded
-				u.mapToggle.SetText("\u25C0")
-			} else {
-				u.mapSplit.Offset = mapOffsetCollapsed
-				u.mapToggle.SetText("\u25B6")
-			}
-		})
-		u.mapToggle.Importance = widget.LowImportance
-		left := container.NewBorder(nil, nil, nil, u.mapToggle, main)
-		u.mapSplit = container.NewHSplit(left, container.NewVScroll(u.navMap))
-		u.mapSplit.Offset = mapOffsetExpanded
+	icon := fyneTheme.NavigateBackIcon()
+	if !u.mapVisible {
+		icon = fyneTheme.NavigateNextIcon()
 	}
-	return u.mapSplit
+	toggle := widget.NewButtonWithIcon("", icon, func() {
+		u.toggleMap()
+	})
+	toggle.Importance = widget.LowImportance
+
+	if u.mapVisible {
+		left := container.NewBorder(nil, nil, nil, toggle, main)
+		split := container.NewHSplit(left, u.mapScroll)
+		split.Offset = mapOffsetExpanded
+		return split
+	}
+	return container.NewBorder(nil, nil, nil, toggle, main)
+}
+
+// toggleMap collapses or expands the side panel in-place (no full tab rebuild).
+func (u *appUI) toggleMap() {
+	u.mapVisible = !u.mapVisible
+	if u.tabs == nil {
+		return
+	}
+	previewArea := u.previewBox()
+	keypadArea := container.NewPadded(u.keypad)
+	main := container.NewVSplit(previewArea, keypadArea)
+	items := u.tabs.Items
+	if len(items) > 0 {
+		items[0].Content = u.shortcutsTab(main)
+		u.tabs.Refresh()
+	}
 }
 
 // headerBar is the top-of-window row: breadcrumb fills the center,
@@ -762,10 +774,7 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // For RadKeys custom themes it is derived from the resolved background color,
 // so it needs no app/global state. For the adaptive system/DefaultTheme it
 // falls back to the variant supplied by the caller.
-const (
-	mapOffsetCollapsed = 1.0
-	mapOffsetExpanded  = 0.75
-)
+const mapOffsetExpanded = 0.75
 
 func variantFor(th fyne.Theme, fallback fyne.ThemeVariant) fyne.ThemeVariant {
 	if _, ok := th.(themes.CustomThemeMarker); ok {
