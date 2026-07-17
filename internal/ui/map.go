@@ -1,8 +1,7 @@
 package ui
 
 import (
-	"math"
-	"math/rand"
+	"slices"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -58,56 +57,71 @@ func buildMapGraph(cfg *config.Config) mapGraph {
 	return g
 }
 
-// layoutFR assigns each node a position inside the (w, h) box. Seeded so
-// the same graph always produces the same positions (test-friendly).
-func layoutFR(g mapGraph, w, h float64) mapGraph {
-	rng := rand.New(rand.NewSource(42))
+// layoutLayered assigns node positions as a vertical cascade. The first
+// screen (root) sits at the top; each BFS depth becomes a row below it.
+// Nodes at the same depth spread evenly across the available width.
+// Isolated nodes (not reachable from root) are placed in a final row.
+func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	n := len(g.nodes)
 	if n == 0 {
 		return g
 	}
-	pos := make([][2]float64, n)
-	for i := range pos {
-		pos[i] = [2]float64{rng.Float64() * w, rng.Float64() * h}
+
+	// adjacency list from edges
+	children := make([][]int, n)
+	for _, e := range g.edges {
+		children[e[0]] = append(children[e[0]], e[1])
 	}
-	k := math.Sqrt((w * h) / float64(n))
-	t := w / 10
-	const iters = 200
-	for iter := 0; iter < iters; iter++ {
-		disp := make([][2]float64, n)
-		for i := 0; i < n; i++ {
-			for j := 0; j < n; j++ {
-				if i == j {
-					continue
+
+	// BFS from node 0 (the first screen = home)
+	depth := make([]int, n)
+	for i := range depth {
+		depth[i] = -1
+	}
+	queue := []int{0}
+	depth[0] = 0
+	maxDepth := 0
+	for len(queue) > 0 {
+		u := queue[0]
+		queue = queue[1:]
+		for _, v := range children[u] {
+			if depth[v] == -1 {
+				depth[v] = depth[u] + 1
+				if depth[v] > maxDepth {
+					maxDepth = depth[v]
 				}
-				dx := pos[i][0] - pos[j][0]
-				dy := pos[i][1] - pos[j][1]
-				d := math.Max(math.Hypot(dx, dy), 0.01)
-				fr := (k * k) / d
-				disp[i][0] += (dx / d) * fr
-				disp[i][1] += (dy / d) * fr
+				queue = append(queue, v)
 			}
 		}
-		for _, e := range g.edges {
-			u, v := e[0], e[1]
-			dx := pos[u][0] - pos[v][0]
-			dy := pos[u][1] - pos[v][1]
-			d := math.Max(math.Hypot(dx, dy), 0.01)
-			fa := (d * d) / k
-			disp[u][0] -= (dx / d) * fa
-			disp[u][1] -= (dy / d) * fa
-			disp[v][0] += (dx / d) * fa
-			disp[v][1] += (dy / d) * fa
-		}
-		for i := 0; i < n; i++ {
-			d := math.Max(math.Hypot(disp[i][0], disp[i][1]), 0.01)
-			pos[i][0] = clamp(pos[i][0]+disp[i][0]/d*math.Min(d, t), 0, w)
-			pos[i][1] = clamp(pos[i][1]+disp[i][1]/d*math.Min(d, t), 0, h)
-		}
-		t *= 0.95
 	}
-	for i, p := range pos {
-		g.nodes[i].pos = fyne.NewPos(float32(p[0]), float32(p[1]))
+
+	// unvisited nodes go to a final row below everything
+	for i := range depth {
+		if depth[i] == -1 {
+			maxDepth++
+			depth[i] = maxDepth
+		}
+	}
+
+	// group nodes by depth
+	levels := make([][]int, maxDepth+1)
+	for i, d := range depth {
+		levels[d] = append(levels[d], i)
+	}
+
+	rowH := h / float64(maxDepth+1)
+	for d, ids := range levels {
+		y := float64(d)*rowH + rowH/2 - mapNodeH/2
+		colW := w / float64(len(ids))
+		// ponytail: stable horizontal order via sorted ids so the
+		// TestLayoutDeterministic check still passes.
+		sorted := make([]int, len(ids))
+		copy(sorted, ids)
+		slices.Sort(sorted)
+		for j, id := range sorted {
+			x := float64(j)*colW + colW/2 - mapNodeW/2
+			g.nodes[id].pos = fyne.NewPos(float32(x), float32(y))
+		}
 	}
 	return g
 }
@@ -136,7 +150,7 @@ type mapWidget struct {
 }
 
 func newMapWidget(cfg *config.Config) *mapWidget {
-	w := &mapWidget{graph: layoutFR(buildMapGraph(cfg), mapPanelWidth-mapPad*2, 300-mapPad*2)}
+	w := &mapWidget{graph: layoutLayered(buildMapGraph(cfg), mapPanelWidth-mapPad*2, 300-mapPad*2)}
 	w.ExtendBaseWidget(w)
 	return w
 }

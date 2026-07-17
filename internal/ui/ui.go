@@ -656,16 +656,13 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	return u.mapSplit
 }
 
-// headerBar is the top-of-window row: breadcrumb on the left, a "|"
-// separator, and the device-status message on the right. Replaces the
-// previous top-border that held only u.status.
+// headerBar is the top-of-window row: breadcrumb fills the center,
+// device-status message sits on the right. Border layout keeps them
+// apart naturally — no separator needed.
 func (u *appUI) headerBar() fyne.CanvasObject {
 	u.breadcrumbLabel = widget.NewLabel(u.breadcrumb())
 	u.breadcrumbLabel.TextStyle = fyne.TextStyle{Italic: true}
-	sep := widget.NewLabel("|")
-	return container.NewBorder(nil, nil, nil, u.status,
-		container.NewHBox(u.breadcrumbLabel, sep),
-	)
+	return container.NewBorder(nil, nil, nil, u.status, u.breadcrumbLabel)
 }
 
 // breadcrumb returns the ">"-separated path of screen names from the back

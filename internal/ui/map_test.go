@@ -49,13 +49,36 @@ func TestLayoutDeterministic(t *testing.T) {
 		App:     config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
 		Screens: makeLinearScreens(10),
 	}
-	g1 := layoutFR(buildMapGraph(cfg), 400, 300)
-	g2 := layoutFR(buildMapGraph(cfg), 400, 300)
+	g1 := layoutLayered(buildMapGraph(cfg), 400, 300)
+	g2 := layoutLayered(buildMapGraph(cfg), 400, 300)
 	for i := range g1.nodes {
 		if g1.nodes[i].pos != g2.nodes[i].pos {
 			t.Errorf("node %d position drift: %v vs %v",
 				i, g1.nodes[i].pos, g2.nodes[i].pos)
 		}
+	}
+}
+
+func TestLayoutLayeredRootAtTop(t *testing.T) {
+	cfg := &config.Config{
+		App: config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		Screens: []config.Screen{
+			{ID: "home", Name: "Home", Buttons: []config.Button{
+				{Row: 0, Col: 0, Label: "go a", Action: config.ActionNavigate, Target: "a"},
+			}},
+			{ID: "a", Name: "A", Buttons: []config.Button{
+				{Row: 0, Col: 0, Label: "go b", Action: config.ActionNavigate, Target: "b"},
+			}},
+			{ID: "b", Name: "B"},
+		},
+	}
+	g := layoutLayered(buildMapGraph(cfg), 400, 300)
+	// home (node 0) must be above a (node 1), which must be above b (node 2)
+	if g.nodes[0].pos.Y >= g.nodes[1].pos.Y {
+		t.Errorf("home (node 0) Y=%v should be above a (node 1) Y=%v", g.nodes[0].pos.Y, g.nodes[1].pos.Y)
+	}
+	if g.nodes[1].pos.Y >= g.nodes[2].pos.Y {
+		t.Errorf("a (node 1) Y=%v should be above b (node 2) Y=%v", g.nodes[1].pos.Y, g.nodes[2].pos.Y)
 	}
 }
 
