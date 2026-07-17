@@ -228,7 +228,7 @@ type mapRenderer struct {
 	m        *mapWidget
 	objects  []fyne.CanvasObject
 	nodeObjs map[string]*canvas.Circle // id -> dot, for in-place color swap
-	lineObjs []canvas.Line             // parallel to m.graph.edges
+	lineObjs []*canvas.Line            // parallel to m.graph.edges
 }
 
 func (r *mapRenderer) MinSize() fyne.Size { return r.m.MinSize() }
@@ -255,12 +255,13 @@ func (r *mapRenderer) Layout(size fyne.Size) {
 		c.Resize(fyne.NewSize(mapNodeW, mapNodeH))
 		c.Move(p)
 	}
-	for i := range r.lineObjs {
+	for i, ln := range r.lineObjs {
 		e := r.m.graph.edges[i]
 		a := r.m.graph.nodes[e[0]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
 		b := r.m.graph.nodes[e[1]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
-		r.lineObjs[i].Position1 = a
-		r.lineObjs[i].Position2 = b
+		ln.Position1 = a
+		ln.Position2 = b
+		ln.Refresh()
 	}
 }
 
@@ -285,7 +286,7 @@ func (r *mapRenderer) Refresh() {
 		a := r.m.graph.nodes[e[0]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
 		b := r.m.graph.nodes[e[1]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
 		line.Position1, line.Position2 = a, b
-		r.lineObjs = append(r.lineObjs, *line)
+		r.lineObjs = append(r.lineObjs, line)
 		r.objects = append(r.objects, line)
 	}
 	// Dots.
