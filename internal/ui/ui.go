@@ -159,6 +159,7 @@ type appUI struct {
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
 	mapSplit        *container.Split // cached HSplit for the side panel
+	mapVisible      bool             // true when panel is shown
 	breadcrumbLabel *widget.Label
 }
 
@@ -640,8 +641,9 @@ func (u *appUI) rebuildTabs() {
 }
 
 // shortcutsTab wraps the existing preview/keypad split with the
-// map panel on the right. The map is a purely visual guide — no
-// click-to-navigate, no collapse button.
+// collapsible map panel on the right. The map content (dots+lines) is
+// purely visual — no click-to-navigate. The panel is toggled via a
+// small chevron button above the map.
 func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.navMap == nil {
 		u.navMap = newMapWidget(u.cfg)
@@ -650,7 +652,19 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	u.navMap.SetTheme(th, v)
 
 	if u.mapSplit == nil {
-		u.mapSplit = container.NewHSplit(main, container.NewVScroll(u.navMap))
+		mapScroll := container.NewVScroll(u.navMap)
+		collapseBtn := widget.NewButton("\u25C0", func() {
+			u.mapVisible = !u.mapVisible
+			if u.mapVisible {
+				u.mapSplit.Offset = mapOffsetExpanded
+			} else {
+				u.mapSplit.Offset = mapOffsetCollapsed
+			}
+			u.mapSplit.Refresh()
+		})
+		collapseBtn.Importance = widget.LowImportance
+		mapPanel := container.NewBorder(collapseBtn, nil, nil, nil, mapScroll)
+		u.mapSplit = container.NewHSplit(main, mapPanel)
 		u.mapSplit.Offset = mapOffsetExpanded
 	}
 	return u.mapSplit
