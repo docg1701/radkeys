@@ -5,6 +5,7 @@ package ui
 import (
 	"fmt"
 	"log"
+	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -650,9 +651,9 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	th, v := u.a.Settings().Theme(), u.a.Settings().ThemeVariant()
 	u.navMap.SetTheme(th, v)
 
-	icon := fyneTheme.NavigateBackIcon()
+	icon := fyneTheme.NavigateNextIcon()
 	if !u.mapVisible {
-		icon = fyneTheme.NavigateNextIcon()
+		icon = fyneTheme.NavigateBackIcon()
 	}
 	toggle := widget.NewButtonWithIcon("", icon, func() {
 		u.toggleMap()
@@ -662,7 +663,7 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.mapVisible {
 		left := container.NewBorder(nil, nil, nil, toggle, main)
 		split := container.NewHSplit(left, u.mapScroll)
-		split.Offset = mapOffsetExpanded
+		split.Offset = u.mapSplitOffset()
 		return split
 	}
 	return container.NewBorder(nil, nil, nil, toggle, main)
@@ -775,6 +776,22 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // so it needs no app/global state. For the adaptive system/DefaultTheme it
 // falls back to the variant supplied by the caller.
 const mapOffsetExpanded = 0.75
+
+// mapSplitOffset returns the HSplit offset that gives the map its natural
+// width, capped at 50% of the window width so the main content never gets
+// squeezed below half the window.
+func (u *appUI) mapSplitOffset() float64 {
+	winW := float64(u.win.Canvas().Size().Width)
+	if winW <= 0 {
+		return mapOffsetExpanded
+	}
+	mapW := math.Min(float64(mapPanelWidth), winW*0.5)
+	offset := 1.0 - mapW/winW
+	if offset < 0.5 {
+		return 0.5
+	}
+	return offset
+}
 
 func variantFor(th fyne.Theme, fallback fyne.ThemeVariant) fyne.ThemeVariant {
 	if _, ok := th.(themes.CustomThemeMarker); ok {
