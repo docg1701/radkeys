@@ -65,7 +65,8 @@ func buildMapGraph(cfg *config.Config) mapGraph {
 // layoutLayered assigns node positions as a vertical cascade. The first
 // screen (root) sits at the top; each BFS depth becomes a row below it.
 // Nodes at the same depth spread evenly across the available width.
-// Isolated nodes (not reachable from root) are placed in a final row.
+// Rows are distributed evenly across the full height h so the graph
+// always fills the panel, never squishes at the top.
 func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	n := len(g.nodes)
 	if n == 0 {
@@ -117,10 +118,8 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	// Build flat list of rows (a depth may span multiple rows if too wide).
 	type row struct {
 		nodes []int
-		y     float64
 	}
 	var rows []row
-	rowY := float64(mapNodeH) / 2 // start with top padding
 	maxNodesPerRow := int(math.Max(1, w/mapNodeSpacing))
 	for d := 0; d <= maxDepth; d++ {
 		ids := levels[d]
@@ -130,28 +129,36 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 		sorted := make([]int, len(ids))
 		copy(sorted, ids)
 		slices.Sort(sorted)
-		// Track max per level across all sub-rows
 		if len(ids) > g.maxPerLevel {
 			g.maxPerLevel = len(ids)
 		}
-		// Split into sub-rows if needed
 		for start := 0; start < len(sorted); start += maxNodesPerRow {
 			end := start + maxNodesPerRow
 			if end > len(sorted) {
 				end = len(sorted)
 			}
-			rows = append(rows, row{nodes: sorted[start:end], y: rowY})
-			rowY += mapRowH
+			rows = append(rows, row{nodes: sorted[start:end]})
 		}
 	}
 
-	// Position each sub-row
+	// Distribute rows evenly across the full height h so the graph always
+	// fills the panel, never squishes at the top.
 	g.totalRows = len(rows)
-	for _, r := range rows {
+	usableH := h - mapPad*2
+	if usableH < mapNodeH {
+		usableH = mapNodeH
+	}
+	rowSpacing := float64(mapRowH) // fallback for zero-height edge case
+	if len(rows) > 0 {
+		rowSpacing = usableH / float64(len(rows))
+	}
+	// Position each sub-row: center of each row band minus half node height.
+	for i, r := range rows {
+		y := mapPad + float64(i)*rowSpacing + rowSpacing/2 - mapNodeH/2
 		colW := w / float64(len(r.nodes))
 		for j, id := range r.nodes {
 			x := float64(j)*colW + colW/2 - mapNodeW/2
-			g.nodes[id].pos = fyne.NewPos(float32(x), float32(r.y))
+			g.nodes[id].pos = fyne.NewPos(float32(x), float32(y))
 		}
 	}
 	return g
