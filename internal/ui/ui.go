@@ -31,8 +31,8 @@ import (
 	"github.com/docg1701/radkeys/internal/widgetutil"
 )
 
-func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) error {
-	u, err := buildMainUI(cfg, configPath, dev, version, mock, deviceOpenErr)
+func Run(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool) error {
+	u, err := buildMainUI(cfg, configPath, dev, version, mock)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func Run(cfg *config.Config, configPath string, dev hid.Device, version string, 
 }
 
 // buildMainUI creates the Fyne app, window, and initial tab layout.
-func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool, deviceOpenErr error) (*appUI, error) {
+func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version string, mock bool) (*appUI, error) {
 	a := app.New()
 	a.Settings().SetTheme(resolveFullTheme(cfg))
 	a.SetIcon(fyne.NewStaticResource("icon.png", appIconData(cfg)))
@@ -81,10 +81,6 @@ func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version 
 
 	if u.mock {
 		u.setStatus(i18n.T("status.mock_mode"))
-	}
-	if mock && deviceOpenErr != nil {
-		msg := fmt.Sprintf(i18n.T("device.not_found_message"), deviceOpenErr.Error())
-		dialog.ShowInformation(i18n.T("device.not_found_title"), msg, w)
 	}
 	return u, nil
 }

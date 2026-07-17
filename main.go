@@ -20,7 +20,7 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.15.2"
+var Version = "0.15.3"
 
 var flagConfig = flag.String("c", "", "Path to radkeys.config.toml")
 
@@ -48,7 +48,7 @@ func main() {
 		dev = hid.NewMock()
 	}
 
-	if err := ui.Run(cfg, path, dev, Version, isMock, devOpenErr); err != nil {
+	if err := ui.Run(cfg, path, dev, Version, isMock); err != nil {
 		log.Fatalf("radkeys: %v", err)
 	}
 }
