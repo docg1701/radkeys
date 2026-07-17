@@ -27,7 +27,7 @@ func Open(dev config.Device) (Device, error) {
 	}
 	switch dev.Protocol {
 	case config.ProtocolDIY:
-		dd := &diyDevice{deviceBase: newBase(d)}
+		dd := newDIYDevice(d)
 		dd.versionMajor, dd.versionMinor, dd.versionKnown = readFirmwareVersion(d)
 		return dd, nil
 	default:
@@ -84,32 +84,17 @@ type hidDevice interface {
 	Close() error
 }
 
-// deviceBase carries the hidapi handle and the event/stop channels.
-type deviceBase struct {
-	dev         hidDevice
-	ch          chan Event
-	stop        chan struct{}
-	done        chan struct{}
-	once        sync.Once
-	dropCount   int
-	lastDropLog time.Time
-}
-
-func newBase(dev hidDevice) deviceBase {
-	return deviceBase{dev: dev, ch: make(chan Event, 64), stop: make(chan struct{}), done: make(chan struct{})}
-}
-
-func (b *deviceBase) Events() <-chan Event { return b.ch }
+func (d *diyDevice) Events() <-chan Event { return d.ch }
 
 // Close is idempotent: a second call returns nil without re-closing the
 // device or panicking on a closed channel. The event channel is closed by
 // loop() when it exits (stop or read error), so pollHID stops cleanly.
-func (b *deviceBase) Close() error {
+func (d *diyDevice) Close() error {
 	var err error
-	b.once.Do(func() {
-		close(b.stop)
-		<-b.done
-		err = b.dev.Close()
+	d.once.Do(func() {
+		close(d.stop)
+		<-d.done
+		err = d.dev.Close()
 	})
 	return err
 }
@@ -117,15 +102,15 @@ func (b *deviceBase) Close() error {
 // emit sends an event. Non-blocking: if the consumer is behind and the
 // channel is full, the event is dropped and counted for logging. Blocking
 // the HID read loop is not safe because a stuck UI would freeze the device.
-func (b *deviceBase) emit(e Event) {
+func (d *diyDevice) emit(e Event) {
 	select {
-	case b.ch <- e:
+	case d.ch <- e:
 	default:
-		b.dropCount++
-		if b.lastDropLog.IsZero() || time.Since(b.lastDropLog) > 5*time.Second {
-			log.Printf("radkeys: hid event dropped: channel full; %d event(s) lost since last log", b.dropCount)
-			b.dropCount = 0
-			b.lastDropLog = time.Now()
+		d.dropCount++
+		if d.lastDropLog.IsZero() || time.Since(d.lastDropLog) > 5*time.Second {
+			log.Printf("radkeys: hid event dropped: channel full; %d event(s) lost since last log", d.dropCount)
+			d.dropCount = 0
+			d.lastDropLog = time.Now()
 		}
 	}
 }
@@ -144,10 +129,26 @@ const (
 // [row, col] via HID vendor-defined (TinyUSB on RP2040-Zero), and writes the
 // fire-paste vendor OUT command.
 type diyDevice struct {
-	deviceBase
+	dev         hidDevice
+	ch          chan Event
+	stop        chan struct{}
+	done        chan struct{}
+	once        sync.Once
+	dropCount   int
+	lastDropLog time.Time
+
 	versionMajor byte
 	versionMinor byte
 	versionKnown bool
+}
+
+func newDIYDevice(dev hidDevice) *diyDevice {
+	return &diyDevice{
+		dev:  dev,
+		ch:   make(chan Event, 64),
+		stop: make(chan struct{}),
+		done: make(chan struct{}),
+	}
 }
 
 func (d *diyDevice) Open() error {

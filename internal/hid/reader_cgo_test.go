@@ -84,7 +84,7 @@ func TestDIYDeviceReportDelivered(t *testing.T) {
 	dev := newFakeHIDDevice([]readCall{
 		{report: []byte{2, 5}, n: 2, err: nil},
 	})
-	r := &diyDevice{deviceBase: newBase(dev)}
+	r := newDIYDevice(dev)
 	if err := r.Open(); err != nil {
 		t.Fatalf("Open: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestDIYDeviceReadErrorClosesEvents(t *testing.T) {
 	dev := newFakeHIDDevice([]readCall{
 		{err: readErr},
 	})
-	r := &diyDevice{deviceBase: newBase(dev)}
+	r := newDIYDevice(dev)
 	_ = r.Open()
 
 	select {
@@ -131,7 +131,7 @@ func TestDIYDeviceReadErrorClosesEvents(t *testing.T) {
 
 func TestDIYDeviceStopClosesEvents(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	r := &diyDevice{deviceBase: newBase(dev)}
+	r := newDIYDevice(dev)
 	_ = r.Open()
 
 	if err := r.Close(); err != nil {
@@ -154,7 +154,7 @@ func TestDIYDeviceStopClosesEvents(t *testing.T) {
 
 func TestDIYDeviceCloseIdempotent(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	r := &diyDevice{deviceBase: newBase(dev)}
+	r := newDIYDevice(dev)
 	_ = r.Open()
 	_ = r.Close()
 	if err := r.Close(); err != nil {
@@ -166,7 +166,7 @@ func TestDIYDeviceCloseIdempotent(t *testing.T) {
 }
 
 func TestEmitLogsWhenChannelFull(t *testing.T) {
-	br := deviceBase{
+	br := diyDevice{
 		ch:   make(chan Event, 1),
 		stop: make(chan struct{}),
 		done: make(chan struct{}),
@@ -195,7 +195,7 @@ func TestEmitLogsWhenChannelFull(t *testing.T) {
 
 func TestDIYDeviceFireCommandWritesCtrlBytes(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	d := &diyDevice{deviceBase: newBase(dev)}
+	d := newDIYDevice(dev)
 	if err := d.FireCommand(CmdFirePaste, byte(ModifierCtrl)); err != nil {
 		t.Fatalf("FireCommand: %v", err)
 	}
@@ -211,7 +211,7 @@ func TestDIYDeviceFireCommandWritesCtrlBytes(t *testing.T) {
 
 func TestDIYDeviceFireCommandWritesGUIBytes(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	d := &diyDevice{deviceBase: newBase(dev)}
+	d := newDIYDevice(dev)
 	if err := d.FireCommand(CmdFirePaste, byte(ModifierGUI)); err != nil {
 		t.Fatalf("FireCommand: %v", err)
 	}
@@ -227,7 +227,7 @@ func TestDIYDeviceFireCommandWritesGUIBytes(t *testing.T) {
 
 func TestDIYDeviceFireCommandSelectAllGUI(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	d := &diyDevice{deviceBase: newBase(dev)}
+	d := newDIYDevice(dev)
 	if err := d.FireCommand(CmdSelectAll, byte(ModifierGUI)); err != nil {
 		t.Fatalf("FireCommand: %v", err)
 	}
@@ -367,7 +367,10 @@ func TestReadFirmwareVersionAcceptsFirstPlausibleReply(t *testing.T) {
 func TestDIYDeviceVersionKnown(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
 	d := &diyDevice{
-		deviceBase:   newBase(dev),
+		dev:          dev,
+		ch:           make(chan Event, 64),
+		stop:         make(chan struct{}),
+		done:         make(chan struct{}),
 		versionMajor: 1,
 		versionMinor: 0,
 		versionKnown: true,
@@ -380,7 +383,7 @@ func TestDIYDeviceVersionKnown(t *testing.T) {
 
 func TestDIYDeviceVersionUnknown(t *testing.T) {
 	dev := newFakeHIDDevice(nil)
-	d := &diyDevice{deviceBase: newBase(dev)}
+	d := newDIYDevice(dev)
 	_, _, err := d.Version()
 	if err == nil {
 		t.Fatal("Version() should return error when version is unknown")

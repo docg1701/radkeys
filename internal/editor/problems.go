@@ -22,16 +22,11 @@ func (e *Editor) buildProblems() fyne.CanvasObject {
 	}
 	items := make([]fyne.CanvasObject, 0, len(issues))
 	for _, issue := range issues {
-		items = append(items, helpLine(e.issueMessage(issue)))
+		lbl := widget.NewLabel(e.issueMessage(issue))
+		lbl.TextStyle = fyne.TextStyle{Italic: true}
+		items = append(items, lbl)
 	}
 	return container.NewVBox(items...)
-}
-
-// helpLine creates an italic helper label.
-func helpLine(text string) fyne.CanvasObject {
-	lbl := widget.NewLabel(text)
-	lbl.TextStyle = fyne.TextStyle{Italic: true}
-	return lbl
 }
 
 // refreshProblems rebuilds the validation strip.

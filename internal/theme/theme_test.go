@@ -18,13 +18,10 @@ func TestFindPresetExists(t *testing.T) {
 	}
 }
 
-func TestFindPresetByName(t *testing.T) {
-	p, ok := FindPreset("Dracula")
-	if !ok {
-		t.Fatal("Dracula preset not found by display name")
-	}
-	if p.ID() != "dracula" {
-		t.Fatalf("id = %q, want dracula", p.ID())
+func TestFindPresetByDisplayNameNotSupported(t *testing.T) {
+	_, ok := FindPreset("Dracula")
+	if ok {
+		t.Fatal("name-based lookup removed — should not find by display name")
 	}
 }
 

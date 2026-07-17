@@ -81,11 +81,8 @@ var ActionList = []string{
 	ActionLineEnd, ActionBackspace, ActionDelete,
 }
 
-// ActionLabelKey returns the i18n key for an action's display label.
-func ActionLabelKey(id string) string { return "action." + id }
-
 // ActionLabel returns the localized label for an action id.
-func ActionLabel(id string) string { return i18n.T(ActionLabelKey(id)) }
+func ActionLabel(id string) string { return i18n.T("action." + id) }
 
 // ActionLabels returns the localized labels for every action in ActionList,
 // in the same order. The editor uses it to populate the action dropdown.
@@ -349,7 +346,11 @@ func formatUnsupportedLanguage(issue Issue, _, _ int) error {
 }
 
 func formatUnknownTheme(issue Issue, _, _ int) error {
-	return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(theme.PresetIDs(), ", "))
+	ids := make([]string, len(theme.Presets))
+	for i, p := range theme.Presets {
+		ids[i] = p.ID()
+	}
+	return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(ids, ", "))
 }
 
 func formatColumnsOutOfRange(issue Issue, _, _ int) error {

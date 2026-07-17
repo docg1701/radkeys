@@ -310,26 +310,23 @@ func (e *Editor) setAppName(name string) {
 // setVendorIDFromEntry parses the hex value in the entry and updates the
 // config vendor ID when valid. It marks the entry on parse failure.
 func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
-	v, err := config.ParseHexUint16(s)
-	if err != nil {
-		entry.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
-		return
-	}
-	entry.SetValidationError(nil)
-	e.cfg.App.Device.VendorID = v
-	e.setDirty()
+	e.setHexIDFromEntry(entry, s, &e.cfg.App.Device.VendorID)
 }
 
 // setProductIDFromEntry parses the hex value in the entry and updates the
 // config product ID when valid. It marks the entry on parse failure.
 func (e *Editor) setProductIDFromEntry(entry *widget.Entry, s string) {
+	e.setHexIDFromEntry(entry, s, &e.cfg.App.Device.ProductID)
+}
+
+func (e *Editor) setHexIDFromEntry(entry *widget.Entry, s string, dst *uint16) {
 	v, err := config.ParseHexUint16(s)
 	if err != nil {
 		entry.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
 		return
 	}
 	entry.SetValidationError(nil)
-	e.cfg.App.Device.ProductID = v
+	*dst = v
 	e.setDirty()
 }
 
