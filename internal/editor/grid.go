@@ -60,7 +60,7 @@ func (e *Editor) filledCell(b config.Button, row, col int) fyne.CanvasObject {
 	if e.isSelected(row, col) {
 		btn.Importance = widget.HighImportance
 	}
-	if _, bad := e.cellProblem(e.current, row, col); bad {
+	if len(e.issuesAt(e.current, row, col)) > 0 {
 		btn.Importance = widget.DangerImportance
 	}
 	return btn
@@ -74,7 +74,7 @@ func (e *Editor) cellLabel(b config.Button) string {
 	if b.Label == "" {
 		return i18n.T("editor.label_required")
 	}
-	return fmt.Sprintf("%s · %s", b.Label, e.actionLabel(b.Action))
+	return fmt.Sprintf("%s · %s", b.Label, config.ActionLabel(b.Action))
 }
 
 // isSelected reports whether (row, col) on the current screen is selected.
@@ -127,19 +127,4 @@ func (e *Editor) updateButtonsTab() {
 	}
 	e.tabs.Items[1].Content = e.buildButtonsTab()
 	e.tabs.Refresh()
-}
-
-// cellProblem returns the first validation problem for a cell, if any.
-func (e *Editor) cellProblem(screenIdx, row, col int) (string, bool) {
-	issues := e.cfg.Issues()
-	for _, issue := range issues {
-		if issue.ScreenID != e.cfg.Screens[screenIdx].ID {
-			continue
-		}
-		if issue.Row != row || issue.Col != col {
-			continue
-		}
-		return e.issueMessage(issue), true
-	}
-	return "", false
 }

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -70,21 +73,39 @@ type Issue struct {
 	Detail   string
 }
 
-// validActions is the set of all supported button actions.
-var validActions = map[string]bool{
-	ActionText:       true,
-	ActionCopy:       true,
-	ActionPaste:      true,
-	ActionPrev:       true,
-	ActionHome:       true,
-	ActionNavigate:   true,
-	ActionSelectAll:  true,
-	ActionSelectLine: true,
-	ActionLineStart:  true,
-	ActionLineEnd:    true,
-	ActionBackspace:  true,
-	ActionDelete:     true,
-	ActionExec:       true,
+// ActionList is the canonical ordered list of all button actions. It is the
+// single source of truth for both validation and the editor's action picker.
+var ActionList = []string{
+	ActionText, ActionExec, ActionCopy, ActionPaste, ActionPrev, ActionHome,
+	ActionNavigate, ActionSelectAll, ActionSelectLine, ActionLineStart,
+	ActionLineEnd, ActionBackspace, ActionDelete,
+}
+
+// ActionLabelKey returns the i18n key for an action's display label.
+func ActionLabelKey(id string) string { return "action." + id }
+
+// ActionLabel returns the localized label for an action id.
+func ActionLabel(id string) string { return i18n.T(ActionLabelKey(id)) }
+
+// ActionLabels returns the localized labels for every action in ActionList,
+// in the same order. The editor uses it to populate the action dropdown.
+func ActionLabels() []string {
+	out := make([]string, len(ActionList))
+	for i, id := range ActionList {
+		out[i] = i18n.T("action." + id)
+	}
+	return out
+}
+
+// ActionIDFromLabel maps a localized label back to the action id.
+// Returns ActionText on miss.
+func ActionIDFromLabel(label string) string {
+	for _, id := range ActionList {
+		if i18n.T("action."+id) == label {
+			return id
+		}
+	}
+	return ActionText
 }
 
 // Config is the root of radkeys.config.toml.
@@ -238,7 +259,7 @@ func (c *Config) Issues() []Issue {
 				continue
 			}
 			occupied[pos] = b.Label
-			if !validActions[b.Action] {
+			if !slices.Contains(ActionList, b.Action) {
 				issues = append(issues, Issue{Kind: IssueInvalidAction, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 				continue
 			}
@@ -441,4 +462,76 @@ func (s Screen) ButtonAt(row, col int) (Button, bool) {
 		}
 	}
 	return Button{}, false
+}
+
+// ButtonIndex returns the index of the button at (row, col), or (-1, false).
+// Mirrors ButtonAt but returns the slice position so callers can mutate.
+func (s Screen) ButtonIndex(row, col int) (int, bool) {
+	for i, b := range s.Buttons {
+		if b.Row == row && b.Col == col {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// DropdownLabel formats the screen for picker UIs as "id — name".
+func (s Screen) DropdownLabel() string {
+	return s.ID + " — " + s.Name
+}
+
+// ParseHexUint16 parses a hexadecimal string as a 16-bit unsigned integer.
+// A leading "0x" or "0X" is stripped before parsing.
+func ParseHexUint16(s string) (uint16, error) {
+	v, err := strconv.ParseUint(strings.TrimPrefix(strings.TrimPrefix(s, "0x"), "0X"), 16, 16)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(v), nil
+}
+
+// DefaultConfigFile is the file name the host looks for next to the binary
+// and in the working directory when no --config flag or env var is set.
+const DefaultConfigFile = "radkeys.config.toml"
+
+// StartupPath resolves the config file path the host should open at launch.
+// Order: $RADKEYS_CONFIG, <exe-dir>/DefaultConfigFile, DefaultConfigFile.
+func StartupPath() string {
+	if p := os.Getenv("RADKEYS_CONFIG"); p != "" {
+		return p
+	}
+	if exe, err := os.Executable(); err == nil {
+		candidate := filepath.Join(filepath.Dir(exe), DefaultConfigFile)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return DefaultConfigFile
+}
+
+// DefaultConfig returns a blank starter config with one empty screen.
+func DefaultConfig() *Config {
+	return &Config{
+		App: App{
+			Name:     "RadKeys",
+			Language: "en",
+			Device:   Device{VendorID: 0x1234, ProductID: 0xABCD, Protocol: ProtocolDIY},
+			Layout:   Layout{Columns: 6, Rows: 6},
+			Theme:    Theme{Preset: "system"},
+		},
+		Screens: []Screen{{ID: "root", Name: "Home"}},
+	}
+}
+
+// LoadStartup loads the config at path or returns a fresh default and a
+// non-nil error describing the failure. The host binary uses this at boot.
+func LoadStartup(path string) (*Config, error) {
+	if _, err := os.Stat(path); err != nil {
+		return DefaultConfig(), fmt.Errorf("no config found at %s", path)
+	}
+	cfg, err := Load(path)
+	if err != nil {
+		return DefaultConfig(), err
+	}
+	return cfg, nil
 }

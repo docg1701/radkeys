@@ -13,7 +13,10 @@ import (
 
 // buildProblems creates the validation strip below the inspector.
 func (e *Editor) buildProblems() fyne.CanvasObject {
-	issues := e.buttonIssues()
+	if e.selected == nil || e.selected.screen != e.current {
+		return container.NewVBox()
+	}
+	issues := e.issuesAt(e.current, e.selected.row, e.selected.col)
 	if len(issues) == 0 {
 		return container.NewVBox()
 	}
@@ -41,15 +44,13 @@ func (e *Editor) hasBlockingIssues() bool {
 	return len(e.cfg.Issues()) > 0
 }
 
-// buttonIssues filters the config issues to those on the current screen.
-func (e *Editor) buttonIssues() []config.Issue {
-	if e.selected == nil || e.selected.screen != e.current {
-		return nil
-	}
-	s := e.cfg.Screens[e.current]
+// issuesAt returns every config.Issue that points at (row, col) on the given
+// screen index, or nil if none.
+func (e *Editor) issuesAt(screenIdx, row, col int) []config.Issue {
+	sid := e.cfg.Screens[screenIdx].ID
 	var out []config.Issue
 	for _, issue := range e.cfg.Issues() {
-		if issue.ScreenID == s.ID && issue.Row == e.selected.row && issue.Col == e.selected.col {
+		if issue.ScreenID == sid && issue.Row == row && issue.Col == col {
 			out = append(out, issue)
 		}
 	}

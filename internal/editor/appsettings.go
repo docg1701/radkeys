@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -42,7 +43,7 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	theme := widget.NewSelect(themeNames, nil)
 	theme.SetSelected(i18n.T("theme." + e.cfg.App.Theme.Preset))
 	theme.OnChanged = func(choice string) {
-		e.setAppTheme(themeIDs[widgetutil.IndexOf(themeNames, choice)])
+		e.setAppTheme(themeIDs[slices.Index(themeNames, choice)])
 	}
 	return widgetutil.Section(i18n.T("settings.group_appearance"),
 		container.NewGridWithColumns(2,

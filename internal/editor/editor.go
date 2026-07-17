@@ -4,9 +4,6 @@ package editor
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -34,24 +31,22 @@ type Editor struct {
 	app      fyne.App
 	win      fyne.Window
 
-	tabs           *container.AppTabs
-	gridBox        fyne.CanvasObject
-	inspector      fyne.CanvasObject
-	layerBar       fyne.CanvasObject
-	problemsBox    fyne.CanvasObject
-	appSettings    fyne.CanvasObject
-	labelDebouncer *debouncer
+	tabs        *container.AppTabs
+	gridBox     fyne.CanvasObject
+	inspector   fyne.CanvasObject
+	layerBar    fyne.CanvasObject
+	problemsBox fyne.CanvasObject
+	appSettings fyne.CanvasObject
 }
 
 // NewEditor creates an Editor for the given config and file path.
 func NewEditor(a fyne.App, w fyne.Window, cfg *config.Config, path string) *Editor {
 	e := &Editor{
-		cfg:            cfg,
-		path:           path,
-		app:            a,
-		win:            w,
-		current:        0,
-		labelDebouncer: newDebouncer(200 * time.Millisecond),
+		cfg:     cfg,
+		path:    path,
+		app:     a,
+		win:     w,
+		current: 0,
 	}
 	e.buildUI()
 	return e
@@ -156,34 +151,15 @@ func (e *Editor) currentScreen() *config.Screen {
 	return &e.cfg.Screens[e.current]
 }
 
-// findButton returns the index of the button at (row, col) on a screen.
-func (e *Editor) findButton(screenIdx, row, col int) (int, bool) {
-	if screenIdx < 0 || screenIdx >= len(e.cfg.Screens) {
-		return -1, false
-	}
-	for i, b := range e.cfg.Screens[screenIdx].Buttons {
-		if b.Row == row && b.Col == col {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
-// buttonAt returns the button at (row, col) on a screen.
-func (e *Editor) buttonAt(screenIdx, row, col int) (config.Button, bool) {
-	idx, ok := e.findButton(screenIdx, row, col)
-	if !ok {
-		return config.Button{}, false
-	}
-	return e.cfg.Screens[screenIdx].Buttons[idx], true
-}
-
 // selectedButton returns the currently selected button, if any.
 func (e *Editor) selectedButton() (config.Button, bool) {
 	if e.selected == nil {
 		return config.Button{}, false
 	}
-	return e.buttonAt(e.selected.screen, e.selected.row, e.selected.col)
+	if e.selected.screen < 0 || e.selected.screen >= len(e.cfg.Screens) {
+		return config.Button{}, false
+	}
+	return e.cfg.Screens[e.selected.screen].ButtonAt(e.selected.row, e.selected.col)
 }
 
 // selectCell selects a cell and refreshes the dependent UI surfaces.
@@ -217,7 +193,7 @@ func (e *Editor) addButton(row, col int) {
 
 // removeButton deletes the button at (row, col) on the current screen.
 func (e *Editor) removeButton(row, col int) {
-	idx, ok := e.findButton(e.current, row, col)
+	idx, ok := e.cfg.Screens[e.current].ButtonIndex(row, col)
 	if !ok {
 		return
 	}
@@ -289,7 +265,7 @@ func (e *Editor) selectedIndex() (int, bool) {
 	if e.selected == nil || e.selected.screen != e.current {
 		return -1, false
 	}
-	return e.findButton(e.current, e.selected.row, e.selected.col)
+	return e.cfg.Screens[e.current].ButtonIndex(e.selected.row, e.selected.col)
 }
 
 // resizeGrid sets the layout size without deleting buttons.
@@ -334,9 +310,9 @@ func (e *Editor) setAppName(name string) {
 // setVendorIDFromEntry parses the hex value in the entry and updates the
 // config vendor ID when valid. It marks the entry on parse failure.
 func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
-	v, err := parseHexUint16(strings.TrimPrefix(s, "0x"))
+	v, err := config.ParseHexUint16(s)
 	if err != nil {
-		entry.SetValidationError(err)
+		entry.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
 		return
 	}
 	entry.SetValidationError(nil)
@@ -347,23 +323,14 @@ func (e *Editor) setVendorIDFromEntry(entry *widget.Entry, s string) {
 // setProductIDFromEntry parses the hex value in the entry and updates the
 // config product ID when valid. It marks the entry on parse failure.
 func (e *Editor) setProductIDFromEntry(entry *widget.Entry, s string) {
-	v, err := parseHexUint16(strings.TrimPrefix(s, "0x"))
+	v, err := config.ParseHexUint16(s)
 	if err != nil {
-		entry.SetValidationError(err)
+		entry.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
 		return
 	}
 	entry.SetValidationError(nil)
 	e.cfg.App.Device.ProductID = v
 	e.setDirty()
-}
-
-// parseHexUint16 parses a hexadecimal string as a 16-bit unsigned integer.
-func parseHexUint16(s string) (uint16, error) {
-	v, err := strconv.ParseUint(s, 16, 16)
-	if err != nil {
-		return 0, fmt.Errorf("%s", i18n.T("settings.invalid_hex"))
-	}
-	return uint16(v), nil
 }
 
 // setProtocol stores the device protocol.

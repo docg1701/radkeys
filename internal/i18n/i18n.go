@@ -4,18 +4,10 @@
 // To add a language: add the code to Supported and fill translations below.
 package i18n
 
-import (
-	"log"
-
-	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/text/language"
-)
-
 // Supported lists the language codes the UI accepts.
 var Supported = []string{"en", "pt-BR", "pt-PT", "es", "fr", "de", "it"}
 
-var bundle *i18n.Bundle
-var current *i18n.Localizer
+var current = "en"
 
 // messages is the single source of truth for all translations.
 // Key = message ID. Value = map[language]translation.
@@ -79,6 +71,66 @@ var messages = map[string]map[string]string{
 	"theme.dark_gray": {
 		"en": "Dark Gray", "pt-BR": "Cinza Escuro", "pt-PT": "Cinzento Escuro",
 		"es": "Gris Oscuro", "fr": "Gris Foncé", "de": "Dunkelgrau", "it": "Grigio Scuro",
+	},
+
+	// ── Action labels (canonical i18n keys) ─────────────
+	"action.text": {
+		"en": "Text", "pt-BR": "Texto", "pt-PT": "Texto", "es": "Texto",
+		"fr": "Texte", "de": "Text", "it": "Testo",
+	},
+	"action.exec": {
+		"en": "Execute command", "pt-BR": "Executar comando", "pt-PT": "Executar comando",
+		"es": "Ejecutar comando", "fr": "Exécuter commande", "de": "Befehl ausführen",
+		"it": "Esegui comando",
+	},
+	"action.copy": {
+		"en": "Copy", "pt-BR": "Copiar", "pt-PT": "Copiar",
+		"es": "Copiar", "fr": "Copier", "de": "Kopieren", "it": "Copia",
+	},
+	"action.paste": {
+		"en": "Paste", "pt-BR": "Colar", "pt-PT": "Colar",
+		"es": "Pegar", "fr": "Coller", "de": "Einfügen", "it": "Incolla",
+	},
+	"action.prev": {
+		"en": "Back", "pt-BR": "Voltar", "pt-PT": "Voltar",
+		"es": "Volver", "fr": "Retour", "de": "Zurück", "it": "Indietro",
+	},
+	"action.home": {
+		"en": "Home", "pt-BR": "Início", "pt-PT": "Início",
+		"es": "Inicio", "fr": "Accueil", "de": "Start", "it": "Home",
+	},
+	"action.navigate": {
+		"en": "Navigate", "pt-BR": "Navegar", "pt-PT": "Navegar", "es": "Navegar",
+		"fr": "Naviguer", "de": "Navigieren", "it": "Naviga",
+	},
+	"action.select_all": {
+		"en": "Select All", "pt-BR": "Selecionar Tudo", "pt-PT": "Selecionar Tudo",
+		"es": "Seleccionar Todo", "fr": "Sélectionner Tout", "de": "Alle auswählen",
+		"it": "Seleziona Tutto",
+	},
+	"action.select_line": {
+		"en": "Select Line", "pt-BR": "Selecionar Linha", "pt-PT": "Selecionar Linha",
+		"es": "Seleccionar Línea", "fr": "Sélectionner Ligne", "de": "Zeile auswählen",
+		"it": "Seleziona Riga",
+	},
+	"action.line_start": {
+		"en": "Line Start", "pt-BR": "Início da Linha", "pt-PT": "Início da Linha",
+		"es": "Inicio de Línea", "fr": "Début de Ligne", "de": "Zeilenanfang",
+		"it": "Inizio Riga",
+	},
+	"action.line_end": {
+		"en": "Line End", "pt-BR": "Fim da Linha", "pt-PT": "Fim da Linha",
+		"es": "Fin de Línea", "fr": "Fin de Ligne", "de": "Zeilenende",
+		"it": "Fine Riga",
+	},
+	"action.backspace": {
+		"en": "Backspace", "pt-BR": "Backspace", "pt-PT": "Backspace",
+		"es": "Retroceso", "fr": "Retour arrière", "de": "Rücktaste",
+		"it": "Backspace",
+	},
+	"action.delete": {
+		"en": "Delete", "pt-BR": "Delete", "pt-PT": "Delete",
+		"es": "Suprimir", "fr": "Supprimer", "de": "Entf", "it": "Canc",
 	},
 
 	// ── Tabs ──────────────────────────────────────────────
@@ -731,29 +783,12 @@ var messages = map[string]map[string]string{
 	},
 }
 
-func init() {
-	bundle = i18n.NewBundle(language.English)
-
-	for id, langs := range messages {
-		for lang, text := range langs {
-			if err := bundle.AddMessages(language.Make(lang), &i18n.Message{
-				ID:    id,
-				Other: text,
-			}); err != nil {
-				log.Printf("radkeys: i18n register %s/%s: %v", lang, id, err)
-			}
-		}
-	}
-
-	current = i18n.NewLocalizer(bundle, "en")
-}
-
-// SetLanguage switches the active locale. Falls back to English if unknown.
+// SetLanguage switches the active locale. Falls back to English on empty input.
 func SetLanguage(lang string) {
 	if lang == "" {
 		lang = "en"
 	}
-	current = i18n.NewLocalizer(bundle, lang)
+	current = lang
 }
 
 // IsSupported reports whether lang is one of the supported language codes.
@@ -766,11 +801,18 @@ func IsSupported(lang string) bool {
 	return false
 }
 
-// T translates a message ID to the active language.
+// T translates a message ID to the active language. Falls back to English,
+// then to the raw ID.
 func T(id string) string {
-	msg, err := current.Localize(&i18n.LocalizeConfig{MessageID: id})
-	if err != nil {
+	msg, ok := messages[id]
+	if !ok {
 		return id
 	}
-	return msg
+	if text, ok := msg[current]; ok {
+		return text
+	}
+	if text, ok := msg["en"]; ok {
+		return text
+	}
+	return id
 }

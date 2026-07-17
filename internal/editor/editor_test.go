@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -141,94 +140,10 @@ func TestResizeIsNonDestructive(t *testing.T) {
 	}
 }
 
-func TestDefaultConfigHasOneScreen(t *testing.T) {
-	cfg := defaultConfig()
-	if len(cfg.Screens) != 1 {
-		t.Fatalf("screens = %d, want 1", len(cfg.Screens))
-	}
-	if cfg.Screens[0].ID != "root" {
-		t.Fatalf("first screen id = %q, want root", cfg.Screens[0].ID)
-	}
-}
-
-func TestStartupPathUsesExecutableDir(t *testing.T) {
-	// Clear the env override so the fallback path is deterministic.
-	t.Setenv("RADKEYS_CONFIG", "")
-	// Fallback returns the relative filename when no executable-dir config exists.
-	if got := StartupPath(); got != "radkeys.config.toml" {
-		t.Fatalf("StartupPath fallback = %q, want radkeys.config.toml", got)
-	}
-}
-
-func TestStartupPathHonorsEnvOverride(t *testing.T) {
-	t.Setenv("RADKEYS_CONFIG", "/tmp/radkeys-test-override.toml")
-	if got := StartupPath(); got != "/tmp/radkeys-test-override.toml" {
-		t.Fatalf("StartupPath = %q, want /tmp/radkeys-test-override.toml", got)
-	}
-}
-
-func TestLoadStartupReturnsDefaultWhenMissing(t *testing.T) {
-	cfg, err := LoadStartup(filepath.Join(t.TempDir(), "missing.toml"))
-	if err == nil {
-		t.Fatal("expected error for missing file")
-	}
-	if len(cfg.Screens) != 1 {
-		t.Fatalf("default config should have one screen, got %d", len(cfg.Screens))
-	}
-}
-
-func TestLoadStartupReadsExistingFile(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "radkeys.config.toml")
-	body := `[app]
-[app.device]
-vendor_id = 0x1234
-product_id = 0xABCD
-protocol = "radkeys-diy"
-[[screens]]
-id = "root"
-name = "Home"
-`
-	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
-		t.Fatalf("write fixture: %v", err)
-	}
-	cfg, err := LoadStartup(path)
-	if err != nil {
-		t.Fatalf("LoadStartup: %v", err)
-	}
-	if cfg.Screens[0].Name != "Home" {
-		t.Fatalf("screen name = %q, want Home", cfg.Screens[0].Name)
-	}
-}
-
-func TestParseHexUint16Valid(t *testing.T) {
-	v, err := parseHexUint16("1234")
-	if err != nil {
-		t.Fatalf("parseHexUint16(1234) unexpected error: %v", err)
-	}
-	if v != 0x1234 {
-		t.Fatalf("parseHexUint16(1234) = 0x%04x, want 0x1234", v)
-	}
-	v, err = parseHexUint16("ABCD")
-	if err != nil {
-		t.Fatalf("parseHexUint16(ABCD) unexpected error: %v", err)
-	}
-	if v != 0xABCD {
-		t.Fatalf("parseHexUint16(ABCD) = 0x%04x, want 0xABCD", v)
-	}
-}
-
-func TestParseHexUint16Invalid(t *testing.T) {
-	_, err := parseHexUint16("xyz")
-	if err == nil {
-		t.Fatal("parseHexUint16(xyz) expected error, got nil")
-	}
-}
-
 func TestCloseFileResetsConfig(t *testing.T) {
-	cfg := defaultConfig()
+	cfg := config.DefaultConfig()
 	if cfg == nil {
-		t.Fatal("defaultConfig returned nil")
+		t.Fatal("DefaultConfig returned nil")
 	}
 	if len(cfg.Screens) != 1 {
 		t.Fatalf("default config screens = %d, want 1", len(cfg.Screens))
@@ -238,12 +153,5 @@ func TestCloseFileResetsConfig(t *testing.T) {
 	}
 	if cfg.App.Name != "RadKeys" {
 		t.Fatalf("expected RadKeys name, got %q", cfg.App.Name)
-	}
-}
-
-func TestParseHexUint16Overflow(t *testing.T) {
-	_, err := parseHexUint16("12345")
-	if err == nil {
-		t.Fatal("parseHexUint16(12345) expected error, got nil")
 	}
 }

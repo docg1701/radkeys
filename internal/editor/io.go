@@ -1,9 +1,7 @@
 package editor
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
@@ -31,8 +29,8 @@ func (e *Editor) buildMenu() *fyne.MainMenu {
 
 // closeFile resets to a blank default config without closing the window.
 func (e *Editor) closeFile() {
-	e.confirmDiscardAsync(func() {
-		e.cfg = defaultConfig()
+	e.confirmDiscard(func() {
+		e.cfg = config.DefaultConfig()
 		e.path = ""
 		e.current = 0
 		e.selected = nil
@@ -43,15 +41,17 @@ func (e *Editor) closeFile() {
 
 // onCloseIntercept asks for confirmation when there are unsaved changes.
 func (e *Editor) onCloseIntercept() {
-	if !e.dirty {
-		e.win.Close()
-		return
-	}
-	e.confirmDiscard(func() { e.win.Close() })
+	e.confirmDiscard(e.win.Close)
 }
 
-// confirmDiscard asks before discarding unsaved changes; runs onDiscard on "Discard".
-func (e *Editor) confirmDiscard(onDiscard func()) {
+// confirmDiscard runs action when there are no unsaved changes, otherwise
+// shows a confirm dialog and runs action only on "Discard". Used by every
+// path that can lose edits (close, new, open, close-file).
+func (e *Editor) confirmDiscard(action func()) {
+	if !e.dirty {
+		action()
+		return
+	}
 	msg := widget.NewLabel(i18n.T("editor.confirm_discard"))
 	msg.Wrapping = fyne.TextWrapWord
 	d := dialog.NewCustomConfirm(
@@ -61,7 +61,7 @@ func (e *Editor) confirmDiscard(onDiscard func()) {
 		msg,
 		func(ok bool) {
 			if ok {
-				onDiscard()
+				action()
 			}
 		},
 		e.win,
@@ -72,8 +72,8 @@ func (e *Editor) confirmDiscard(onDiscard func()) {
 
 // newConfig starts a fresh default config.
 func (e *Editor) newConfig() {
-	e.confirmDiscardAsync(func() {
-		e.cfg = defaultConfig()
+	e.confirmDiscard(func() {
+		e.cfg = config.DefaultConfig()
 		e.path = ""
 		e.current = 0
 		e.selected = nil
@@ -82,18 +82,9 @@ func (e *Editor) newConfig() {
 	})
 }
 
-// confirmDiscardAsync runs onOK after confirming unsaved changes, if any.
-func (e *Editor) confirmDiscardAsync(onOK func()) {
-	if !e.dirty {
-		onOK()
-		return
-	}
-	e.confirmDiscard(onOK)
-}
-
 // openConfig loads an existing TOML file.
 func (e *Editor) openConfig() {
-	e.confirmDiscardAsync(func() {
+	e.confirmDiscard(func() {
 		fd := dialog.NewFileOpen(e.onFileOpened, e.win)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".toml"}))
 		fd.Resize(fyne.NewSize(900, 650))
@@ -179,45 +170,4 @@ func (e *Editor) showSaveBlocked() {
 	d := dialog.NewCustom(i18n.T("editor.save_blocked_title"), i18n.T("editor.cancel"), body, e.win)
 	d.Resize(fyne.NewSize(500, 200))
 	d.Show()
-}
-
-// defaultConfig returns a blank starter config with one empty screen.
-func defaultConfig() *config.Config {
-	return &config.Config{
-		App: config.App{
-			Name:     "RadKeys",
-			Language: "en",
-			Device:   config.Device{VendorID: 0x1234, ProductID: 0xABCD, Protocol: config.ProtocolDIY},
-			Layout:   config.Layout{Columns: 6, Rows: 6},
-			Theme:    config.Theme{Preset: "system"},
-		},
-		Screens: []config.Screen{{ID: "root", Name: "Home"}},
-	}
-}
-
-// StartupPath resolves the file to open at launch.
-func StartupPath() string {
-	if p := os.Getenv("RADKEYS_CONFIG"); p != "" {
-		return p
-	}
-	if exe, err := os.Executable(); err == nil {
-		candidate := filepath.Join(filepath.Dir(exe), "radkeys.config.toml")
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return "radkeys.config.toml"
-}
-
-// LoadStartup loads the config at path or returns a fresh default.
-func LoadStartup(path string) (*config.Config, error) {
-	if _, err := os.Stat(path); err != nil {
-		return defaultConfig(), fmt.Errorf("no config found at %s", path)
-	}
-	cfg, err := config.Load(path)
-	if err != nil {
-		log.Printf("radkeys-config: cannot load %s: %v", path, err)
-		return defaultConfig(), err
-	}
-	return cfg, nil
 }

@@ -1,6 +1,9 @@
 package editor
 
 import (
+	"slices"
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -51,13 +54,21 @@ func (e *Editor) refreshInspector() {
 	e.inspector = e.buildInspector()
 }
 
+// ponytail: package-level timer — Fyne is single-threaded for UI events.
+const labelDebounce = 200 * time.Millisecond
+
+var labelDebounceTimer *time.Timer
+
 // labelField edits the button label.
 func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 	ent := widget.NewEntry()
 	ent.SetText(b.Label)
 	ent.OnChanged = func(label string) {
 		e.setButtonLabel(label)
-		e.labelDebouncer.Add(func() {
+		if labelDebounceTimer != nil {
+			labelDebounceTimer.Stop()
+		}
+		labelDebounceTimer = time.AfterFunc(labelDebounce, func() {
 			fyne.Do(func() {
 				e.refreshGrid()
 				e.refreshProblems()
@@ -70,11 +81,10 @@ func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 
 // actionField edits the button action.
 func (e *Editor) actionField(b config.Button) fyne.CanvasObject {
-	actions := e.actionOptions()
-	sel := widget.NewSelect(actions, nil)
-	sel.SetSelected(e.actionLabel(b.Action))
+	sel := widget.NewSelect(config.ActionLabels(), nil)
+	sel.SetSelected(config.ActionLabel(b.Action))
 	sel.OnChanged = func(choice string) {
-		e.setButtonAction(e.actionFromLabel(choice))
+		e.setButtonAction(config.ActionIDFromLabel(choice))
 	}
 	return widgetutil.Labeled(i18n.T("editor.action"), sel)
 }
@@ -91,60 +101,23 @@ func (e *Editor) contentField(b config.Button) fyne.CanvasObject {
 
 // targetField edits the navigate target.
 func (e *Editor) targetField(b config.Button) fyne.CanvasObject {
-	names := e.targetOptions()
-	sel := widget.NewSelect(names, nil)
-	sel.SetSelected(e.targetName(b.Target))
-	sel.OnChanged = func(choice string) {
-		e.setButtonTarget(e.targetFromName(choice))
+	screens := e.cfg.Screens
+	ids := make([]string, len(screens))
+	labels := make([]string, len(screens))
+	for i, s := range screens {
+		ids[i] = s.ID
+		labels[i] = s.DropdownLabel()
+	}
+	sel := widget.NewSelect(labels, nil)
+	if idx := slices.Index(ids, b.Target); idx >= 0 {
+		sel.SetSelectedIndex(idx)
+	} else {
+		sel.PlaceHolder = i18n.T("editor.select_target")
+	}
+	sel.OnChanged = func(label string) {
+		if i := slices.Index(labels, label); i >= 0 {
+			e.setButtonTarget(ids[i])
+		}
 	}
 	return widgetutil.Labeled(i18n.T("editor.target"), sel)
-}
-
-// actionOptions returns the human-readable labels for all 12 actions.
-func (e *Editor) actionOptions() []string {
-	return actionLabels()
-}
-
-// actionLabel returns the display label for an action id.
-func (e *Editor) actionLabel(action string) string {
-	return actionLabelByID(action)
-}
-
-// actionFromLabel maps a display label back to the action id.
-func (e *Editor) actionFromLabel(label string) string {
-	return actionIDByLabel(label)
-}
-
-// targetOptions returns human-readable names for the target dropdown.
-func (e *Editor) targetOptions() []string {
-	names := make([]string, 0, len(e.cfg.Screens))
-	for _, s := range e.cfg.Screens {
-		names = append(names, targetLabel(s))
-	}
-	return names
-}
-
-// targetLabel formats a screen as "id — name".
-func targetLabel(s config.Screen) string {
-	return s.ID + " — " + s.Name
-}
-
-// targetName returns the label for a target id, or a placeholder.
-func (e *Editor) targetName(id string) string {
-	for _, s := range e.cfg.Screens {
-		if s.ID == id {
-			return targetLabel(s)
-		}
-	}
-	return i18n.T("editor.select_target")
-}
-
-// targetFromName maps a target label back to the screen id.
-func (e *Editor) targetFromName(name string) string {
-	for _, s := range e.cfg.Screens {
-		if targetLabel(s) == name {
-			return s.ID
-		}
-	}
-	return ""
 }

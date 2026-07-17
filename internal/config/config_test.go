@@ -720,3 +720,93 @@ func TestIssueErrorPerKind(t *testing.T) {
 		t.Fatal("unknown kind should still produce a message")
 	}
 }
+
+func TestDefaultConfigHasOneScreen(t *testing.T) {
+	cfg := DefaultConfig()
+	if len(cfg.Screens) != 1 {
+		t.Fatalf("screens = %d, want 1", len(cfg.Screens))
+	}
+	if cfg.Screens[0].ID != "root" {
+		t.Fatalf("first screen id = %q, want root", cfg.Screens[0].ID)
+	}
+}
+
+func TestStartupPathUsesExecutableDir(t *testing.T) {
+	// Clear the env override so the fallback path is deterministic.
+	t.Setenv("RADKEYS_CONFIG", "")
+	// Fallback returns the relative filename when no executable-dir config exists.
+	if got := StartupPath(); got != "radkeys.config.toml" {
+		t.Fatalf("StartupPath fallback = %q, want radkeys.config.toml", got)
+	}
+}
+
+func TestStartupPathHonorsEnvOverride(t *testing.T) {
+	t.Setenv("RADKEYS_CONFIG", "/tmp/radkeys-test-override.toml")
+	if got := StartupPath(); got != "/tmp/radkeys-test-override.toml" {
+		t.Fatalf("StartupPath = %q, want /tmp/radkeys-test-override.toml", got)
+	}
+}
+
+func TestLoadStartupReturnsDefaultWhenMissing(t *testing.T) {
+	cfg, err := LoadStartup(filepath.Join(t.TempDir(), "missing.toml"))
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+	if len(cfg.Screens) != 1 {
+		t.Fatalf("default config should have one screen, got %d", len(cfg.Screens))
+	}
+}
+
+func TestLoadStartupReadsExistingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "radkeys.config.toml")
+	body := `[app]
+[app.device]
+vendor_id = 0x1234
+product_id = 0xABCD
+protocol = "radkeys-diy"
+[[screens]]
+id = "root"
+name = "Home"
+`
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+	cfg, err := LoadStartup(path)
+	if err != nil {
+		t.Fatalf("LoadStartup: %v", err)
+	}
+	if cfg.Screens[0].Name != "Home" {
+		t.Fatalf("screen name = %q, want Home", cfg.Screens[0].Name)
+	}
+}
+
+func TestParseHexUint16Valid(t *testing.T) {
+	for _, in := range []string{"1234", "0x1234", "0X1234", "ABCD"} {
+		v, err := ParseHexUint16(in)
+		if err != nil {
+			t.Fatalf("ParseHexUint16(%q) unexpected error: %v", in, err)
+		}
+		want := uint16(0x1234)
+		if in == "ABCD" {
+			want = 0xABCD
+		}
+		if v != want {
+			t.Fatalf("ParseHexUint16(%q) = 0x%04x, want 0x%04x", in, v, want)
+		}
+	}
+}
+
+func TestParseHexUint16Invalid(t *testing.T) {
+	_, err := ParseHexUint16("xyz")
+	if err == nil {
+		t.Fatal("ParseHexUint16(xyz) expected error, got nil")
+	}
+}
+
+func TestParseHexUint16Overflow(t *testing.T) {
+	_, err := ParseHexUint16("12345")
+	if err == nil {
+		t.Fatal("ParseHexUint16(12345) expected error, got nil")
+	}
+}

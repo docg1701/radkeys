@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"slices"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -20,9 +21,9 @@ func (e *Editor) buildLayerBar() fyne.CanvasObject {
 	}
 	names := e.layerOptions()
 	sel := widget.NewSelect(names, nil)
-	sel.SetSelected(layerLabel(*s))
-	sel.OnChanged = func(choice string) {
-		e.switchToLayer(e.layerIndexFromName(choice))
+	sel.SetSelectedIndex(e.current)
+	sel.OnChanged = func(_ string) {
+		e.switchToLayer(sel.SelectedIndex())
 	}
 
 	add := widget.NewButton(i18n.T("editor.add_layer"), e.addLayer)
@@ -46,24 +47,9 @@ func (e *Editor) refreshLayerBar() {
 func (e *Editor) layerOptions() []string {
 	names := make([]string, 0, len(e.cfg.Screens))
 	for _, s := range e.cfg.Screens {
-		names = append(names, layerLabel(s))
+		names = append(names, s.DropdownLabel())
 	}
 	return names
-}
-
-// layerLabel formats a screen as "id — name".
-func layerLabel(s config.Screen) string {
-	return s.ID + " — " + s.Name
-}
-
-// layerIndexFromName maps a layer label back to its index.
-func (e *Editor) layerIndexFromName(name string) int {
-	for i, s := range e.cfg.Screens {
-		if layerLabel(s) == name {
-			return i
-		}
-	}
-	return e.current
 }
 
 // switchToLayer changes the current layer.
@@ -92,20 +78,14 @@ func (e *Editor) uniqueLayerID() string {
 	base := "layer"
 	for i := 1; ; i++ {
 		candidate := fmt.Sprintf("%s%d", base, i)
-		if !e.hasLayerID(candidate) {
+		ids := make([]string, len(e.cfg.Screens))
+		for j, s := range e.cfg.Screens {
+			ids[j] = s.ID
+		}
+		if !slices.Contains(ids, candidate) {
 			return candidate
 		}
 	}
-}
-
-// hasLayerID reports whether a screen id already exists.
-func (e *Editor) hasLayerID(id string) bool {
-	for _, s := range e.cfg.Screens {
-		if s.ID == id {
-			return true
-		}
-	}
-	return false
 }
 
 // askRemoveLayer confirms before deleting the current layer.

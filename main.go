@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 
 	"fyne.io/fyne/v2"
@@ -21,9 +20,7 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.15.1"
-
-const configFileName = "radkeys.config.toml"
+var Version = "0.15.2"
 
 var flagConfig = flag.String("c", "", "Path to radkeys.config.toml")
 
@@ -33,7 +30,7 @@ func main() {
 
 	path := *flagConfig
 	if path == "" {
-		path = configPath()
+		path = config.StartupPath()
 	}
 	if err := ensureConfig(path); err != nil {
 		log.Fatalf("radkeys: %v", err)
@@ -83,19 +80,6 @@ func showConfigError(configPath string, err error) {
 
 	w.SetContent(content)
 	w.ShowAndRun()
-}
-
-func configPath() string {
-	if p := os.Getenv("RADKEYS_CONFIG"); p != "" {
-		return p
-	}
-	if exec, err := os.Executable(); err == nil {
-		candidate := filepath.Join(filepath.Dir(exec), configFileName)
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return configFileName
 }
 
 func ensureConfig(path string) error {

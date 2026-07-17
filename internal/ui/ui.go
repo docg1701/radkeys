@@ -9,8 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -424,7 +424,7 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	ids, names := u.themeOptions()
 	w.themeIDs = ids
 	w.themeSel = widget.NewSelect(names, nil)
-	w.themeSel.SetSelectedIndex(widgetutil.IndexOf(w.themeIDs, cfg.App.Theme.Preset))
+	w.themeSel.SetSelectedIndex(slices.Index(w.themeIDs, cfg.App.Theme.Preset))
 
 	w.colsEnt = widget.NewEntry()
 	w.colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
@@ -548,15 +548,15 @@ func (u *appUI) makeSaveHandler(w *settingsWidgets) func() {
 			cfg.App.Layout.Rows = 1
 			w.rowsEnt.SetText("1")
 		}
-		if v, err := strconv.ParseUint(strings.TrimPrefix(w.vidEnt.Text, "0x"), 16, 16); err == nil {
-			cfg.App.Device.VendorID = uint16(v)
+		if v, err := config.ParseHexUint16(w.vidEnt.Text); err == nil {
+			cfg.App.Device.VendorID = v
 			w.vidEnt.SetValidationError(nil)
 		} else {
 			w.vidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
 			u.flashStatus(fmt.Sprintf("%s: %v", i18n.T("settings.vid"), err))
 		}
-		if v, err := strconv.ParseUint(strings.TrimPrefix(w.pidEnt.Text, "0x"), 16, 16); err == nil {
-			cfg.App.Device.ProductID = uint16(v)
+		if v, err := config.ParseHexUint16(w.pidEnt.Text); err == nil {
+			cfg.App.Device.ProductID = v
 			w.pidEnt.SetValidationError(nil)
 		} else {
 			w.pidEnt.SetValidationError(fmt.Errorf("%s", i18n.T("settings.invalid_hex")))
@@ -710,9 +710,6 @@ func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string
 }
 
 func hexUint16Validator(s string) error {
-	_, err := strconv.ParseUint(strings.TrimPrefix(s, "0x"), 16, 16)
-	if err != nil {
-		return fmt.Errorf("%s", i18n.T("settings.invalid_hex"))
-	}
-	return nil
+	_, err := config.ParseHexUint16(s)
+	return err
 }
