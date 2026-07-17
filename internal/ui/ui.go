@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"slices"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -97,6 +98,9 @@ func (u *appUI) osThemeSettledListener(s fyne.Settings) {
 		u.previewBg.FillColor = th.Color(fyneTheme.ColorNameBackground, v)
 		canvas.Refresh(u.previewBg)
 	}
+	if u.navMap != nil {
+		u.navMap.SetTheme(th, v)
+	}
 	u.renderGrid()
 }
 
@@ -133,26 +137,29 @@ func (u *appUI) startHIDLoop() error {
 }
 
 type appUI struct {
-	cfg         *config.Config
-	configPath  string
-	current     string   // current screen id
-	stack       []string // parent screen ids for prev
-	device      hid.Device
-	a           fyne.App
-	win         fyne.Window
-	titleBase   string
-	preview     *widget.Label
-	previewText string
-	version     string
-	mock        bool
-	closing     atomic.Bool
-	status      *widget.Label
-	flashTimer  *time.Timer
-	tabs        *container.AppTabs
-	cols        int
-	rows        int
-	keypad      *fyne.Container
-	previewBg   *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
+	cfg             *config.Config
+	configPath      string
+	current         string   // current screen id
+	stack           []string // parent screen ids for prev
+	device          hid.Device
+	a               fyne.App
+	win             fyne.Window
+	titleBase       string
+	preview         *widget.Label
+	previewText     string
+	version         string
+	mock            bool
+	closing         atomic.Bool
+	status          *widget.Label
+	flashTimer      *time.Timer
+	tabs            *container.AppTabs
+	cols            int
+	rows            int
+	keypad          *fyne.Container
+	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
+	navMap          *mapWidget
+	mapSplit        *container.Split // cached HSplit for the side panel
+	breadcrumbLabel *widget.Label
 }
 
 // appName returns the configured app name, defaulting to "RadKeys".
@@ -291,6 +298,12 @@ func runExec(command string) error {
 }
 
 func (u *appUI) renderGrid() {
+	if u.navMap != nil {
+		u.navMap.SetCurrentScreen(u.current)
+	}
+	if u.breadcrumbLabel != nil {
+		u.breadcrumbLabel.SetText(u.breadcrumb())
+	}
 	s := u.currentScreen()
 	totalSlots := u.cols * u.rows
 	u.keypad.Objects = u.keypad.Objects[:0]
@@ -583,9 +596,13 @@ func (u *appUI) applySettings(cfg *config.Config) {
 
 	newTheme := resolveFullTheme(cfg)
 	u.a.Settings().SetTheme(newTheme)
+	v := variantFor(newTheme, u.a.Settings().ThemeVariant())
 	if u.previewBg != nil {
-		u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, variantFor(newTheme, u.a.Settings().ThemeVariant()))
+		u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, v)
 		canvas.Refresh(u.previewBg)
+	}
+	if u.navMap != nil {
+		u.navMap.SetTheme(newTheme, v)
 	}
 
 	if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
@@ -610,15 +627,70 @@ func (u *appUI) rebuildTabs() {
 
 	previewArea := u.previewBox()
 	keypadArea := container.NewPadded(u.keypad)
-	split := container.NewVSplit(previewArea, keypadArea)
+	main := container.NewVSplit(previewArea, keypadArea)
+	shortcuts := u.shortcutsTab(main)
 
 	u.tabs = container.NewAppTabs(
-		container.NewTabItem(i18n.T("tab.shortcuts"), split),
+		container.NewTabItem(i18n.T("tab.shortcuts"), shortcuts),
 		container.NewTabItem(i18n.T("tab.settings"), u.buildSettings()),
 		container.NewTabItem(i18n.T("tab.about"), u.buildAbout()),
 	)
 	u.tabs.SelectIndex(selectedIdx)
-	u.win.SetContent(container.NewBorder(u.status, nil, nil, nil, u.tabs))
+	u.win.SetContent(container.NewBorder(u.headerBar(), nil, nil, nil, u.tabs))
+}
+
+// shortcutsTab wraps the existing preview/keypad split with the
+// map panel on the right. The map is a purely visual guide — no
+// click-to-navigate, no collapse button.
+func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
+	if u.navMap == nil {
+		u.navMap = newMapWidget(u.cfg)
+	}
+	th, v := u.a.Settings().Theme(), u.a.Settings().ThemeVariant()
+	u.navMap.SetTheme(th, v)
+
+	if u.mapSplit == nil {
+		u.mapSplit = container.NewHSplit(main, container.NewVScroll(u.navMap))
+		u.mapSplit.Offset = mapOffsetExpanded
+	}
+	return u.mapSplit
+}
+
+// headerBar is the top-of-window row: breadcrumb on the left, a "|"
+// separator, and the device-status message on the right. Replaces the
+// previous top-border that held only u.status.
+func (u *appUI) headerBar() fyne.CanvasObject {
+	u.breadcrumbLabel = widget.NewLabel(u.breadcrumb())
+	u.breadcrumbLabel.TextStyle = fyne.TextStyle{Italic: true}
+	sep := widget.NewLabel("|")
+	return container.NewBorder(nil, nil, nil, u.status,
+		container.NewHBox(u.breadcrumbLabel, sep),
+	)
+}
+
+// breadcrumb returns the ">"-separated path of screen names from the back
+// stack to the current screen, e.g. "Home > RM > Medicina Interna > Abdome".
+// Unknown ids fall back to the raw id (never empty — visible in the UI).
+func (u *appUI) breadcrumb() string {
+	names := make([]string, 0, len(u.stack)+1)
+	idToName := make(map[string]string, len(u.cfg.Screens))
+	for _, s := range u.cfg.Screens {
+		idToName[s.ID] = s.Name
+	}
+	for _, id := range u.stack {
+		if name, ok := idToName[id]; ok {
+			names = append(names, name)
+		} else {
+			names = append(names, id)
+		}
+	}
+	cur := u.current
+	if name, ok := idToName[cur]; ok {
+		names = append(names, name)
+	} else {
+		names = append(names, cur)
+	}
+	return strings.Join(names, " > ")
 }
 
 // themeOptions returns theme IDs and their localized names for the settings
@@ -677,6 +749,11 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // For RadKeys custom themes it is derived from the resolved background color,
 // so it needs no app/global state. For the adaptive system/DefaultTheme it
 // falls back to the variant supplied by the caller.
+const (
+	mapOffsetCollapsed = 1.0
+	mapOffsetExpanded  = 0.75
+)
+
 func variantFor(th fyne.Theme, fallback fyne.ThemeVariant) fyne.ThemeVariant {
 	if _, ok := th.(themes.CustomThemeMarker); ok {
 		return variantFromBackground(th)
