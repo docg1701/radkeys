@@ -5,7 +5,6 @@ package ui
 import (
 	"fmt"
 	"log"
-	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -782,10 +781,13 @@ const mapOffsetExpanded = 0.75
 // squeezed below half the window.
 func (u *appUI) mapSplitOffset() float64 {
 	winW := float64(u.win.Canvas().Size().Width)
-	if winW <= 0 {
+	if winW <= 0 || u.navMap == nil {
 		return mapOffsetExpanded
 	}
-	mapW := math.Min(float64(mapPanelWidth), winW*0.5)
+	mapW := float64(u.navMap.MinSize().Width)
+	if mapW > winW*0.5 {
+		mapW = winW * 0.5
+	}
 	offset := 1.0 - mapW/winW
 	if offset < 0.5 {
 		return 0.5

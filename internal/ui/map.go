@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	mapNodeW      = 12
-	mapNodeH      = 12
-	mapPad        = 24
-	mapPanelWidth = 260
+	mapNodeW       = 12
+	mapNodeH       = 12
+	mapNodeSpacing = 24 // 12px dot + 12px gap between centers
+	mapPad         = 24
+	mapMinWidth    = 260 // floor when the graph has few nodes
 )
 
 // mapNode is a renderable screen with the position assigned by the layout
@@ -28,8 +29,9 @@ type mapNode struct {
 }
 
 type mapGraph struct {
-	nodes []mapNode
-	edges [][2]int // indices into nodes: [from, to]
+	nodes       []mapNode
+	edges       [][2]int // indices into nodes: [from, to]
+	maxPerLevel int      // widest level — drives min panel width
 }
 
 // buildMapGraph walks cfg: one node per screen, one edge per ActionNavigate
@@ -103,10 +105,13 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 		}
 	}
 
-	// group nodes by depth
+	// group nodes by depth, track widest level
 	levels := make([][]int, maxDepth+1)
 	for i, d := range depth {
 		levels[d] = append(levels[d], i)
+		if len(levels[d]) > g.maxPerLevel {
+			g.maxPerLevel = len(levels[d])
+		}
 	}
 
 	rowH := h / float64(maxDepth+1)
@@ -150,9 +155,18 @@ type mapWidget struct {
 }
 
 func newMapWidget(cfg *config.Config) *mapWidget {
-	w := &mapWidget{graph: layoutLayered(buildMapGraph(cfg), mapPanelWidth-mapPad*2, 300-mapPad*2)}
+	g := buildMapGraph(cfg)
+	// Provisional layout — real positions are computed in the renderer's Layout().
+	g = layoutLayered(g, float64(mapMinWidth-mapPad*2), 300-mapPad*2)
+	w := &mapWidget{graph: g}
 	w.ExtendBaseWidget(w)
 	return w
+}
+
+// relayout re-runs the layered layout with the given canvas size so node
+// positions always match the actual panel dimensions.
+func (m *mapWidget) relayout(w, h float32) {
+	m.graph = layoutLayered(m.graph, float64(w-mapPad*2), float64(h-mapPad*2))
 }
 
 func (m *mapWidget) SetTheme(th fyne.Theme, v fyne.ThemeVariant) {
@@ -166,7 +180,14 @@ func (m *mapWidget) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (m *mapWidget) MinSize() fyne.Size {
-	return fyne.NewSize(mapPanelWidth, 300)
+	w := float32(mapMinWidth)
+	if m.graph.maxPerLevel > 0 {
+		need := float32(m.graph.maxPerLevel)*mapNodeSpacing + mapPad*2
+		if need > w {
+			w = need
+		}
+	}
+	return fyne.NewSize(w, 300)
 }
 
 // SetCurrentScreen updates the highlight. Mutates the existing dot's
@@ -213,6 +234,7 @@ type mapRenderer struct {
 func (r *mapRenderer) MinSize() fyne.Size { return r.m.MinSize() }
 
 func (r *mapRenderer) Layout(size fyne.Size) {
+	r.m.relayout(size.Width, size.Height)
 	w, h := float64(size.Width-mapPad*2), float64(size.Height-mapPad*2)
 	if w < 1 {
 		w = 1
