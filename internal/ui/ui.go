@@ -159,6 +159,8 @@ type appUI struct {
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
 	mapSplit        *container.Split // cached HSplit for the side panel
+	mapVisible      bool             // true when panel is shown
+	mapToggle       *widget.Button   // ◀ / ▶ collapse button
 	breadcrumbLabel *widget.Label
 }
 
@@ -640,9 +642,9 @@ func (u *appUI) rebuildTabs() {
 }
 
 // shortcutsTab wraps the existing preview/keypad split with the
-// map panel on the right. The map content (dots+lines) is purely
-// visual. The HSplit divider lets the user resize or fully hide
-// the panel — no extra buttons.
+// collapsible map panel on the right. The collapse button lives on
+// the right edge of the main panel so it stays visible when the map
+// is hidden.
 func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.navMap == nil {
 		u.navMap = newMapWidget(u.cfg)
@@ -651,7 +653,20 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	u.navMap.SetTheme(th, v)
 
 	if u.mapSplit == nil {
-		u.mapSplit = container.NewHSplit(main, container.NewVScroll(u.navMap))
+		// Button lives on the left panel's right edge — survives collapse.
+		u.mapToggle = widget.NewButton("\u25C0", func() {
+			u.mapVisible = !u.mapVisible
+			if u.mapVisible {
+				u.mapSplit.Offset = mapOffsetExpanded
+				u.mapToggle.SetText("\u25C0")
+			} else {
+				u.mapSplit.Offset = mapOffsetCollapsed
+				u.mapToggle.SetText("\u25B6")
+			}
+		})
+		u.mapToggle.Importance = widget.LowImportance
+		left := container.NewBorder(nil, nil, nil, u.mapToggle, main)
+		u.mapSplit = container.NewHSplit(left, container.NewVScroll(u.navMap))
 		u.mapSplit.Offset = mapOffsetExpanded
 	}
 	return u.mapSplit
@@ -747,7 +762,10 @@ func (u *appUI) buildAbout() fyne.CanvasObject {
 // For RadKeys custom themes it is derived from the resolved background color,
 // so it needs no app/global state. For the adaptive system/DefaultTheme it
 // falls back to the variant supplied by the caller.
-const mapOffsetExpanded = 0.75
+const (
+	mapOffsetCollapsed = 1.0
+	mapOffsetExpanded  = 0.75
+)
 
 func variantFor(th fyne.Theme, fallback fyne.ThemeVariant) fyne.ThemeVariant {
 	if _, ok := th.(themes.CustomThemeMarker); ok {
