@@ -646,7 +646,7 @@ func (u *appUI) rebuildTabs() {
 func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.navMap == nil {
 		u.navMap = newMapWidget(u.cfg)
-		u.mapScroll = container.NewMax(u.navMap)
+		u.mapScroll = container.NewStack(u.navMap)
 	}
 	th, v := u.a.Settings().Theme(), u.a.Settings().ThemeVariant()
 	u.navMap.SetTheme(th, v)
