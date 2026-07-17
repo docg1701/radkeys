@@ -255,11 +255,12 @@ func (r *mapRenderer) Layout(size fyne.Size) {
 		c.Resize(fyne.NewSize(mapNodeW, mapNodeH))
 		c.Move(p)
 	}
-	for i, line := range r.lineObjs {
+	for i := range r.lineObjs {
 		e := r.m.graph.edges[i]
 		a := r.m.graph.nodes[e[0]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
 		b := r.m.graph.nodes[e[1]].pos.Add(fyne.NewPos(mapPad+mapNodeW/2, mapPad+mapNodeH/2))
-		line.Position1, line.Position2 = a, b
+		r.lineObjs[i].Position1 = a
+		r.lineObjs[i].Position2 = b
 	}
 }
 

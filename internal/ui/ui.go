@@ -661,7 +661,13 @@ func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 
 	if u.mapVisible {
 		left := container.NewBorder(nil, nil, nil, toggle, main)
-		split := container.NewHSplit(left, u.mapScroll)
+		// Enforce that the left panel never shrinks below 50% of the
+		// window width, so the map panel is capped at 50% even when
+		// the user drags the HSplit divider.
+		guard := newMinWidthBox(left, func() float32 {
+			return float32(u.win.Canvas().Size().Width) * 0.5
+		})
+		split := container.NewHSplit(guard, u.mapScroll)
 		split.Offset = u.mapSplitOffset()
 		return split
 	}
@@ -826,4 +832,31 @@ func showFileDialog(parent fyne.Window, exts []string, onSelect func(path string
 func hexUint16Validator(s string) error {
 	_, err := config.ParseHexUint16(s)
 	return err
+}
+
+// minWidthBox wraps a child widget and enforces a floor on its MinSize
+// width. The getMinW callback is invoked on every MinSize() call so the
+// constraint stays in sync with the window size.
+type minWidthBox struct {
+	widget.BaseWidget
+	child   fyne.CanvasObject
+	getMinW func() float32
+}
+
+func newMinWidthBox(child fyne.CanvasObject, getMinW func() float32) *minWidthBox {
+	b := &minWidthBox{child: child, getMinW: getMinW}
+	b.ExtendBaseWidget(b)
+	return b
+}
+
+func (b *minWidthBox) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(b.child)
+}
+
+func (b *minWidthBox) MinSize() fyne.Size {
+	s := b.child.MinSize()
+	if minW := b.getMinW(); s.Width < minW {
+		s.Width = minW
+	}
+	return s
 }
