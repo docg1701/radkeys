@@ -146,6 +146,7 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	}
 
 	// Position each sub-row
+	g.totalRows = len(rows)
 	for _, r := range rows {
 		colW := w / float64(len(r.nodes))
 		for j, id := range r.nodes {
@@ -205,6 +206,7 @@ func (m *mapWidget) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (m *mapWidget) MinSize() fyne.Size {
+	// Width: enough to fit the widest level without wrapping.
 	w := float32(mapMinWidth)
 	if m.graph.maxPerLevel > 0 {
 		need := float32(m.graph.maxPerLevel)*mapNodeSpacing + mapPad*2
@@ -212,7 +214,12 @@ func (m *mapWidget) MinSize() fyne.Size {
 			w = need
 		}
 	}
-	return fyne.NewSize(w, 300)
+	// Height: enough rows to show the full graph.
+	h := float32(m.graph.totalRows)*mapRowH + mapPad*2
+	if h < 200 {
+		h = 200
+	}
+	return fyne.NewSize(w, h)
 }
 
 // SetCurrentScreen updates the highlight. Mutates the existing dot's

@@ -1,3695 +1,3498 @@
-# =============================================================================
-# RadKeys — Reference Example Config (TOML)
-# =============================================================================
-#
-# 39 screens, max depth 6 levels, ALL 13 actions exercised.
-# Every screen has row-4 (SLine, LStart, LEnd, Del) + row-5 (Back, Home,
-# SelAll, Copy, Paste, Bksp) for full editing control.
-# EXEC buttons ONLY on the utilities screen (root level = L2).
-#
-# LONGEST CHAINS:
-#   6 levels: root → xray_menu → xray_extremities → xray_hand
-#                   → xray_hand_trauma → xray_hand_scaphoid (also distal, metacarp, phalanx)
-#   5 levels: root → ct_menu → ct_chest → ct_chest_vascular → ct_chest_pe
-#   5 levels: root → mri_menu → mri_spine → mri_spine_lumbar
-#                   → mri_spine_lumbar_disc (also stenosis)
-#   4 levels: root → us_menu → us_abdomen → us_abdomen_liver (also gallbladder)
-#
-# WARNING: BurntSushi/toml does NOT preserve comments on save.
-# A .bak backup is created automatically — restore from it.
-
 [app]
-name = "RadKeys"
-radiologist = "Dr. Galvani"
-language = "en"
-
-[app.device]
-vendor_id = 0x1234
-product_id = 0xABCD
-protocol = "radkeys-diy"
-
-[app.layout]
-columns = 6
-rows = 6
-
-[app.theme]
-preset = "dracula"
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# root — RadKeys Home
-# ═══════════════════════════════════════════════════════════════════════════
+  name = "RadKeys"
+  radiologist = "Dr. Galvani"
+  language = "en"
+  [app.device]
+    vendor_id = 4660
+    product_id = 43981
+    protocol = "radkeys-diy"
+  [app.layout]
+    columns = 6
+    rows = 6
+  [app.theme]
+    preset = "system"
+    icon = ""
 
 [[screens]]
-id = "root"
-name = "RadKeys Home"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "X-Ray"
-  action = "navigate"
-  target = "xray_menu"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "CT"
-  action = "navigate"
-  target = "ct_menu"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "MRI"
-  action = "navigate"
-  target = "mri_menu"
-  [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "US"
-  action = "navigate"
-  target = "us_menu"
-  [[screens.buttons]]
-  row = 0
-  col = 4
-  label = "Tools"
-  action = "navigate"
-  target = "utilities"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "root"
+  name = "RadKeys Home"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_menu — X-Ray Exams
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "X-Ray"
+    action = "navigate"
+    target = "xray_menu"
 
-[[screens]]
-id = "xray_menu"
-name = "X-Ray Exams"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Chest"
-  action = "navigate"
-  target = "xray_chest"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Abdomen"
-  action = "navigate"
-  target = "xray_abdomen"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Bone Age"
-  action = "navigate"
-  target = "xray_bone_age"
-  [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Scoliosis"
-  action = "navigate"
-  target = "xray_scoliosis"
-  [[screens.buttons]]
-  row = 0
-  col = 4
-  label = "Extremities"
-  action = "navigate"
-  target = "xray_extremities"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 0
+    col = 1
+    label = "CT"
+    action = "navigate"
+    target = "ct_menu"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_chest — Chest X-Ray
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "MRI"
+    action = "navigate"
+    target = "mri_menu"
+
+  [[screens.buttons]]
+    row = 0
+    col = 3
+    label = "US"
+    action = "navigate"
+    target = "us_menu"
+
+  [[screens.buttons]]
+    row = 0
+    col = 4
+    label = "Tools"
+    action = "navigate"
+    target = "utilities"
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_chest"
-name = "Chest X-Ray"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """PA and lateral chest radiographs were obtained.
+  id = "xray_menu"
+  name = "X-Ray Exams"
 
-Lungs are clear without focal consolidation, pneumothorax, or pleural
-effusion. Cardiomediastinal silhouette is normal. No pulmonary edema.
-Costophrenic angles are sharp. Trachea is midline. Osseous structures
-and soft tissues are unremarkable.
-
-IMPRESSION: Normal chest radiograph."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Effusion R"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 0
+    col = 0
+    label = "Chest"
+    action = "navigate"
+    target = "xray_chest"
 
-Blunting of the right costophrenic angle with a meniscoid opacity
-tracking up the lateral chest wall, consistent with right pleural
-effusion. Left lung is clear. Cardiomediastinal silhouette is normal.
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Abdomen"
+    action = "navigate"
+    target = "xray_abdomen"
 
-IMPRESSION: Right pleural effusion. US correlation recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Effusion L"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 0
+    col = 2
+    label = "Bone Age"
+    action = "navigate"
+    target = "xray_bone_age"
 
-Blunting of the left costophrenic angle with a meniscoid opacity
-tracking up the lateral chest wall, consistent with left pleural
-effusion. Right lung is clear. Cardiomediastinal silhouette is normal.
+  [[screens.buttons]]
+    row = 0
+    col = 3
+    label = "Scoliosis"
+    action = "navigate"
+    target = "xray_scoliosis"
 
-IMPRESSION: Left pleural effusion. US correlation recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Pneumothorax"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 0
+    col = 4
+    label = "Extremities"
+    action = "navigate"
+    target = "xray_extremities"
 
-Visible visceral pleural line in the right hemithorax with absence of
-lung markings peripheral to this line, consistent with right-sided
-pneumothorax (estimated 30%). No mediastinal shift. Left lung is clear.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Right pneumothorax. Clinical correlation recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 4
-  label = "Pneumonia"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Focal airspace opacity in the right lower lobe with air bronchograms,
-consistent with consolidation. No pleural effusion. Left lung is clear.
-Cardiomediastinal silhouette is normal.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: RLL consolidation, suggestive of pneumonia."""
   [[screens.buttons]]
-  row = 0
-  col = 5
-  label = "CHF/Edema"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-Cardiomegaly (CTR > 0.5). Bilateral perihilar and interstitial opacities
-with Kerley B lines, consistent with pulmonary edema. Small bilateral
-pleural effusions. Cephalization of pulmonary vasculature.
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-IMPRESSION: CHF with pulmonary edema. Correlate with BNP."""
   [[screens.buttons]]
-  row = 1
-  col = 0
-  label = "Atelectasis"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
 
-Linear bandlike opacity in the left lung base with volume loss
-(ipsilateral diaphragmatic elevation and mediastinal shift),
-consistent with platelike atelectasis. No consolidation or effusion.
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
 
-IMPRESSION: Left basilar platelike atelectasis."""
   [[screens.buttons]]
-  row = 1
-  col = 1
-  label = "Nodule"
-  action = "text"
-  content = """PA and lateral chest radiographs.
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
 
-Solitary well-circumscribed nodular opacity measuring ~8 mm in the
-right upper lobe. No calcification. No other nodules. Remainder of
-lungs is clear.
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
 
-IMPRESSION: Solitary pulmonary nodule, 8 mm, RUL. Comparison with
-prior studies and CT recommended per Fleischner guidelines."""
   [[screens.buttons]]
-  row = 1
-  col = 2
-  label = "Fibrosis"
-  action = "text"
-  content = """PA and lateral chest radiographs.
-
-Bilateral reticular opacities with basal and subpleural predominance,
-consistent with UIP pattern. Volume loss with diaphragmatic tenting.
-No effusion or pneumothorax.
-
-IMPRESSION: Bilateral pulmonary fibrosis with UIP pattern. HRCT
-recommended. Correlate for CTD or hypersensitivity pneumonitis."""
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
-
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_abdomen — Abdomen X-Ray
-# ═══════════════════════════════════════════════════════════════════════════
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_abdomen"
-name = "Abdomen X-Ray"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """Supine and upright abdominal radiographs.
+  id = "xray_chest"
+  name = "Chest X-Ray"
 
-Normal bowel gas distribution. No obstruction, ileus, or free air.
-No pathological calcifications or masses. Solid organs and bones
-are unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "PA and lateral chest radiographs were obtained.\n\nLungs are clear without focal consolidation, pneumothorax, or pleural\neffusion. Cardiomediastinal silhouette is normal. No pulmonary edema.\nCostophrenic angles are sharp. Trachea is midline. Osseous structures\nand soft tissues are unremarkable.\n\nIMPRESSION: Normal chest radiograph."
 
-IMPRESSION: Normal abdominal series."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Ileus"
-  action = "text"
-  content = """Supine and upright abdominal radiographs.
+    row = 0
+    col = 1
+    label = "Effusion R"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nBlunting of the right costophrenic angle with a meniscoid opacity\ntracking up the lateral chest wall, consistent with right pleural\neffusion. Left lung is clear. Cardiomediastinal silhouette is normal.\n\nIMPRESSION: Right pleural effusion. US correlation recommended."
 
-Diffuse gaseous distention of small and large bowel without transition
-point, consistent with generalized adynamic ileus. No free air or
-mechanical obstruction.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Effusion L"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nBlunting of the left costophrenic angle with a meniscoid opacity\ntracking up the lateral chest wall, consistent with left pleural\neffusion. Right lung is clear. Cardiomediastinal silhouette is normal.\n\nIMPRESSION: Left pleural effusion. US correlation recommended."
 
-IMPRESSION: Generalized adynamic ileus. Correlate clinically."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "SBO"
-  action = "text"
-  content = """Supine and upright abdominal radiographs.
+    row = 0
+    col = 3
+    label = "Pneumothorax"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nVisible visceral pleural line in the right hemithorax with absence of\nlung markings peripheral to this line, consistent with right-sided\npneumothorax (estimated 30%). No mediastinal shift. Left lung is clear.\n\nIMPRESSION: Right pneumothorax. Clinical correlation recommended."
 
-Multiple dilated small bowel loops with air-fluid levels on upright
-view. Transition zone suggested in mid-abdomen. Paucity of colonic
-gas distally.
+  [[screens.buttons]]
+    row = 0
+    col = 4
+    label = "Pneumonia"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nFocal airspace opacity in the right lower lobe with air bronchograms,\nconsistent with consolidation. No pleural effusion. Left lung is clear.\nCardiomediastinal silhouette is normal.\n\nIMPRESSION: RLL consolidation, suggestive of pneumonia."
 
-IMPRESSION: Small bowel obstruction. CT abdomen/pelvis with IV
-contrast recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Free Air"
-  action = "text"
-  content = """Supine and upright abdominal radiographs.
+    row = 0
+    col = 5
+    label = "CHF/Edema"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nCardiomegaly (CTR > 0.5). Bilateral perihilar and interstitial opacities\nwith Kerley B lines, consistent with pulmonary edema. Small bilateral\npleural effusions. Cephalization of pulmonary vasculature.\n\nIMPRESSION: CHF with pulmonary edema. Correlate with BNP."
 
-Linear lucency under the right hemidiaphragm on upright view,
-consistent with free intraperitoneal air. No obstruction or ileus.
+  [[screens.buttons]]
+    row = 1
+    col = 0
+    label = "Atelectasis"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nLinear bandlike opacity in the left lung base with volume loss\n(ipsilateral diaphragmatic elevation and mediastinal shift),\nconsistent with platelike atelectasis. No consolidation or effusion.\n\nIMPRESSION: Left basilar platelike atelectasis."
 
-IMPRESSION: Pneumoperitoneum. Immediate surgical evaluation required."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 1
+    col = 1
+    label = "Nodule"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nSolitary well-circumscribed nodular opacity measuring ~8 mm in the\nright upper lobe. No calcification. No other nodules. Remainder of\nlungs is clear.\n\nIMPRESSION: Solitary pulmonary nodule, 8 mm, RUL. Comparison with\nprior studies and CT recommended per Fleischner guidelines."
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_bone_age — Bone Age
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 1
+    col = 2
+    label = "Fibrosis"
+    action = "text"
+    content = "PA and lateral chest radiographs.\n\nBilateral reticular opacities with basal and subpleural predominance,\nconsistent with UIP pattern. Volume loss with diaphragmatic tenting.\nNo effusion or pneumothorax.\n\nIMPRESSION: Bilateral pulmonary fibrosis with UIP pattern. HRCT\nrecommended. Correlate for CTD or hypersensitivity pneumonitis."
 
-[[screens]]
-id = "xray_bone_age"
-name = "Bone Age"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal (GP)"
-  action = "text"
-  content = """Left hand and wrist radiograph for bone age assessment.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Bone age is consistent with chronological age per Greulich and Pyle
-standards. All carpals, metacarpals, and phalanges show age-appropriate
-ossification.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Normal bone age per Greulich and Pyle atlas."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Delayed"
-  action = "text"
-  content = """Left hand and wrist radiograph for bone age assessment.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Bone age delayed by ~2 SD compared to chronological age per Greulich
-and Pyle standards. Carpal ossification lags chronologic age.
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: Delayed bone age. Endocrinological correlation recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Advanced"
-  action = "text"
-  content = """Left hand and wrist radiograph for bone age assessment.
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-Bone age advanced by ~2 SD compared to chronological age per Greulich
-and Pyle standards.
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
 
-IMPRESSION: Advanced bone age. Endocrinological correlation recommended."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_scoliosis — Scoliosis Series
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_scoliosis"
-name = "Scoliosis Series"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """Full spine PA and lateral radiographs for scoliosis evaluation.
+  id = "xray_abdomen"
+  name = "Abdomen X-Ray"
 
-Normal spinal alignment without significant coronal or sagittal
-deformity. No vertebral anomalies, fractures, or destructive lesions.
-Risser sign appropriate for age.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "Supine and upright abdominal radiographs.\n\nNormal bowel gas distribution. No obstruction, ileus, or free air.\nNo pathological calcifications or masses. Solid organs and bones\nare unremarkable.\n\nIMPRESSION: Normal abdominal series."
 
-IMPRESSION: No significant scoliosis. Normal spinal alignment."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Idiopathic"
-  action = "text"
-  content = """Full spine PA and lateral radiographs for scoliosis evaluation.
+    row = 0
+    col = 1
+    label = "Ileus"
+    action = "text"
+    content = "Supine and upright abdominal radiographs.\n\nDiffuse gaseous distention of small and large bowel without transition\npoint, consistent with generalized adynamic ileus. No free air or\nmechanical obstruction.\n\nIMPRESSION: Generalized adynamic ileus. Correlate clinically."
 
-Right thoracic curve with apex at T8-T9 measuring ~18 degrees (Cobb
-angle), consistent with adolescent idiopathic scoliosis. No vertebral
-rotation or structural anomalies. Risser sign grade 3.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "SBO"
+    action = "text"
+    content = "Supine and upright abdominal radiographs.\n\nMultiple dilated small bowel loops with air-fluid levels on upright\nview. Transition zone suggested in mid-abdomen. Paucity of colonic\ngas distally.\n\nIMPRESSION: Small bowel obstruction. CT abdomen/pelvis with IV\ncontrast recommended."
 
-IMPRESSION: Adolescent idiopathic scoliosis, 18-degree right thoracic
-curve. Orthopedic follow-up recommended."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 0
+    col = 3
+    label = "Free Air"
+    action = "text"
+    content = "Supine and upright abdominal radiographs.\n\nLinear lucency under the right hemidiaphragm on upright view,\nconsistent with free intraperitoneal air. No obstruction or ileus.\n\nIMPRESSION: Pneumoperitoneum. Immediate surgical evaluation required."
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_extremities — Extremity X-Ray
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-[[screens]]
-id = "xray_extremities"
-name = "Extremity X-Ray"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Hand/Wrist"
-  action = "navigate"
-  target = "xray_hand"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Elbow"
-  action = "navigate"
-  target = "xray_elbow"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Knee"
-  action = "navigate"
-  target = "xray_knee"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand — Hand/Wrist
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand"
-name = "Hand/Wrist"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Trauma"
-  action = "navigate"
-  target = "xray_hand_trauma"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Degenerat."
-  action = "navigate"
-  target = "xray_hand_degen"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Pediatric"
-  action = "navigate"
-  target = "xray_hand_pediatric"
-  [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Normal"
-  action = "text"
-  content = """PA, oblique, and lateral views of the right hand and wrist.
+  id = "xray_bone_age"
+  name = "Bone Age"
 
-Bones normal in alignment and mineralization. No fracture or
-dislocation. Joint spaces preserved. Soft tissues unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal (GP)"
+    action = "text"
+    content = "Left hand and wrist radiograph for bone age assessment.\n\nBone age is consistent with chronological age per Greulich and Pyle\nstandards. All carpals, metacarpals, and phalanges show age-appropriate\nossification.\n\nIMPRESSION: Normal bone age per Greulich and Pyle atlas."
 
-IMPRESSION: Normal right hand and wrist radiographs."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 0
+    col = 1
+    label = "Delayed"
+    action = "text"
+    content = "Left hand and wrist radiograph for bone age assessment.\n\nBone age delayed by ~2 SD compared to chronological age per Greulich\nand Pyle standards. Carpal ossification lags chronologic age.\n\nIMPRESSION: Delayed bone age. Endocrinological correlation recommended."
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_elbow — Elbow X-Ray
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Advanced"
+    action = "text"
+    content = "Left hand and wrist radiograph for bone age assessment.\n\nBone age advanced by ~2 SD compared to chronological age per Greulich\nand Pyle standards.\n\nIMPRESSION: Advanced bone age. Endocrinological correlation recommended."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_elbow"
-name = "Elbow X-Ray"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """AP and lateral views of the right elbow.
+  id = "xray_scoliosis"
+  name = "Scoliosis Series"
 
-Normal alignment and mineralization. No fracture or dislocation.
-Joint spaces preserved. Anterior fat pad sign negative; posterior
-fat pad absent. Soft tissues unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "Full spine PA and lateral radiographs for scoliosis evaluation.\n\nNormal spinal alignment without significant coronal or sagittal\ndeformity. No vertebral anomalies, fractures, or destructive lesions.\nRisser sign appropriate for age.\n\nIMPRESSION: No significant scoliosis. Normal spinal alignment."
 
-IMPRESSION: Normal right elbow radiographs."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Fat Pad+"
-  action = "text"
-  content = """AP and lateral views of the left elbow following trauma.
+    row = 0
+    col = 1
+    label = "Idiopathic"
+    action = "text"
+    content = "Full spine PA and lateral radiographs for scoliosis evaluation.\n\nRight thoracic curve with apex at T8-T9 measuring ~18 degrees (Cobb\nangle), consistent with adolescent idiopathic scoliosis. No vertebral\nrotation or structural anomalies. Risser sign grade 3.\n\nIMPRESSION: Adolescent idiopathic scoliosis, 18-degree right thoracic\ncurve. Orthopedic follow-up recommended."
 
-Positive posterior fat pad sign and elevated anterior fat pad
-("sail sign"), indicating joint effusion. No discrete fracture line.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Joint effusion with positive fat pad signs. Occult radial
-head or supracondylar fracture suspected. Follow-up in 10-14 days."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Rad Head"
-  action = "text"
-  content = """AP and lateral views of the right elbow.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Minimally displaced transverse fracture through radial head involving
-~25% of articular surface with < 2 mm step-off (Mason type I). Moderate
-joint effusion with elevated fat pads. No other fractures.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: Mason type I radial head fracture. Conservative management
-with early range of motion. Orthopedic follow-up."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_knee — Knee X-Ray
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_knee"
-name = "Knee X-Ray"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """AP, lateral, and sunrise views of the left knee.
+  id = "xray_extremities"
+  name = "Extremity X-Ray"
 
-Normal alignment and mineralization. No fracture or dislocation.
-Joint spaces preserved (medial, lateral, patellofemoral). No
-effusion. No loose bodies. Soft tissues unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Hand/Wrist"
+    action = "navigate"
+    target = "xray_hand"
 
-IMPRESSION: Normal left knee radiographs."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "OA Medial"
-  action = "text"
-  content = """AP and lateral views of the right knee, weight-bearing.
+    row = 0
+    col = 1
+    label = "Elbow"
+    action = "navigate"
+    target = "xray_elbow"
 
-Moderate medial compartment joint space narrowing with subchondral
-sclerosis and marginal osteophytes. Lateral compartment and PFJ
-relatively preserved. No fracture or effusion.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Knee"
+    action = "navigate"
+    target = "xray_knee"
 
-IMPRESSION: Moderate medial compartment osteoarthritis. KL grade 3."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "OA Tricomp"
-  action = "text"
-  content = """AP, lateral, and sunrise views of the right knee.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Severe tricompartmental joint space narrowing with pronounced
-subchondral sclerosis, subchondral cysts, and large osteophytes.
-Varus malalignment.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Severe tricompartmental OA. KL grade 4 with varus
-deformity. Orthopedic evaluation for arthroplasty."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_trauma — Hand Trauma
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_trauma"
-name = "Hand Trauma"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Dist Radius"
-  action = "navigate"
-  target = "xray_hand_distal"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Scaphoid"
-  action = "navigate"
-  target = "xray_hand_scaphoid"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Metacarpal"
-  action = "navigate"
-  target = "xray_hand_metacarp"
-  [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Phalanx"
-  action = "navigate"
-  target = "xray_hand_phalanx"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "xray_hand"
+  name = "Hand/Wrist"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_degen — Degenerative Hand
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Trauma"
+    action = "navigate"
+    target = "xray_hand_trauma"
 
-[[screens]]
-id = "xray_hand_degen"
-name = "Degenerative Hand"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "CMC OA"
-  action = "text"
-  content = """PA view of both hands.
+    row = 0
+    col = 1
+    label = "Degenerat."
+    action = "navigate"
+    target = "xray_hand_degen"
 
-Moderate first CMC joint space narrowing and subchondral sclerosis
-bilaterally, right > left. Small osteophytes.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Pediatric"
+    action = "navigate"
+    target = "xray_hand_pediatric"
 
-IMPRESSION: Bilateral first CMC OA, moderate on right."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Erosive OA"
-  action = "text"
-  content = """PA view of both hands.
+    row = 0
+    col = 3
+    label = "Normal"
+    action = "text"
+    content = "PA, oblique, and lateral views of the right hand and wrist.\n\nBones normal in alignment and mineralization. No fracture or\ndislocation. Joint spaces preserved. Soft tissues unremarkable.\n\nIMPRESSION: Normal right hand and wrist radiographs."
 
-DIP and PIP joint space narrowing with central subchondral erosions
-("gull-wing" deformity) and marginal osteophytes. No periarticular
-osteopenia or marginal erosions to suggest RA.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Erosive OA ("gull-wing" pattern). Rheumatology correlation."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "CPPD"
-  action = "text"
-  content = """PA view of the right hand.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Chondrocalcinosis of the TFCC and radiocarpal joint, consistent with
-CPPD crystal deposition disease. Mild radiocarpal narrowing.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: Chondrocalcinosis of the wrist (CPPD arthropathy).
-Correlate for pseudogout."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_pediatric — Pediatric Hand
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_pediatric"
-name = "Pediatric Hand"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Salter II"
-  action = "text"
-  content = """PA and lateral views of the right wrist (10-year-old).
+  id = "xray_elbow"
+  name = "Elbow X-Ray"
 
-Fracture through distal radial physis extending into metaphysis,
-consistent with Salter-Harris type II. Minimal dorsal displacement
-(< 3 mm). Epiphysis in normal position. Ulna intact.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "AP and lateral views of the right elbow.\n\nNormal alignment and mineralization. No fracture or dislocation.\nJoint spaces preserved. Anterior fat pad sign negative; posterior\nfat pad absent. Soft tissues unremarkable.\n\nIMPRESSION: Normal right elbow radiographs."
 
-IMPRESSION: SH-II distal radius fracture, minimally displaced.
-Closed reduction and short-arm cast for 4-6 weeks."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Torus"
-  action = "text"
-  content = """PA and lateral views of the left wrist (7-year-old).
+    row = 0
+    col = 1
+    label = "Fat Pad+"
+    action = "text"
+    content = "AP and lateral views of the left elbow following trauma.\n\nPositive posterior fat pad sign and elevated anterior fat pad\n(\"sail sign\"), indicating joint effusion. No discrete fracture line.\n\nIMPRESSION: Joint effusion with positive fat pad signs. Occult radial\nhead or supracondylar fracture suspected. Follow-up in 10-14 days."
 
-Subtle buckling of dorsal cortex of distal radial metaphysis without
-cortical disruption, consistent with torus (buckle) fracture. No
-physeal involvement. Ulna normal.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Rad Head"
+    action = "text"
+    content = "AP and lateral views of the right elbow.\n\nMinimally displaced transverse fracture through radial head involving\n~25% of articular surface with < 2 mm step-off (Mason type I). Moderate\njoint effusion with elevated fat pads. No other fractures.\n\nIMPRESSION: Mason type I radial head fracture. Conservative management\nwith early range of motion. Orthopedic follow-up."
 
-IMPRESSION: Torus fracture of distal radius. Splint or cast for 3-4
-weeks. Excellent prognosis."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Greenstick"
-  action = "text"
-  content = """PA and lateral views of the right forearm (6-year-old).
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Transverse fracture through radial mid-diaphysis with dorsal cortical
-disruption but intact volar cortex — greenstick fracture. ~15 degrees
-dorsal angulation. Ulna intact.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Greenstick fracture of radius with moderate angulation.
-Closed reduction and long-arm cast for 6 weeks."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_distal — Distal Radius Fx
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_distal"
-name = "Distal Radius Fx"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Colles"
-  action = "text"
-  content = """PA and lateral views of the left wrist.
+  id = "xray_knee"
+  name = "Knee X-Ray"
 
-Transverse fracture of distal radial metaphysis with dorsal angulation
-of ~20 degrees and dorsal comminution. Ulna intact. Radiocarpal and
-DRUJ congruent. Radial height decreased 3 mm.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "AP, lateral, and sunrise views of the left knee.\n\nNormal alignment and mineralization. No fracture or dislocation.\nJoint spaces preserved (medial, lateral, patellofemoral). No\neffusion. No loose bodies. Soft tissues unremarkable.\n\nIMPRESSION: Normal left knee radiographs."
 
-IMPRESSION: Colles fracture with dorsal angulation. Orthopedic
-evaluation for closed reduction and casting."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Smith"
-  action = "text"
-  content = """PA and lateral views of the right wrist.
+    row = 0
+    col = 1
+    label = "OA Medial"
+    action = "text"
+    content = "AP and lateral views of the right knee, weight-bearing.\n\nModerate medial compartment joint space narrowing with subchondral\nsclerosis and marginal osteophytes. Lateral compartment and PFJ\nrelatively preserved. No fracture or effusion.\n\nIMPRESSION: Moderate medial compartment osteoarthritis. KL grade 3."
 
-Transverse fracture of distal radial metaphysis with volar angulation
-of ~15 degrees. Ulna intact. Radiocarpal and DRUJ congruent.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "OA Tricomp"
+    action = "text"
+    content = "AP, lateral, and sunrise views of the right knee.\n\nSevere tricompartmental joint space narrowing with pronounced\nsubchondral sclerosis, subchondral cysts, and large osteophytes.\nVarus malalignment.\n\nIMPRESSION: Severe tricompartmental OA. KL grade 4 with varus\ndeformity. Orthopedic evaluation for arthroplasty."
 
-IMPRESSION: Smith fracture (reverse Colles) with volar angulation.
-These are typically unstable — surgical fixation often required."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Barton"
-  action = "text"
-  content = """PA and lateral views of the left wrist.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Intra-articular fracture of dorsal rim of distal radius with dorsal
-carpal subluxation, consistent with dorsal Barton fracture. Fragment
-involves ~40% of articular surface with 2 mm step-off.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Dorsal Barton fracture with carpal subluxation. Urgent
-orthopedic evaluation for ORIF."""
   [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Chauffeur"
-  action = "text"
-  content = """PA and lateral views of the right wrist.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Intra-articular fracture through radial styloid process, consistent
-with chauffeur (Hutchinson) fracture. Fracture extends obliquely to
-scaphoid facet. Minimal displacement (< 2 mm).
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: Radial styloid fracture (chauffeur fracture), minimally
-displaced. Orthopedic follow-up for possible percutaneous pinning."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_scaphoid — Scaphoid Fracture
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_scaphoid"
-name = "Scaphoid Fracture"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Waist Fx"
-  action = "text"
-  content = """PA, oblique, and scaphoid views of the right wrist.
+  id = "xray_hand_trauma"
+  name = "Hand Trauma"
 
-Transverse lucent line through scaphoid waist with ~1 mm cortical
-offset. No sclerosis or cystic change. Scapholunate interval normal.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Dist Radius"
+    action = "navigate"
+    target = "xray_hand_distal"
 
-IMPRESSION: Acute scaphoid waist fracture, minimally displaced.
-Thumb spica cast for 6-12 weeks. Follow-up at 6 and 12 weeks."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Prox Pole"
-  action = "text"
-  content = """PA, oblique, and scaphoid views of the left wrist.
+    row = 0
+    col = 1
+    label = "Scaphoid"
+    action = "navigate"
+    target = "xray_hand_scaphoid"
 
-Subtle lucency at proximal pole of scaphoid with 1 mm sclerosis of
-proximal fragment. No significant displacement. Scapholunate interval
-preserved.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Metacarpal"
+    action = "navigate"
+    target = "xray_hand_metacarp"
 
-IMPRESSION: Proximal pole scaphoid fracture. Due to tenuous blood
-supply, orthopedic evaluation for surgical fixation recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Nonunion"
-  action = "text"
-  content = """PA, oblique, and scaphoid views of the right wrist.
+    row = 0
+    col = 3
+    label = "Phalanx"
+    action = "navigate"
+    target = "xray_hand_phalanx"
 
-Well-defined lucent defect through scaphoid waist with smooth,
-sclerotic margins and 2 mm diastasis — established nonunion. Cystic
-change in proximal fragment suggesting AVN. DISI deformity present.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Scaphoid waist nonunion with AVN and DISI. Urgent hand
-surgery referral for bone grafting and internal fixation."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_metacarp — Metacarpal Fracture
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_metacarp"
-name = "Metacarpal Fracture"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Boxer Fx"
-  action = "text"
-  content = """PA, oblique, and lateral views of the right hand.
+  id = "xray_hand_degen"
+  name = "Degenerative Hand"
 
-Impacted transverse fracture through fifth metacarpal neck with ~35
-degrees volar angulation. No intra-articular extension or rotational
-deformity. Remaining metacarpals and phalanges unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "CMC OA"
+    action = "text"
+    content = "PA view of both hands.\n\nModerate first CMC joint space narrowing and subchondral sclerosis\nbilaterally, right > left. Small osteophytes.\n\nIMPRESSION: Bilateral first CMC OA, moderate on right."
 
-IMPRESSION: Fifth MC neck fracture (boxer fracture) with moderate
-volar angulation. Closed reduction if > 40 degrees."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Bennett"
-  action = "text"
-  content = """PA and lateral views of the right thumb.
+    row = 0
+    col = 1
+    label = "Erosive OA"
+    action = "text"
+    content = "PA view of both hands.\n\nDIP and PIP joint space narrowing with central subchondral erosions\n(\"gull-wing\" deformity) and marginal osteophytes. No periarticular\nosteopenia or marginal erosions to suggest RA.\n\nIMPRESSION: Erosive OA (\"gull-wing\" pattern). Rheumatology correlation."
 
-Oblique intra-articular fracture through first MC base with ~2 mm
-displacement and radial/dorsal subluxation of MC shaft. Volar-ulnar
-fragment attached to anterior oblique ligament.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "CPPD"
+    action = "text"
+    content = "PA view of the right hand.\n\nChondrocalcinosis of the TFCC and radiocarpal joint, consistent with\nCPPD crystal deposition disease. Mild radiocarpal narrowing.\n\nIMPRESSION: Chondrocalcinosis of the wrist (CPPD arthropathy).\nCorrelate for pseudogout."
 
-IMPRESSION: Bennett fracture with CMC subluxation. Unstable injury.
-Urgent orthopedic referral for CRPP or ORIF."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Rolando"
-  action = "text"
-  content = """PA and lateral views of the left thumb.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Comminuted, Y-shaped intra-articular fracture through first MC base
-with multiple displaced fragments involving both articular surfaces.
-Significant joint incongruity.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Rolando fracture (comminuted first MC base). Urgent hand
-surgery referral for ORIF or external fixation."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# xray_hand_phalanx — Phalanx Fracture
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "xray_hand_phalanx"
-name = "Phalanx Fracture"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Tuft Fx"
-  action = "text"
-  content = """PA and lateral views of the left ring finger.
+  id = "xray_hand_pediatric"
+  name = "Pediatric Hand"
 
-Comminuted fracture through distal phalangeal tuft. No intra-articular
-extension. Nail bed intact radiographically.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Salter II"
+    action = "text"
+    content = "PA and lateral views of the right wrist (10-year-old).\n\nFracture through distal radial physis extending into metaphysis,\nconsistent with Salter-Harris type II. Minimal dorsal displacement\n(< 3 mm). Epiphysis in normal position. Ulna intact.\n\nIMPRESSION: SH-II distal radius fracture, minimally displaced.\nClosed reduction and short-arm cast for 4-6 weeks."
 
-IMPRESSION: Comminuted tuft fracture, left ring finger. Protective
-splinting. Clinical evaluation for nail bed injury."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Mallet"
-  action = "text"
-  content = """Lateral view of the right index finger.
+    row = 0
+    col = 1
+    label = "Torus"
+    action = "text"
+    content = "PA and lateral views of the left wrist (7-year-old).\n\nSubtle buckling of dorsal cortex of distal radial metaphysis without\ncortical disruption, consistent with torus (buckle) fracture. No\nphyseal involvement. Ulna normal.\n\nIMPRESSION: Torus fracture of distal radius. Splint or cast for 3-4\nweeks. Excellent prognosis."
 
-Small avulsion fracture at dorsal base of distal phalanx at extensor
-tendon insertion, with ~20 degrees DIP flexion (mallet deformity).
-No volar subluxation.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Greenstick"
+    action = "text"
+    content = "PA and lateral views of the right forearm (6-year-old).\n\nTransverse fracture through radial mid-diaphysis with dorsal cortical\ndisruption but intact volar cortex — greenstick fracture. ~15 degrees\ndorsal angulation. Ulna intact.\n\nIMPRESSION: Greenstick fracture of radius with moderate angulation.\nClosed reduction and long-arm cast for 6 weeks."
 
-IMPRESSION: Mallet finger (bony avulsion). Continuous DIP extension
-splinting for 6-8 weeks."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Jersey"
-  action = "text"
-  content = """Lateral view of the right ring finger.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Avulsion fracture at volar base of middle phalanx at FDP insertion
-with ~30 degrees PIP flexion. No proximal retraction of avulsed
-fragment.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Jersey finger (FDP avulsion). Urgent hand surgery — delays
-beyond 7-10 days significantly reduce success rates."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_menu — CT Exams
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "ct_menu"
-name = "CT Exams"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Head"
-  action = "navigate"
-  target = "ct_head"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Abd/Pelvis"
-  action = "navigate"
-  target = "ct_abdomen_pelvis"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Chest"
-  action = "navigate"
-  target = "ct_chest"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "xray_hand_distal"
+  name = "Distal Radius Fx"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_head — Head CT
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Colles"
+    action = "text"
+    content = "PA and lateral views of the left wrist.\n\nTransverse fracture of distal radial metaphysis with dorsal angulation\nof ~20 degrees and dorsal comminution. Ulna intact. Radiocarpal and\nDRUJ congruent. Radial height decreased 3 mm.\n\nIMPRESSION: Colles fracture with dorsal angulation. Orthopedic\nevaluation for closed reduction and casting."
 
-[[screens]]
-id = "ct_head"
-name = "Head CT"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """Non-contrast CT of the head.
+    row = 0
+    col = 1
+    label = "Smith"
+    action = "text"
+    content = "PA and lateral views of the right wrist.\n\nTransverse fracture of distal radial metaphysis with volar angulation\nof ~15 degrees. Ulna intact. Radiocarpal and DRUJ congruent.\n\nIMPRESSION: Smith fracture (reverse Colles) with volar angulation.\nThese are typically unstable — surgical fixation often required."
 
-No acute intracranial hemorrhage, mass effect, or midline shift.
-Ventricles and sulci age-appropriate. Gray-white differentiation
-preserved. Posterior fossa unremarkable. No calvarial fracture.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Barton"
+    action = "text"
+    content = "PA and lateral views of the left wrist.\n\nIntra-articular fracture of dorsal rim of distal radius with dorsal\ncarpal subluxation, consistent with dorsal Barton fracture. Fragment\ninvolves ~40% of articular surface with 2 mm step-off.\n\nIMPRESSION: Dorsal Barton fracture with carpal subluxation. Urgent\northopedic evaluation for ORIF."
 
-IMPRESSION: Normal non-contrast head CT."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "SAH"
-  action = "text"
-  content = """Non-contrast CT of the head.
+    row = 0
+    col = 3
+    label = "Chauffeur"
+    action = "text"
+    content = "PA and lateral views of the right wrist.\n\nIntra-articular fracture through radial styloid process, consistent\nwith chauffeur (Hutchinson) fracture. Fracture extends obliquely to\nscaphoid facet. Minimal displacement (< 2 mm).\n\nIMPRESSION: Radial styloid fracture (chauffeur fracture), minimally\ndisplaced. Orthopedic follow-up for possible percutaneous pinning."
 
-Acute hyperdensity in basal cisterns and Sylvian fissures bilaterally,
-consistent with acute SAH (Fisher grade 3). Mild ventricular dilatation
-concerning for early hydrocephalus. No parenchymal hematoma.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Acute SAH (Fisher 3) with early hydrocephalus. Emergent
-neurosurgical consultation. CTA for aneurysm evaluation."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "SDH Acute"
-  action = "text"
-  content = """Non-contrast CT of the head.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Crescent-shaped hyperdense extra-axial collection up to 12 mm over
-right cerebral convexity — acute SDH. Associated mass effect with
-~8 mm right-to-left midline shift, partial effacement of right
-lateral ventricle, and uncal herniation.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: Large acute right SDH with mass effect and uncal
-herniation. Emergent neurosurgical intervention indicated."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_abdomen_pelvis — CT Abd/Pelvis
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "ct_abdomen_pelvis"
-name = "CT Abd/Pelvis"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """CT of abdomen and pelvis with IV contrast.
+  id = "xray_hand_scaphoid"
+  name = "Scaphoid Fracture"
 
-Liver, gallbladder, spleen, pancreas, adrenals, and kidneys normal in
-size, contour, and enhancement. No focal lesions. Normal bowel caliber.
-No free fluid or free air. No lymphadenopathy. Bladder and pelvic
-organs unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Waist Fx"
+    action = "text"
+    content = "PA, oblique, and scaphoid views of the right wrist.\n\nTransverse lucent line through scaphoid waist with ~1 mm cortical\noffset. No sclerosis or cystic change. Scapholunate interval normal.\n\nIMPRESSION: Acute scaphoid waist fracture, minimally displaced.\nThumb spica cast for 6-12 weeks. Follow-up at 6 and 12 weeks."
 
-IMPRESSION: Normal contrast-enhanced CT abdomen and pelvis."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Appendicitis"
-  action = "text"
-  content = """CT of abdomen and pelvis with IV contrast.
+    row = 0
+    col = 1
+    label = "Prox Pole"
+    action = "text"
+    content = "PA, oblique, and scaphoid views of the left wrist.\n\nSubtle lucency at proximal pole of scaphoid with 1 mm sclerosis of\nproximal fragment. No significant displacement. Scapholunate interval\npreserved.\n\nIMPRESSION: Proximal pole scaphoid fracture. Due to tenuous blood\nsupply, orthopedic evaluation for surgical fixation recommended."
 
-Appendix dilated (12 mm) with wall enhancement, periappendiceal fat
-stranding, and small appendicolith at tip. Minimal adjacent free fluid.
-No abscess or perforation. Remainder unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Nonunion"
+    action = "text"
+    content = "PA, oblique, and scaphoid views of the right wrist.\n\nWell-defined lucent defect through scaphoid waist with smooth,\nsclerotic margins and 2 mm diastasis — established nonunion. Cystic\nchange in proximal fragment suggesting AVN. DISI deformity present.\n\nIMPRESSION: Scaphoid waist nonunion with AVN and DISI. Urgent hand\nsurgery referral for bone grafting and internal fixation."
 
-IMPRESSION: Acute appendicitis with appendicolith. No perforation.
-Surgical consultation recommended."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest — Chest CT
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-[[screens]]
-id = "ct_chest"
-name = "Chest CT"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Vascular"
-  action = "navigate"
-  target = "ct_chest_vascular"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Interstitial"
-  action = "navigate"
-  target = "ct_chest_interstitial"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Nodule"
-  action = "navigate"
-  target = "ct_chest_nodule"
-  [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Normal"
-  action = "text"
-  content = """CT of the chest with IV contrast.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Lungs clear without consolidation, GGO, or nodules. No PE to
-segmental level. Central airways patent. No pleural or pericardial
-effusion. Mediastinal and hilar nodes normal. Thoracic aorta and
-great vessels normal caliber. Osseous structures unremarkable.
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: Normal contrast-enhanced CT of the chest."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest_vascular — Chest CT Vascular
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "ct_chest_vascular"
-name = "Chest CT Vascular"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Pulm Embol"
-  action = "navigate"
-  target = "ct_chest_pe"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Aortic"
-  action = "navigate"
-  target = "ct_chest_aortic"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "xray_hand_metacarp"
+  name = "Metacarpal Fracture"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest_interstitial — ILD Patterns
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Boxer Fx"
+    action = "text"
+    content = "PA, oblique, and lateral views of the right hand.\n\nImpacted transverse fracture through fifth metacarpal neck with ~35\ndegrees volar angulation. No intra-articular extension or rotational\ndeformity. Remaining metacarpals and phalanges unremarkable.\n\nIMPRESSION: Fifth MC neck fracture (boxer fracture) with moderate\nvolar angulation. Closed reduction if > 40 degrees."
 
-[[screens]]
-id = "ct_chest_interstitial"
-name = "ILD Patterns"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "UIP"
-  action = "text"
-  content = """HRCT of the chest.
+    row = 0
+    col = 1
+    label = "Bennett"
+    action = "text"
+    content = "PA and lateral views of the right thumb.\n\nOblique intra-articular fracture through first MC base with ~2 mm\ndisplacement and radial/dorsal subluxation of MC shaft. Volar-ulnar\nfragment attached to anterior oblique ligament.\n\nIMPRESSION: Bennett fracture with CMC subluxation. Unstable injury.\nUrgent orthopedic referral for CRPP or ORIF."
 
-Bilateral, basilar, subpleural predominant reticular opacity with
-honeycombing and traction bronchiectasis, consistent with UIP pattern.
-No GGO to suggest alternative diagnosis. Mild lower lobe volume loss.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Rolando"
+    action = "text"
+    content = "PA and lateral views of the left thumb.\n\nComminuted, Y-shaped intra-articular fracture through first MC base\nwith multiple displaced fragments involving both articular surfaces.\nSignificant joint incongruity.\n\nIMPRESSION: Rolando fracture (comminuted first MC base). Urgent hand\nsurgery referral for ORIF or external fixation."
 
-IMPRESSION: UIP pattern on HRCT. Correlate for IPF vs CTD-ILD.
-Multidisciplinary discussion recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "NSIP"
-  action = "text"
-  content = """HRCT of the chest.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Bilateral, symmetric, lower-lobe predominant GGO with fine reticulation
-and traction bronchiectasis. Relative subpleural sparing favoring NSIP
-pattern. No honeycombing.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: NSIP pattern on HRCT. Consider CTD-associated ILD. PFTs
-and rheumatology evaluation recommended."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest_nodule — Pulmonary Nodule
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "ct_chest_nodule"
-name = "Pulmonary Nodule"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Solid <8mm"
-  action = "text"
-  content = """Non-contrast chest CT for nodule follow-up.
+  id = "xray_hand_phalanx"
+  name = "Phalanx Fracture"
 
-Solid pulmonary nodule measuring 6 x 5 mm in RUL (series 2, image 45).
-No calcification or fat. Stable compared to prior study of <date>. No
-new nodules.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Tuft Fx"
+    action = "text"
+    content = "PA and lateral views of the left ring finger.\n\nComminuted fracture through distal phalangeal tuft. No intra-articular\nextension. Nail bed intact radiographically.\n\nIMPRESSION: Comminuted tuft fracture, left ring finger. Protective\nsplinting. Clinical evaluation for nail bed injury."
 
-IMPRESSION: Stable 6 mm solid nodule, RUL. Follow-up in 12 months per
-Fleischner guidelines."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Solid >8mm"
-  action = "text"
-  content = """Non-contrast chest CT for nodule evaluation.
+    row = 0
+    col = 1
+    label = "Mallet"
+    action = "text"
+    content = "Lateral view of the right index finger.\n\nSmall avulsion fracture at dorsal base of distal phalanx at extensor\ntendon insertion, with ~20 degrees DIP flexion (mallet deformity).\nNo volar subluxation.\n\nIMPRESSION: Mallet finger (bony avulsion). Continuous DIP extension\nsplinting for 6-8 weeks."
 
-Solid pulmonary nodule measuring 11 x 9 mm with lobulated margins in
-LLL (series 2, image 67). No calcification. Mild surrounding GGO. No
-other nodules. Mediastinal and hilar nodes normal.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Jersey"
+    action = "text"
+    content = "Lateral view of the right ring finger.\n\nAvulsion fracture at volar base of middle phalanx at FDP insertion\nwith ~30 degrees PIP flexion. No proximal retraction of avulsed\nfragment.\n\nIMPRESSION: Jersey finger (FDP avulsion). Urgent hand surgery — delays\nbeyond 7-10 days significantly reduce success rates."
 
-IMPRESSION: 11 mm solid nodule, LLL, indeterminate. PET/CT or tissue
-sampling per Fleischner. Short-term follow-up (3 months) alternative
-for low-risk patients."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest_pe — Pulmonary Embolism
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-[[screens]]
-id = "ct_chest_pe"
-name = "Pulmonary Embolism"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Acute PE"
-  action = "text"
-  content = """CTPA.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Bilateral filling defects within main pulmonary arteries extending
-into lobar and segmental branches — acute PE. Right ventricular
-dilation with straightening of IVS (RV/LV > 1.0) suggesting right
-heart strain. Small wedge-shaped peripheral opacity RLL consistent
-with pulmonary infarction. No effusion.
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: Acute bilateral PE with right heart strain. Immediate
-anticoagulation and risk stratification."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Chronic PE"
-  action = "text"
-  content = """CTPA.
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-Eccentric, peripherally located filling defects within segmental
-branches of both lower lobe PAs forming obtuse angles with vessel
-wall — chronic PE. Mosaic perfusion, enlarged bronchial arteries,
-mild PA dilation (32 mm).
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
 
-IMPRESSION: Chronic PE with CT features of pulmonary hypertension.
-V/Q scintigraphy and echocardiography recommended."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Saddle PE"
-  action = "text"
-  content = """CTPA.
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
 
-Large saddle embolus straddling bifurcation of main PA, extending
-into both right and left main PAs. Significant RV dilation (RV/LV 1.4)
-with bowing of IVS. No infarction identified.
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
 
-IMPRESSION: Saddle PE with right heart strain and impending
-hemodynamic compromise. Medical emergency — immediate thrombolysis
-or embolectomy indicated."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ct_chest_aortic — Aortic Syndrome
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "ct_chest_aortic"
-name = "Aortic Syndrome"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Dissect. A"
-  action = "text"
-  content = """CT angiography of chest, abdomen, and pelvis.
+  id = "ct_menu"
+  name = "CT Exams"
 
-Intimal flap in ascending aorta originating just above aortic root
-and extending into descending thoracic aorta (Stanford type A). True
-lumen smaller than false lumen. Mild AR and small pericardial effusion.
-Coronary ostia patent. No abdominal extension.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Head"
+    action = "navigate"
+    target = "ct_head"
 
-IMPRESSION: Stanford type A aortic dissection with pericardial
-effusion. Surgical emergency — immediate CT surgery consultation."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Dissect. B"
-  action = "text"
-  content = """CT angiography of chest, abdomen, and pelvis.
+    row = 0
+    col = 1
+    label = "Abd/Pelvis"
+    action = "navigate"
+    target = "ct_abdomen_pelvis"
 
-Intimal flap in descending thoracic aorta beginning distal to left
-subclavian artery and extending to renal arteries (Stanford type B).
-Involves origin of SMA. No rupture or malperfusion.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Chest"
+    action = "navigate"
+    target = "ct_chest"
 
-IMPRESSION: Stanford type B dissection involving SMA origin. Vascular
-surgery for BP management and possible TEVAR."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_menu — MRI Exams
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-[[screens]]
-id = "mri_menu"
-name = "MRI Exams"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Brain"
-  action = "navigate"
-  target = "mri_brain"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Spine"
-  action = "navigate"
-  target = "mri_spine"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_brain — Brain MRI
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "mri_brain"
-name = "Brain MRI"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """MRI of the brain without contrast.
+  id = "ct_head"
+  name = "Head CT"
 
-TECHNIQUE: Multiplanar multisequence MRI without IV contrast (T1, T2,
-FLAIR, DWI/ADC, SWI).
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "Non-contrast CT of the head.\n\nNo acute intracranial hemorrhage, mass effect, or midline shift.\nVentricles and sulci age-appropriate. Gray-white differentiation\npreserved. Posterior fossa unremarkable. No calvarial fracture.\n\nIMPRESSION: Normal non-contrast head CT."
 
-FINDINGS: Normal brain parenchyma. No acute infarct (DWI/ADC negative).
-Normal gray-white differentiation. Ventricles and sulci age-appropriate.
-No mass, mass effect, or midline shift. Normal flow voids in major
-intracranial vessels. Sella, brainstem, posterior fossa unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "SAH"
+    action = "text"
+    content = "Non-contrast CT of the head.\n\nAcute hyperdensity in basal cisterns and Sylvian fissures bilaterally,\nconsistent with acute SAH (Fisher grade 3). Mild ventricular dilatation\nconcerning for early hydrocephalus. No parenchymal hematoma.\n\nIMPRESSION: Acute SAH (Fisher 3) with early hydrocephalus. Emergent\nneurosurgical consultation. CTA for aneurysm evaluation."
 
-IMPRESSION: Normal MRI of the brain without contrast."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "CVA Acute"
-  action = "text"
-  content = """MRI of the brain without contrast.
+    row = 0
+    col = 2
+    label = "SDH Acute"
+    action = "text"
+    content = "Non-contrast CT of the head.\n\nCrescent-shaped hyperdense extra-axial collection up to 12 mm over\nright cerebral convexity — acute SDH. Associated mass effect with\n~8 mm right-to-left midline shift, partial effacement of right\nlateral ventricle, and uncal herniation.\n\nIMPRESSION: Large acute right SDH with mass effect and uncal\nherniation. Emergent neurosurgical intervention indicated."
 
-TECHNIQUE: Multiplanar multisequence MRI without IV contrast.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-FINDINGS: Area of restricted diffusion (DWI+, ADC-) in left MCA
-territory involving insular cortex and frontal operculum. Correlating
-T2/FLAIR hyperintensity. No hemorrhagic transformation on SWI. No
-significant mass effect or midline shift.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Acute infarct, left MCA territory (insular ribbon and
-frontal operculum). Neurology consultation and stroke workup."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "MS Plaques"
-  action = "text"
-  content = """MRI of the brain without and with IV contrast.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Multiple periventricular and juxtacortical ovoid T2/FLAIR hyperintense
-lesions perpendicular to corpus callosum ("Dawson's fingers"). Several
-T1 hypointense ("black holes"). One left frontal lesion with incomplete
-rim enhancement. Corpus callosum involvement. No restricted diffusion.
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: Multiple supratentorial white matter lesions characteristic
-of MS. Active enhancing lesion. Neurology follow-up recommended."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_spine — Spine MRI
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "mri_spine"
-name = "Spine MRI"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Cervical"
-  action = "navigate"
-  target = "mri_spine_cervical"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Lumbar"
-  action = "navigate"
-  target = "mri_spine_lumbar"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "ct_abdomen_pelvis"
+  name = "CT Abd/Pelvis"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_spine_lumbar — Lumbar Spine
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "CT of abdomen and pelvis with IV contrast.\n\nLiver, gallbladder, spleen, pancreas, adrenals, and kidneys normal in\nsize, contour, and enhancement. No focal lesions. Normal bowel caliber.\nNo free fluid or free air. No lymphadenopathy. Bladder and pelvic\norgans unremarkable.\n\nIMPRESSION: Normal contrast-enhanced CT abdomen and pelvis."
 
-[[screens]]
-id = "mri_spine_lumbar"
-name = "Lumbar Spine"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Disc Disease"
-  action = "navigate"
-  target = "mri_spine_lumbar_disc"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Stenosis"
-  action = "navigate"
-  target = "mri_spine_lumbar_stenosis"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Normal"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+    row = 0
+    col = 1
+    label = "Appendicitis"
+    action = "text"
+    content = "CT of abdomen and pelvis with IV contrast.\n\nAppendix dilated (12 mm) with wall enhancement, periappendiceal fat\nstranding, and small appendicolith at tip. Minimal adjacent free fluid.\nNo abscess or perforation. Remainder unremarkable.\n\nIMPRESSION: Acute appendicitis with appendicolith. No perforation.\nSurgical consultation recommended."
 
-TECHNIQUE: Sagittal T1, T2, STIR and axial T1, T2.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-FINDINGS: Normal vertebral body height and alignment. Normal marrow
-signal. Discs normal in height and signal. Conus terminates at T12-L1.
-No spinal canal or foraminal stenosis. Normal paraspinal soft tissues.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Normal MRI of the lumbar spine."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_spine_cervical — Cervical Spine
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "mri_spine_cervical"
-name = "Cervical Spine"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """MRI of the cervical spine without contrast.
+  id = "ct_chest"
+  name = "Chest CT"
 
-TECHNIQUE: Sagittal T1, T2, STIR and axial T2.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Vascular"
+    action = "navigate"
+    target = "ct_chest_vascular"
 
-FINDINGS: Normal cervical lordosis and alignment. Normal marrow signal.
-Discs normal in height and signal. No herniation, bulge, or osteophyte.
-Spinal canal and foramina patent. Cord normal signal and caliber.
-No syrinx. Craniocervical junction unremarkable.
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Interstitial"
+    action = "navigate"
+    target = "ct_chest_interstitial"
 
-IMPRESSION: Normal MRI of the cervical spine."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Myelopathy"
-  action = "text"
-  content = """MRI of the cervical spine without contrast.
+    row = 0
+    col = 2
+    label = "Nodule"
+    action = "navigate"
+    target = "ct_chest_nodule"
 
-Large posterior disc-osteophyte complex at C5-C6 effacing ventral
-thecal sac and flattening cord. T2 hyperintensity in cord at this
-level consistent with myelomalacia. Moderate central canal stenosis
-(AP 7 mm). Mild disc bulges at C4-C5 and C6-C7 without cord
-compression.
+  [[screens.buttons]]
+    row = 0
+    col = 3
+    label = "Normal"
+    action = "text"
+    content = "CT of the chest with IV contrast.\n\nLungs clear without consolidation, GGO, or nodules. No PE to\nsegmental level. Central airways patent. No pleural or pericardial\neffusion. Mediastinal and hilar nodes normal. Thoracic aorta and\ngreat vessels normal caliber. Osseous structures unremarkable.\n\nIMPRESSION: Normal contrast-enhanced CT of the chest."
 
-IMPRESSION: C5-C6 disc-osteophyte complex with cord compression and
-myelomalacia. Neurosurgical evaluation for ACDF."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_spine_lumbar_disc — Disc Disease
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-[[screens]]
-id = "mri_spine_lumbar_disc"
-name = "Disc Disease"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Bulge L4-5"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-Broad-based disc bulge at L4-L5 effacing anterior thecal sac without
-significant canal stenosis. No herniation, extrusion, or nerve root
-compression. Remaining discs normal.
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-IMPRESSION: L4-L5 disc bulge without stenosis or nerve compression.
-Conservative management."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Hernia L5-S1"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-Left paracentral disc herniation at L5-S1 measuring ~6 mm AP. Contacts
-and slightly displaces traversing left S1 nerve root. Mild left
-foraminal narrowing. No canal stenosis.
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
 
-IMPRESSION: Left L5-S1 disc herniation with S1 nerve root contact.
-Pain management or neurosurgical microdiscectomy."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Extrusion"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
 
-Large right paracentral disc extrusion at L4-L5 measuring 8 mm and
-migrating inferiorly behind L5 body. Extruded fragment compresses
-traversing right L5 nerve root within lateral recess. Moderate right
-foraminal stenosis.
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
 
-IMPRESSION: Large right L4-L5 disc extrusion with inferior migration
-and L5 nerve root compression. Urgent neurosurgical microdiscectomy."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# mri_spine_lumbar_stenosis — Lumbar Stenosis
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "mri_spine_lumbar_stenosis"
-name = "Lumbar Stenosis"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Central"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+  id = "ct_chest_vascular"
+  name = "Chest CT Vascular"
 
-Severe central spinal canal stenosis at L3-L4 and L4-L5 secondary to
-broad-based disc bulges, ligamentum flavum hypertrophy, and facet OA.
-Thecal sac AP diameter 6 mm at L4-L5. Crowding of cauda equina.
-Multilevel moderate foraminal narrowing.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Pulm Embol"
+    action = "navigate"
+    target = "ct_chest_pe"
 
-IMPRESSION: Severe multilevel central canal stenosis (L3-L5) with
-cauda equina crowding. Neurosurgical decompressive laminectomy."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Foraminal"
-  action = "text"
-  content = """MRI of the lumbar spine without contrast.
+    row = 0
+    col = 1
+    label = "Aortic"
+    action = "navigate"
+    target = "ct_chest_aortic"
 
-Moderate to severe bilateral neural foraminal narrowing at L4-L5 and
-L5-S1 due to disc height loss, uncovertebral/facet hypertrophy, and
-posterolateral disc bulges. Exiting L4, L5, and S1 nerve roots contacted
-bilaterally. No significant central stenosis.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Multilevel foraminal stenosis with bilateral nerve root
-contact. Pain management for selective nerve root blocks."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# us_menu — Ultrasound Exams
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "us_menu"
-name = "Ultrasound Exams"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Thyroid"
-  action = "navigate"
-  target = "us_thyroid"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Abdomen"
-  action = "navigate"
-  target = "us_abdomen"
-  [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+  id = "ct_chest_interstitial"
+  name = "ILD Patterns"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# us_thyroid — Thyroid US
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "UIP"
+    action = "text"
+    content = "HRCT of the chest.\n\nBilateral, basilar, subpleural predominant reticular opacity with\nhoneycombing and traction bronchiectasis, consistent with UIP pattern.\nNo GGO to suggest alternative diagnosis. Mild lower lobe volume loss.\n\nIMPRESSION: UIP pattern on HRCT. Correlate for IPF vs CTD-ILD.\nMultidisciplinary discussion recommended."
 
-[[screens]]
-id = "us_thyroid"
-name = "Thyroid US"
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """Ultrasound of the thyroid gland.
+    row = 0
+    col = 1
+    label = "NSIP"
+    action = "text"
+    content = "HRCT of the chest.\n\nBilateral, symmetric, lower-lobe predominant GGO with fine reticulation\nand traction bronchiectasis. Relative subpleural sparing favoring NSIP\npattern. No honeycombing.\n\nIMPRESSION: NSIP pattern on HRCT. Consider CTD-associated ILD. PFTs\nand rheumatology evaluation recommended."
 
-Thyroid normal in size (RL 4.5 x 1.8 x 1.6 cm, LL 4.2 x 1.7 x 1.5 cm).
-Parenchyma homogeneous without nodules or cysts. Isthmus unremarkable.
-No cervical lymphadenopathy.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Normal thyroid ultrasound."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "TI-RADS 3"
-  action = "text"
-  content = """Ultrasound of the thyroid gland.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Solid, isoechoic nodule 1.5 x 1.2 x 0.9 cm in right lobe. Smooth
-margins, well-defined, no calcifications. Wider-than-tall.
-TI-RADS 3 (mildly suspicious). Left lobe and isthmus unremarkable.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: TI-RADS 3 nodule, right lobe. Follow-up US in 12 months."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "TI-RADS 5"
-  action = "text"
-  content = """Ultrasound of the thyroid gland.
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-Solid, markedly hypoechoic nodule 2.1 x 1.6 x 1.3 cm in right lobe
-with irregular margins, microcalcifications, and taller-than-wide
-morphology. TI-RADS 5 (highly suspicious, 9 points).
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
 
-IMPRESSION: TI-RADS 5 nodule, right lobe. FNA biopsy per ACR guidelines."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# us_abdomen — Abdomen US
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "us_abdomen"
-name = "Abdomen US"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Liver"
-  action = "navigate"
-  target = "us_abdomen_liver"
-  [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Gallbladder"
-  action = "navigate"
-  target = "us_abdomen_gb"
-  [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Normal"
-  action = "text"
-  content = """Ultrasound of the abdomen (complete).
+  id = "ct_chest_nodule"
+  name = "Pulmonary Nodule"
 
-Liver normal in size and echotexture. No focal lesions. Gallbladder
-distended without wall thickening, stones, or pericholecystic fluid.
-Sonographic Murphy sign negative. CBD 4 mm. Pancreas visualized and
-unremarkable. Right kidney 10.2 cm, left 10.5 cm, normal echotexture.
-Spleen normal. No free fluid.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Solid <8mm"
+    action = "text"
+    content = "Non-contrast chest CT for nodule follow-up.\n\nSolid pulmonary nodule measuring 6 x 5 mm in RUL (series 2, image 45).\nNo calcification or fat. Stable compared to prior study of <date>. No\nnew nodules.\n\nIMPRESSION: Stable 6 mm solid nodule, RUL. Follow-up in 12 months per\nFleischner guidelines."
 
-IMPRESSION: Normal abdominal ultrasound."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 0
+    col = 1
+    label = "Solid >8mm"
+    action = "text"
+    content = "Non-contrast chest CT for nodule evaluation.\n\nSolid pulmonary nodule measuring 11 x 9 mm with lobulated margins in\nLLL (series 2, image 67). No calcification. Mild surrounding GGO. No\nother nodules. Mediastinal and hilar nodes normal.\n\nIMPRESSION: 11 mm solid nodule, LLL, indeterminate. PET/CT or tissue\nsampling per Fleischner. Short-term follow-up (3 months) alternative\nfor low-risk patients."
 
-# ═══════════════════════════════════════════════════════════════════════════
-# us_abdomen_liver — Liver US
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "us_abdomen_liver"
-name = "Liver US"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """Ultrasound of the liver.
+  id = "ct_chest_pe"
+  name = "Pulmonary Embolism"
 
-Liver normal in size (span 14.5 cm) with smooth contour and homogeneous
-echotexture. No focal lesions. Hepatic vasculature patent with normal
-flow. Biliary tree nondilated. CBD 3 mm.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Acute PE"
+    action = "text"
+    content = "CTPA.\n\nBilateral filling defects within main pulmonary arteries extending\ninto lobar and segmental branches — acute PE. Right ventricular\ndilation with straightening of IVS (RV/LV > 1.0) suggesting right\nheart strain. Small wedge-shaped peripheral opacity RLL consistent\nwith pulmonary infarction. No effusion.\n\nIMPRESSION: Acute bilateral PE with right heart strain. Immediate\nanticoagulation and risk stratification."
 
-IMPRESSION: Normal liver ultrasound."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Steatosis"
-  action = "text"
-  content = """Ultrasound of the liver.
+    row = 0
+    col = 1
+    label = "Chronic PE"
+    action = "text"
+    content = "CTPA.\n\nEccentric, peripherally located filling defects within segmental\nbranches of both lower lobe PAs forming obtuse angles with vessel\nwall — chronic PE. Mosaic perfusion, enlarged bronchial arteries,\nmild PA dilation (32 mm).\n\nIMPRESSION: Chronic PE with CT features of pulmonary hypertension.\nV/Q scintigraphy and echocardiography recommended."
 
-Liver enlarged (span 17.2 cm) with diffusely increased echogenicity
-compared to right renal cortex. Posterior beam attenuation with
-decreased visualization of hepatic vessels and diaphragm. No focal
-lesions. Patent vasculature.
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Saddle PE"
+    action = "text"
+    content = "CTPA.\n\nLarge saddle embolus straddling bifurcation of main PA, extending\ninto both right and left main PAs. Significant RV dilation (RV/LV 1.4)\nwith bowing of IVS. No infarction identified.\n\nIMPRESSION: Saddle PE with right heart strain and impending\nhemodynamic compromise. Medical emergency — immediate thrombolysis\nor embolectomy indicated."
 
-IMPRESSION: Moderate to severe hepatic steatosis. Correlate for
-metabolic syndrome, NAFLD, and alcohol use."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Cirrhosis"
-  action = "text"
-  content = """Ultrasound of the liver.
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-Liver with nodular contour and coarse, heterogeneous echotexture
-consistent with cirrhosis. Right lobe atrophy with relative caudate
-hypertrophy. Mild splenomegaly (13.5 cm). No focal lesions. Patent
-portal vein with hepatopetal flow. No ascites.
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-IMPRESSION: Cirrhosis with portal hypertension (splenomegaly).
-Hepatology follow-up for HCC screening."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# us_abdomen_gb — Gallbladder US
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "us_abdomen_gb"
-name = "Gallbladder US"
-  [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "Normal"
-  action = "text"
-  content = """RUQ ultrasound (gallbladder).
+  id = "ct_chest_aortic"
+  name = "Aortic Syndrome"
 
-Gallbladder distended with thin walls (2 mm). No stones, sludge, or
-polyps. No pericholecystic fluid. Sonographic Murphy sign negative.
-CBD 3 mm. No intrahepatic biliary dilation.
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Dissect. A"
+    action = "text"
+    content = "CT angiography of chest, abdomen, and pelvis.\n\nIntimal flap in ascending aorta originating just above aortic root\nand extending into descending thoracic aorta (Stanford type A). True\nlumen smaller than false lumen. Mild AR and small pericardial effusion.\nCoronary ostia patent. No abdominal extension.\n\nIMPRESSION: Stanford type A aortic dissection with pericardial\neffusion. Surgical emergency — immediate CT surgery consultation."
 
-IMPRESSION: Normal gallbladder ultrasound."""
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "Cholecystitis"
-  action = "text"
-  content = """RUQ ultrasound.
+    row = 0
+    col = 1
+    label = "Dissect. B"
+    action = "text"
+    content = "CT angiography of chest, abdomen, and pelvis.\n\nIntimal flap in descending thoracic aorta beginning distal to left\nsubclavian artery and extending to renal arteries (Stanford type B).\nInvolves origin of SMA. No rupture or malperfusion.\n\nIMPRESSION: Stanford type B dissection involving SMA origin. Vascular\nsurgery for BP management and possible TEVAR."
 
-Gallbladder distended with wall thickening (6 mm) and pericholecystic
-fluid. Multiple shadowing gallstones including one impacted at neck.
-Sonographic Murphy sign positive. CBD 5 mm. No intrahepatic dilation.
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
 
-IMPRESSION: Acute calculous cholecystitis with impacted neck stone.
-Surgical consultation for cholecystectomy."""
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "Polyp"
-  action = "text"
-  content = """RUQ ultrasound.
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
 
-Non-shadowing, non-mobile polypoid lesion measuring 7 mm in gallbladder
-fundus. No vascularity on color Doppler. No other lesions. Wall thin.
-No stones or sludge. Murphy sign negative.
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
 
-IMPRESSION: 7 mm gallbladder polyp, likely benign. Follow-up US in
-6 and 12 months. Surgical consultation if > 10 mm."""
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
-  [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
-  [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
-  [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
-  [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
-  [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
-  [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
-  [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
-  [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
-  [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# utilities — Utilities & Editing
-# ═══════════════════════════════════════════════════════════════════════════
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
 
 [[screens]]
-id = "utilities"
-name = "Utilities & Editing"
+  id = "mri_menu"
+  name = "MRI Exams"
+
   [[screens.buttons]]
-  row = 0
-  col = 0
-  label = "RadioPedia"
-  action = "exec"
-  content = """xdg-open https://radiopaedia.org &"""
+    row = 0
+    col = 0
+    label = "Brain"
+    action = "navigate"
+    target = "mri_brain"
+
   [[screens.buttons]]
-  row = 0
-  col = 1
-  label = "PubMed"
-  action = "exec"
-  content = """xdg-open https://pubmed.ncbi.nlm.nih.gov &"""
+    row = 0
+    col = 1
+    label = "Spine"
+    action = "navigate"
+    target = "mri_spine"
+
   [[screens.buttons]]
-  row = 0
-  col = 2
-  label = "RadAssist"
-  action = "exec"
-  content = """xdg-open https://radiopaedia.org/articles/radiology-reporting-checklist &"""
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
   [[screens.buttons]]
-  row = 0
-  col = 3
-  label = "Date->Clip"
-  action = "exec"
-  content = """date '+%Y-%m-%d %H:%M' | xclip -selection clipboard"""
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
   [[screens.buttons]]
-  row = 0
-  col = 4
-  label = "RIS Web"
-  action = "exec"
-  content = """xdg-open https://ris.hospital.local &"""
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
   [[screens.buttons]]
-  row = 0
-  col = 5
-  label = "PACS"
-  action = "exec"
-  content = """xdg-open https://pacs.hospital.local &"""
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
   [[screens.buttons]]
-  row = 1
-  col = 0
-  label = "OrthoBullets"
-  action = "exec"
-  content = """xdg-open https://www.orthobullets.com &"""
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
   [[screens.buttons]]
-  row = 1
-  col = 1
-  label = "MDCalc"
-  action = "exec"
-  content = """xdg-open https://www.mdcalc.com &"""
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
   [[screens.buttons]]
-  row = 1
-  col = 2
-  label = "UpToDate"
-  action = "exec"
-  content = """xdg-open https://www.uptodate.com &"""
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
   [[screens.buttons]]
-  row = 1
-  col = 3
-  label = "e-Anatomy"
-  action = "exec"
-  content = """xdg-open https://www.imaios.com/en/e-anatomy &"""
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
   [[screens.buttons]]
-  row = 1
-  col = 4
-  label = "RadLex"
-  action = "exec"
-  content = """xdg-open https://radlex.org &"""
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
   [[screens.buttons]]
-  row = 1
-  col = 5
-  label = "ACR Guide"
-  action = "exec"
-  content = """xdg-open https://www.acr.org/Clinical-Resources/ACR-Appropriateness-Criteria &"""
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_brain"
+  name = "Brain MRI"
+
   [[screens.buttons]]
-  row = 2
-  col = 0
-  label = "Txt:HN"
-  action = "text"
-  content = """Patient tolerated the procedure well without immediate complications."""
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "MRI of the brain without contrast.\n\nTECHNIQUE: Multiplanar multisequence MRI without IV contrast (T1, T2,\nFLAIR, DWI/ADC, SWI).\n\nFINDINGS: Normal brain parenchyma. No acute infarct (DWI/ADC negative).\nNormal gray-white differentiation. Ventricles and sulci age-appropriate.\nNo mass, mass effect, or midline shift. Normal flow voids in major\nintracranial vessels. Sella, brainstem, posterior fossa unremarkable.\n\nIMPRESSION: Normal MRI of the brain without contrast."
+
   [[screens.buttons]]
-  row = 2
-  col = 1
-  label = "Txt:Comp"
-  action = "text"
-  content = """Comparison is made with the prior study of <date>."""
+    row = 0
+    col = 1
+    label = "CVA Acute"
+    action = "text"
+    content = "MRI of the brain without contrast.\n\nTECHNIQUE: Multiplanar multisequence MRI without IV contrast.\n\nFINDINGS: Area of restricted diffusion (DWI+, ADC-) in left MCA\nterritory involving insular cortex and frontal operculum. Correlating\nT2/FLAIR hyperintensity. No hemorrhagic transformation on SWI. No\nsignificant mass effect or midline shift.\n\nIMPRESSION: Acute infarct, left MCA territory (insular ribbon and\nfrontal operculum). Neurology consultation and stroke workup."
+
   [[screens.buttons]]
-  row = 2
-  col = 2
-  label = "Txt:Rec"
-  action = "text"
-  content = """Clinical correlation and follow-up as clinically indicated is recommended."""
+    row = 0
+    col = 2
+    label = "MS Plaques"
+    action = "text"
+    content = "MRI of the brain without and with IV contrast.\n\nMultiple periventricular and juxtacortical ovoid T2/FLAIR hyperintense\nlesions perpendicular to corpus callosum (\"Dawson's fingers\"). Several\nT1 hypointense (\"black holes\"). One left frontal lesion with incomplete\nrim enhancement. Corpus callosum involvement. No restricted diffusion.\n\nIMPRESSION: Multiple supratentorial white matter lesions characteristic\nof MS. Active enhancing lesion. Neurology follow-up recommended."
+
   [[screens.buttons]]
-  row = 2
-  col = 3
-  label = "Txt:Lim"
-  action = "text"
-  content = """The study is limited by patient body habitus and/or motion artifact."""
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
   [[screens.buttons]]
-  row = 2
-  col = 4
-  label = "Txt:Urg"
-  action = "text"
-  content = """CRITICAL FINDING — the referring physician was notified by Dr. <name> on <date> at <time>."""
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
   [[screens.buttons]]
-  row = 2
-  col = 5
-  label = "Txt:Tech"
-  action = "text"
-  content = """TECHNIQUE: Multiplanar multisequence imaging was performed according to departmental protocol."""
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
   [[screens.buttons]]
-  row = 3
-  col = 0
-  label = "SelAll"
-  action = "select_all"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
   [[screens.buttons]]
-  row = 3
-  col = 1
-  label = "SLine"
-  action = "select_line"
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
   [[screens.buttons]]
-  row = 3
-  col = 2
-  label = "LStart"
-  action = "line_start"
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
   [[screens.buttons]]
-  row = 3
-  col = 3
-  label = "LEnd"
-  action = "line_end"
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
   [[screens.buttons]]
-  row = 3
-  col = 4
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
   [[screens.buttons]]
-  row = 3
-  col = 5
-  label = "Del"
-  action = "delete"
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
   [[screens.buttons]]
-  row = 4
-  col = 0
-  label = "SLine"
-  action = "select_line"
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_spine"
+  name = "Spine MRI"
+
   [[screens.buttons]]
-  row = 4
-  col = 1
-  label = "LStart"
-  action = "line_start"
+    row = 0
+    col = 0
+    label = "Cervical"
+    action = "navigate"
+    target = "mri_spine_cervical"
+
   [[screens.buttons]]
-  row = 4
-  col = 2
-  label = "LEnd"
-  action = "line_end"
+    row = 0
+    col = 1
+    label = "Lumbar"
+    action = "navigate"
+    target = "mri_spine_lumbar"
+
   [[screens.buttons]]
-  row = 4
-  col = 3
-  label = "Del"
-  action = "delete"
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
   [[screens.buttons]]
-  row = 5
-  col = 0
-  label = "Back"
-  action = "prev"
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
   [[screens.buttons]]
-  row = 5
-  col = 1
-  label = "Home"
-  action = "home"
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
   [[screens.buttons]]
-  row = 5
-  col = 2
-  label = "SelAll"
-  action = "select_all"
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
   [[screens.buttons]]
-  row = 5
-  col = 3
-  label = "Copy"
-  action = "copy"
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
   [[screens.buttons]]
-  row = 5
-  col = 4
-  label = "Paste"
-  action = "paste"
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
   [[screens.buttons]]
-  row = 5
-  col = 5
-  label = "Bksp"
-  action = "backspace"
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_spine_lumbar"
+  name = "Lumbar Spine"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Disc Disease"
+    action = "navigate"
+    target = "mri_spine_lumbar_disc"
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Stenosis"
+    action = "navigate"
+    target = "mri_spine_lumbar_stenosis"
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Normal"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nTECHNIQUE: Sagittal T1, T2, STIR and axial T1, T2.\n\nFINDINGS: Normal vertebral body height and alignment. Normal marrow\nsignal. Discs normal in height and signal. Conus terminates at T12-L1.\nNo spinal canal or foraminal stenosis. Normal paraspinal soft tissues.\n\nIMPRESSION: Normal MRI of the lumbar spine."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_spine_cervical"
+  name = "Cervical Spine"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "MRI of the cervical spine without contrast.\n\nTECHNIQUE: Sagittal T1, T2, STIR and axial T2.\n\nFINDINGS: Normal cervical lordosis and alignment. Normal marrow signal.\nDiscs normal in height and signal. No herniation, bulge, or osteophyte.\nSpinal canal and foramina patent. Cord normal signal and caliber.\nNo syrinx. Craniocervical junction unremarkable.\n\nIMPRESSION: Normal MRI of the cervical spine."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Myelopathy"
+    action = "text"
+    content = "MRI of the cervical spine without contrast.\n\nLarge posterior disc-osteophyte complex at C5-C6 effacing ventral\nthecal sac and flattening cord. T2 hyperintensity in cord at this\nlevel consistent with myelomalacia. Moderate central canal stenosis\n(AP 7 mm). Mild disc bulges at C4-C5 and C6-C7 without cord\ncompression.\n\nIMPRESSION: C5-C6 disc-osteophyte complex with cord compression and\nmyelomalacia. Neurosurgical evaluation for ACDF."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_spine_lumbar_disc"
+  name = "Disc Disease"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Bulge L4-5"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nBroad-based disc bulge at L4-L5 effacing anterior thecal sac without\nsignificant canal stenosis. No herniation, extrusion, or nerve root\ncompression. Remaining discs normal.\n\nIMPRESSION: L4-L5 disc bulge without stenosis or nerve compression.\nConservative management."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Hernia L5-S1"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nLeft paracentral disc herniation at L5-S1 measuring ~6 mm AP. Contacts\nand slightly displaces traversing left S1 nerve root. Mild left\nforaminal narrowing. No canal stenosis.\n\nIMPRESSION: Left L5-S1 disc herniation with S1 nerve root contact.\nPain management or neurosurgical microdiscectomy."
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Extrusion"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nLarge right paracentral disc extrusion at L4-L5 measuring 8 mm and\nmigrating inferiorly behind L5 body. Extruded fragment compresses\ntraversing right L5 nerve root within lateral recess. Moderate right\nforaminal stenosis.\n\nIMPRESSION: Large right L4-L5 disc extrusion with inferior migration\nand L5 nerve root compression. Urgent neurosurgical microdiscectomy."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "mri_spine_lumbar_stenosis"
+  name = "Lumbar Stenosis"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Central"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nSevere central spinal canal stenosis at L3-L4 and L4-L5 secondary to\nbroad-based disc bulges, ligamentum flavum hypertrophy, and facet OA.\nThecal sac AP diameter 6 mm at L4-L5. Crowding of cauda equina.\nMultilevel moderate foraminal narrowing.\n\nIMPRESSION: Severe multilevel central canal stenosis (L3-L5) with\ncauda equina crowding. Neurosurgical decompressive laminectomy."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Foraminal"
+    action = "text"
+    content = "MRI of the lumbar spine without contrast.\n\nModerate to severe bilateral neural foraminal narrowing at L4-L5 and\nL5-S1 due to disc height loss, uncovertebral/facet hypertrophy, and\nposterolateral disc bulges. Exiting L4, L5, and S1 nerve roots contacted\nbilaterally. No significant central stenosis.\n\nIMPRESSION: Multilevel foraminal stenosis with bilateral nerve root\ncontact. Pain management for selective nerve root blocks."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "us_menu"
+  name = "Ultrasound Exams"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Thyroid"
+    action = "navigate"
+    target = "us_thyroid"
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Abdomen"
+    action = "navigate"
+    target = "us_abdomen"
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "us_thyroid"
+  name = "Thyroid US"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "Ultrasound of the thyroid gland.\n\nThyroid normal in size (RL 4.5 x 1.8 x 1.6 cm, LL 4.2 x 1.7 x 1.5 cm).\nParenchyma homogeneous without nodules or cysts. Isthmus unremarkable.\nNo cervical lymphadenopathy.\n\nIMPRESSION: Normal thyroid ultrasound."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "TI-RADS 3"
+    action = "text"
+    content = "Ultrasound of the thyroid gland.\n\nSolid, isoechoic nodule 1.5 x 1.2 x 0.9 cm in right lobe. Smooth\nmargins, well-defined, no calcifications. Wider-than-tall.\nTI-RADS 3 (mildly suspicious). Left lobe and isthmus unremarkable.\n\nIMPRESSION: TI-RADS 3 nodule, right lobe. Follow-up US in 12 months."
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "TI-RADS 5"
+    action = "text"
+    content = "Ultrasound of the thyroid gland.\n\nSolid, markedly hypoechoic nodule 2.1 x 1.6 x 1.3 cm in right lobe\nwith irregular margins, microcalcifications, and taller-than-wide\nmorphology. TI-RADS 5 (highly suspicious, 9 points).\n\nIMPRESSION: TI-RADS 5 nodule, right lobe. FNA biopsy per ACR guidelines."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "us_abdomen"
+  name = "Abdomen US"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Liver"
+    action = "navigate"
+    target = "us_abdomen_liver"
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Gallbladder"
+    action = "navigate"
+    target = "us_abdomen_gb"
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Normal"
+    action = "text"
+    content = "Ultrasound of the abdomen (complete).\n\nLiver normal in size and echotexture. No focal lesions. Gallbladder\ndistended without wall thickening, stones, or pericholecystic fluid.\nSonographic Murphy sign negative. CBD 4 mm. Pancreas visualized and\nunremarkable. Right kidney 10.2 cm, left 10.5 cm, normal echotexture.\nSpleen normal. No free fluid.\n\nIMPRESSION: Normal abdominal ultrasound."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "us_abdomen_liver"
+  name = "Liver US"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "Ultrasound of the liver.\n\nLiver normal in size (span 14.5 cm) with smooth contour and homogeneous\nechotexture. No focal lesions. Hepatic vasculature patent with normal\nflow. Biliary tree nondilated. CBD 3 mm.\n\nIMPRESSION: Normal liver ultrasound."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Steatosis"
+    action = "text"
+    content = "Ultrasound of the liver.\n\nLiver enlarged (span 17.2 cm) with diffusely increased echogenicity\ncompared to right renal cortex. Posterior beam attenuation with\ndecreased visualization of hepatic vessels and diaphragm. No focal\nlesions. Patent vasculature.\n\nIMPRESSION: Moderate to severe hepatic steatosis. Correlate for\nmetabolic syndrome, NAFLD, and alcohol use."
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Cirrhosis"
+    action = "text"
+    content = "Ultrasound of the liver.\n\nLiver with nodular contour and coarse, heterogeneous echotexture\nconsistent with cirrhosis. Right lobe atrophy with relative caudate\nhypertrophy. Mild splenomegaly (13.5 cm). No focal lesions. Patent\nportal vein with hepatopetal flow. No ascites.\n\nIMPRESSION: Cirrhosis with portal hypertension (splenomegaly).\nHepatology follow-up for HCC screening."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "us_abdomen_gb"
+  name = "Gallbladder US"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "Normal"
+    action = "text"
+    content = "RUQ ultrasound (gallbladder).\n\nGallbladder distended with thin walls (2 mm). No stones, sludge, or\npolyps. No pericholecystic fluid. Sonographic Murphy sign negative.\nCBD 3 mm. No intrahepatic biliary dilation.\n\nIMPRESSION: Normal gallbladder ultrasound."
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "Cholecystitis"
+    action = "text"
+    content = "RUQ ultrasound.\n\nGallbladder distended with wall thickening (6 mm) and pericholecystic\nfluid. Multiple shadowing gallstones including one impacted at neck.\nSonographic Murphy sign positive. CBD 5 mm. No intrahepatic dilation.\n\nIMPRESSION: Acute calculous cholecystitis with impacted neck stone.\nSurgical consultation for cholecystectomy."
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "Polyp"
+    action = "text"
+    content = "RUQ ultrasound.\n\nNon-shadowing, non-mobile polypoid lesion measuring 7 mm in gallbladder\nfundus. No vascularity on color Doppler. No other lesions. Wall thin.\nNo stones or sludge. Murphy sign negative.\n\nIMPRESSION: 7 mm gallbladder polyp, likely benign. Follow-up US in\n6 and 12 months. Surgical consultation if > 10 mm."
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"
+
+[[screens]]
+  id = "utilities"
+  name = "Utilities & Editing"
+
+  [[screens.buttons]]
+    row = 0
+    col = 0
+    label = "RadioPedia"
+    action = "exec"
+    content = "xdg-open https://radiopaedia.org &"
+
+  [[screens.buttons]]
+    row = 0
+    col = 1
+    label = "PubMed"
+    action = "exec"
+    content = "xdg-open https://pubmed.ncbi.nlm.nih.gov &"
+
+  [[screens.buttons]]
+    row = 0
+    col = 2
+    label = "RadAssist"
+    action = "exec"
+    content = "xdg-open https://radiopaedia.org/articles/radiology-reporting-checklist &"
+
+  [[screens.buttons]]
+    row = 0
+    col = 3
+    label = "Date->Clip"
+    action = "exec"
+    content = "date '+%Y-%m-%d %H:%M' | xclip -selection clipboard"
+
+  [[screens.buttons]]
+    row = 0
+    col = 4
+    label = "RIS Web"
+    action = "exec"
+    content = "xdg-open https://ris.hospital.local &"
+
+  [[screens.buttons]]
+    row = 0
+    col = 5
+    label = "PACS"
+    action = "exec"
+    content = "xdg-open https://pacs.hospital.local &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 0
+    label = "OrthoBullets"
+    action = "exec"
+    content = "xdg-open https://www.orthobullets.com &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 1
+    label = "MDCalc"
+    action = "exec"
+    content = "xdg-open https://www.mdcalc.com &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 2
+    label = "UpToDate"
+    action = "exec"
+    content = "xdg-open https://www.uptodate.com &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 3
+    label = "e-Anatomy"
+    action = "exec"
+    content = "xdg-open https://www.imaios.com/en/e-anatomy &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 4
+    label = "RadLex"
+    action = "exec"
+    content = "xdg-open https://radlex.org &"
+
+  [[screens.buttons]]
+    row = 1
+    col = 5
+    label = "ACR Guide"
+    action = "exec"
+    content = "xdg-open https://www.acr.org/Clinical-Resources/ACR-Appropriateness-Criteria &"
+
+  [[screens.buttons]]
+    row = 2
+    col = 0
+    label = "Txt:HN"
+    action = "text"
+    content = "Patient tolerated the procedure well without immediate complications."
+
+  [[screens.buttons]]
+    row = 2
+    col = 1
+    label = "Txt:Comp"
+    action = "text"
+    content = "Comparison is made with the prior study of <date>."
+
+  [[screens.buttons]]
+    row = 2
+    col = 2
+    label = "Txt:Rec"
+    action = "text"
+    content = "Clinical correlation and follow-up as clinically indicated is recommended."
+
+  [[screens.buttons]]
+    row = 2
+    col = 3
+    label = "Txt:Lim"
+    action = "text"
+    content = "The study is limited by patient body habitus and/or motion artifact."
+
+  [[screens.buttons]]
+    row = 2
+    col = 4
+    label = "Txt:Urg"
+    action = "text"
+    content = "CRITICAL FINDING — the referring physician was notified by Dr. <name> on <date> at <time>."
+
+  [[screens.buttons]]
+    row = 2
+    col = 5
+    label = "Txt:Tech"
+    action = "text"
+    content = "TECHNIQUE: Multiplanar multisequence imaging was performed according to departmental protocol."
+
+  [[screens.buttons]]
+    row = 3
+    col = 0
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 3
+    col = 1
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 3
+    col = 2
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 3
+    col = 3
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 3
+    col = 4
+    label = "Bksp"
+    action = "backspace"
+
+  [[screens.buttons]]
+    row = 3
+    col = 5
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 4
+    col = 0
+    label = "SLine"
+    action = "select_line"
+
+  [[screens.buttons]]
+    row = 4
+    col = 1
+    label = "LStart"
+    action = "line_start"
+
+  [[screens.buttons]]
+    row = 4
+    col = 2
+    label = "LEnd"
+    action = "line_end"
+
+  [[screens.buttons]]
+    row = 4
+    col = 3
+    label = "Del"
+    action = "delete"
+
+  [[screens.buttons]]
+    row = 5
+    col = 0
+    label = "Back"
+    action = "prev"
+
+  [[screens.buttons]]
+    row = 5
+    col = 1
+    label = "Home"
+    action = "home"
+
+  [[screens.buttons]]
+    row = 5
+    col = 2
+    label = "SelAll"
+    action = "select_all"
+
+  [[screens.buttons]]
+    row = 5
+    col = 3
+    label = "Copy"
+    action = "copy"
+
+  [[screens.buttons]]
+    row = 5
+    col = 4
+    label = "Paste"
+    action = "paste"
+
+  [[screens.buttons]]
+    row = 5
+    col = 5
+    label = "Bksp"
+    action = "backspace"

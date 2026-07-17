@@ -158,8 +158,8 @@ type appUI struct {
 	keypad          *fyne.Container
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
-	mapVisible      bool              // true when panel is shown
-	mapScroll       *container.Scroll // cached VScroll wrapping navMap
+	mapVisible      bool            // true when panel is shown
+	mapScroll       *fyne.Container // cached Max wrapper around navMap
 	breadcrumbLabel *widget.Label
 }
 
@@ -646,7 +646,7 @@ func (u *appUI) rebuildTabs() {
 func (u *appUI) shortcutsTab(main *container.Split) fyne.CanvasObject {
 	if u.navMap == nil {
 		u.navMap = newMapWidget(u.cfg)
-		u.mapScroll = container.NewVScroll(u.navMap)
+		u.mapScroll = container.NewMax(u.navMap)
 	}
 	th, v := u.a.Settings().Theme(), u.a.Settings().ThemeVariant()
 	u.navMap.SetTheme(th, v)
