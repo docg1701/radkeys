@@ -20,7 +20,7 @@ import (
 	"github.com/docg1701/radkeys/internal/ui"
 )
 
-var Version = "0.16.0"
+var Version = "0.16.1"
 
 var flagConfig = flag.String("c", "", "Path to radkeys.config.toml")
 
