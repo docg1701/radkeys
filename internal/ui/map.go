@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"math"
 	"slices"
 
 	"fyne.io/fyne/v2"
@@ -17,6 +18,7 @@ const (
 	mapNodeSpacing = 24 // 12px dot + 12px gap between centers
 	mapPad         = 24
 	mapMinWidth    = 260 // floor when the graph has few nodes
+	mapRowH        = 32  // vertical spacing between rows
 )
 
 // mapNode is a renderable screen with the position assigned by the layout
@@ -32,6 +34,7 @@ type mapGraph struct {
 	nodes       []mapNode
 	edges       [][2]int // indices into nodes: [from, to]
 	maxPerLevel int      // widest level — drives min panel width
+	totalRows   int      // sub-rows after wrapping — drives min height
 }
 
 // buildMapGraph walks cfg: one node per screen, one edge per ActionNavigate
@@ -109,23 +112,45 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	levels := make([][]int, maxDepth+1)
 	for i, d := range depth {
 		levels[d] = append(levels[d], i)
-		if len(levels[d]) > g.maxPerLevel {
-			g.maxPerLevel = len(levels[d])
-		}
 	}
 
-	rowH := h / float64(maxDepth+1)
-	for d, ids := range levels {
-		y := float64(d)*rowH + rowH/2 - mapNodeH/2
-		colW := w / float64(len(ids))
-		// ponytail: stable horizontal order via sorted ids so the
-		// TestLayoutDeterministic check still passes.
+	// Build flat list of rows (a depth may span multiple rows if too wide).
+	type row struct {
+		nodes []int
+		y     float64
+	}
+	var rows []row
+	rowY := float64(mapNodeH) / 2 // start with top padding
+	maxNodesPerRow := int(math.Max(1, w/mapNodeSpacing))
+	for d := 0; d <= maxDepth; d++ {
+		ids := levels[d]
+		if len(ids) == 0 {
+			continue
+		}
 		sorted := make([]int, len(ids))
 		copy(sorted, ids)
 		slices.Sort(sorted)
-		for j, id := range sorted {
+		// Track max per level across all sub-rows
+		if len(ids) > g.maxPerLevel {
+			g.maxPerLevel = len(ids)
+		}
+		// Split into sub-rows if needed
+		for start := 0; start < len(sorted); start += maxNodesPerRow {
+			end := start + maxNodesPerRow
+			if end > len(sorted) {
+				end = len(sorted)
+			}
+			rows = append(rows, row{nodes: sorted[start:end], y: rowY})
+			rowY += mapRowH
+		}
+	}
+
+	// Position each sub-row
+	for _, r := range rows {
+		colW := w / float64(len(r.nodes))
+		for j, id := range r.nodes {
 			x := float64(j)*colW + colW/2 - mapNodeW/2
-			g.nodes[id].pos = fyne.NewPos(float32(x), float32(y))
+			g.nodes[id].pos = fyne.NewPos(float32(x), float32(r.y))
 		}
 	}
 	return g

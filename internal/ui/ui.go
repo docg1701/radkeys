@@ -588,6 +588,7 @@ func (u *appUI) makeSaveHandler(w *settingsWidgets) func() {
 // the user saves the settings tab.
 func (u *appUI) applySettings(cfg *config.Config) {
 	u.cfg = cfg
+	u.navMap = nil // force rebuild on next shortcutsTab — graph must reflect current config
 	i18n.SetLanguage(cfg.App.Language)
 	u.win.SetTitle(fmt.Sprintf("%s — %s", u.titleBase, cfg.App.Radiologist))
 
