@@ -18,16 +18,13 @@ func main() {
 	a.Settings().SetTheme(themes.NewCustomTheme(themes.Presets[0]))
 	a.SetIcon(fyne.NewStaticResource("icon.png", assets.IconPNG))
 
-	path := config.StartupPath()
+	path := a.Preferences().String("lastFile")
+	if path == "" {
+		path = config.StartupPath()
+	}
 	cfg, err := config.LoadStartup(path)
 	if err != nil {
 		log.Printf("radkeys-config: %v; starting with new config", err)
-	}
-	if p := a.Preferences().String("lastFile"); p != "" {
-		path = p
-		if loaded, err := config.LoadStartup(p); err == nil {
-			cfg = loaded
-		}
 	}
 
 	i18n.SetLanguage(cfg.App.Language)
