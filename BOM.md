@@ -13,13 +13,20 @@ Do NOT buy "RP2040-Zero-M" — different pin count, firmware-incompatible.
 | Mercado Livre | R$ 42 | [produto.mercadolivre.com.br/MLB-7167143866](https://produto.mercadolivre.com.br/MLB-7167143866--bby-placa-compativel-rp2040-zero-para-raspberry-pi-pico--_JM) |
 | Shopee | R$ 25 | [shopee.com.br/list/Raspberry/Pi%20Zero](https://shopee.com.br/list/Raspberry/Pi%20Zero) |
 
-## 2. Push buttons 6×6mm 4-pin, 7–9mm height (×100)
+## 2. Push buttons 12×12×7.3mm 4-pin (×20, caps not included)
 
-| Platform | Price | Product page |
-|----------|-------|--------------|
-| AliExpress | R$ 8.84 | [aliexpress.com/item/1005008683932324](https://pt.aliexpress.com/item/1005008683932324.html) |
-| Mercado Livre | R$ 25 | [produto.mercadolivre.com.br/MLB-4444543388](https://produto.mercadolivre.com.br/MLB-4444543388-100-x-push-button-micro-chave-4-pinos-6x6-_JM) |
-| Shopee | R$ 15 | [shopee.com.br/list/Botão/Liga%20Desliga](https://shopee.com.br/list/Bot%C3%A3o/Liga%20Desliga) |
+12×12mm body, 4-pin through-hole — same footprint as 6×6mm but 4× the surface.
+**Caps are 3D-printed** (custom STL in `firmware/rp2040-zero/case/`) — uniform look,
+embossed labels, no color mismatch.
+
+> For a 36-key deck: **2 kits** = 40 switches (R$ 18.64).
+
+| Platform | Item | Price | Product page |
+|----------|------|-------|--------------|
+| AliExpress | 20 switches 12×12×7.3mm | R$ 9.32 | [aliexpress.com/item/1005007361046397](https://pt.aliexpress.com/item/1005007361046397.html) |
+| Mercado Livre | Kit 25 switches + caps 5 cores | R$ 25 | — |
+| RoboCore | Kit 25 switches + 25 caps 5 cores | R$ 22 | [robocore.net](https://www.robocore.net/botao-chave/kit-push-button-com-capas-coloridas-x25-unidades) |
+| Fermarc | Kit 25 switches + caps | R$ 22 | [fermarc.com](https://www.fermarc.com/kit-push-button-com-capas-coloridas-x50-unidades) |
 
 ## 3. 1N4148 through-hole diodes DO-35 (×100)
 
@@ -72,31 +79,31 @@ STL and FreeCAD files: [`firmware/rp2040-zero/case/`](firmware/rp2040-zero/case/
 | Item | Kit | Price | Per device | Covers |
 |------|-----|-------|------------|--------|
 | RP2040-Zero | 1 pc | R$ 7 | R$ 7.00 | 1 |
-| Push buttons | 100 pcs | R$ 9 | R$ 3.24 | 2.7 |
+| Push buttons 12×12mm | 20 pcs ×2 | R$ 9.32 | R$ 18.64 | 2 kits → 1 |
 | 1N4148 diodes | 100 pcs | R$ 1 | R$ 0.36 | 2.7 |
 | M-F jumpers | 40-pin kit | R$ 2 | R$ 0.30 | 6.6 |
 | Zip ties | 100 pcs | R$ 5 | R$ 0.50 | 10 |
 | USB-C cable | 1 pc | R$ 8 | R$ 8.00 | 1 |
-| **Total per device** | | | **R$ 19** | |
+| **Total per device** | | | **R$ 35** | |
 
 ### Shopee (~7–15 days)
 | Item | Kit | Price | Per device | Covers |
 |------|-----|-------|------------|--------|
 | RP2040-Zero | 1 pc | R$ 25 | R$ 25.00 | 1 |
-| Push buttons | 100 pcs | R$ 15 | R$ 5.40 | 2.7 |
+| Push buttons 12×12mm | 25+pc kit ×2 | R$ 44 | R$ 22.00 | 2 kits → 1.3 |
 | 1N4148 diodes | 100 pcs | R$ 14 | R$ 5.04 | 2.7 |
 | M-F jumpers | 40 pcs | R$ 12 | R$ 1.80 | 6.6 |
 | Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
 | USB-C cable | 1 pc | R$ 12 | R$ 12.00 | 1 |
-| **Total per device** | | | **R$ 50** | |
+| **Total per device** | | | **R$ 67** | |
 
 ### Mercado Livre (~2–5 days)
 | Item | Kit | Price | Per device | Covers |
 |------|-----|-------|------------|--------|
 | RP2040-Zero | 1 pc | R$ 42 | R$ 42.00 | 1 |
-| Push buttons | 100 pcs | R$ 25 | R$ 9.00 | 2.7 |
+| Push buttons 12×12mm | 25-pc kit ×2 | R$ 50 | R$ 25.00 | 2 kits → 1.3 |
 | 1N4148 diodes | 100 pcs | R$ 28 | R$ 10.08 | 2.7 |
 | M-F jumpers | 60 pcs | R$ 12 | R$ 1.20 | 10 |
 | Zip ties | 100 pcs | R$ 10 | R$ 1.00 | 10 |
 | USB-C cable | 1 pc | R$ 19 | R$ 19.00 | 1 |
-| **Total per device** | | | **R$ 82** | |
+| **Total per device** | | | **R$ 99** | |

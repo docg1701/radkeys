@@ -1,6 +1,6 @@
 # RadKeys — Hardware Assembly Guide
 
-> Physical 6×6 (36-key) keypad with custom Raw HID, point-to-point wiring, and Dupont connectors.
+> Physical 6×6 (36-key) keypad using 12×12mm push buttons with removable square caps, point-to-point wiring, and Dupont connectors.
 
 **Shopping list**: see [`BOM.md`](BOM.md) for component links, prices, and quantity recommendations across AliExpress, Mercado Livre, and Shopee.
 
@@ -52,10 +52,11 @@ Row 5 (GP5)  B30    B31    B32    B33    B34    B35
 
 ### 3.1 Preparation
 
-1. Fit the 36 push buttons into the 3D frame.
+1. Fit the 36 push buttons (12×12mm) into the 3D frame.
 2. Standardize the orientation: longer terminals horizontally or vertically — but **the same for all**.
 3. Identify for each button: the column terminal and the row terminal.
    - Suggestion: upper-left terminal = column, lower-right = row.
+4. Snap the square cap onto each button stem *after* soldering (caps are removable).
 
 ### 3.2 Solder the Diodes (Anti-Ghosting)
 
