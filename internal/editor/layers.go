@@ -38,11 +38,6 @@ func (e *Editor) buildLayerBar() fyne.CanvasObject {
 	)
 }
 
-// refreshLayerBar rebuilds the layer management bar.
-func (e *Editor) refreshLayerBar() {
-	e.layerBar = e.buildLayerBar()
-}
-
 // layerOptions returns labels for every screen.
 func (e *Editor) layerOptions() []string {
 	names := make([]string, 0, len(e.cfg.Screens))

@@ -193,11 +193,6 @@ func (u *appUI) currentScreen() config.Screen {
 // versus the physical HID keypad (which preserves the RIS focus).
 //
 // HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
-// press handles a button press at physical (row, col). fromUI reports whether
-// the press came from an on-screen button click (which gives RadKeys focus)
-// versus the physical HID keypad (which preserves the RIS focus).
-//
-// HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
 // focus the RadKeys window — the only permitted focus grab is the initial
 // w.ShowAndRun() at startup. ActionText/Copy/Navigate are silent (preview,
 // clipboard, internal state + renderGrid); the device-keyboard actions
@@ -431,7 +426,7 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	w.langSel = widget.NewSelect(i18n.Supported, nil)
 	w.langSel.SetSelected(cfg.App.Language)
 
-	ids, names := u.themeOptions()
+	ids, names := themes.Options()
 	w.themeIDs = ids
 	w.themeSel = widget.NewSelect(names, nil)
 	w.themeSel.SetSelectedIndex(slices.Index(w.themeIDs, cfg.App.Theme.Preset))
@@ -603,9 +598,6 @@ func (u *appUI) applySettings(cfg *config.Config) {
 		u.previewBg.FillColor = newTheme.Color(fyneTheme.ColorNameBackground, v)
 		canvas.Refresh(u.previewBg)
 	}
-	if u.navMap != nil {
-		u.navMap.SetTheme(newTheme, v)
-	}
 
 	if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
 		u.cols = cfg.App.Layout.Columns
@@ -723,16 +715,6 @@ func (u *appUI) breadcrumb() string {
 		names = append(names, cur)
 	}
 	return strings.Join(names, " > ")
-}
-
-// themeOptions returns theme IDs and their localized names for the settings
-// dropdown.
-func (u *appUI) themeOptions() (ids, names []string) {
-	for _, p := range themes.Presets {
-		ids = append(ids, p.ID())
-		names = append(names, i18n.T("theme."+p.ID()))
-	}
-	return ids, names
 }
 
 // ---------------------------------------------------------------------------

@@ -39,7 +39,7 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	lang.SetSelected(e.cfg.App.Language)
 	lang.OnChanged = e.setAppLanguage
 
-	themeIDs, themeNames := e.themeOptions()
+	themeIDs, themeNames := themes.Options()
 	theme := widget.NewSelect(themeNames, nil)
 	theme.SetSelected(i18n.T("theme." + e.cfg.App.Theme.Preset))
 	theme.OnChanged = func(choice string) {
@@ -57,16 +57,7 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	)
 }
 
-// themeOptions returns theme ids and localized names.
-func (e *Editor) themeOptions() (ids, names []string) {
-	for _, p := range themes.Presets {
-		ids = append(ids, p.ID())
-		names = append(names, i18n.T("theme."+p.ID()))
-	}
-	return ids, names
-}
-
-// buildGridGroup groups the columns/rows steppers.
+// themeOptions is shared: theme.Options().
 func (e *Editor) buildGridGroup() fyne.CanvasObject {
 	cols := widget.NewSelect(gridSizes, nil)
 	cols.SetSelected(strconv.Itoa(e.cfg.App.Layout.Columns))

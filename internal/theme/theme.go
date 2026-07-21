@@ -9,6 +9,8 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
+
+	"github.com/docg1701/radkeys/internal/i18n"
 )
 
 var _ fyne.Theme = (*radKeysTheme)(nil)
@@ -33,13 +35,6 @@ type CustomThemeMarker interface {
 }
 
 func (t *radKeysTheme) isRadKeysTheme() {}
-
-func newTheme(p preset) fyne.Theme {
-	if p.id == "system" {
-		return theme.DefaultTheme()
-	}
-	return &radKeysTheme{light: p.light, dark: p.dark}
-}
 
 func (t *radKeysTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
 	bc := t.resolve(v)
@@ -169,18 +164,8 @@ func shift(c color.NRGBA, factor float64) color.NRGBA {
 }
 
 func lerp(a, b uint8, t float64) uint8 { return uint8(float64(a)*(1-t) + float64(b)*t) }
-func satAdd(a, b uint8) uint8 {
-	if uint16(a)+uint16(b) <= 255 {
-		return a + b
-	}
-	return 255
-}
-func satSub(a, b uint8) uint8 {
-	if b > a {
-		return 0
-	}
-	return a - b
-}
+func satAdd(a, b uint8) uint8          { return uint8(min(uint16(a)+uint16(b), 255)) }
+func satSub(a, b uint8) uint8          { return a - min(a, b) }
 
 // ─── Presets ───────────────────────────────────────────────────────────────
 
@@ -291,7 +276,21 @@ func FindPreset(id string) (preset, bool) {
 }
 
 // NewCustomTheme constructs a fyne.Theme from a preset.
-func NewCustomTheme(p preset) fyne.Theme { return newTheme(p) }
+func NewCustomTheme(p preset) fyne.Theme {
+	if p.id == "system" {
+		return theme.DefaultTheme()
+	}
+	return &radKeysTheme{light: p.light, dark: p.dark}
+}
+
+// Options returns theme IDs and their localized names for picker UIs.
+func Options() (ids, names []string) {
+	for _, p := range Presets {
+		ids = append(ids, p.ID())
+		names = append(names, i18n.T("theme."+p.ID()))
+	}
+	return ids, names
+}
 
 // ID returns the machine-readable id (for i18n keys).
 func (p preset) ID() string { return p.id }

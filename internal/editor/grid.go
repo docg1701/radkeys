@@ -112,14 +112,6 @@ func (e *Editor) outOfGridButton(b config.Button) fyne.CanvasObject {
 	return container.NewVBox(btn, lbl)
 }
 
-// refreshGrid rebuilds the grid and out-of-grid strip.
-func (e *Editor) refreshGrid() {
-	if e.tabs == nil {
-		return
-	}
-	e.gridBox = e.buildGrid()
-}
-
 // updateButtonsTab replaces the Buttons tab content with the rebuilt grid.
 func (e *Editor) updateButtonsTab() {
 	if len(e.tabs.Items) < 2 {

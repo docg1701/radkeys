@@ -49,11 +49,6 @@ func (e *Editor) buildInspector() fyne.CanvasObject {
 	)
 }
 
-// refreshInspector rebuilds the property bar.
-func (e *Editor) refreshInspector() {
-	e.inspector = e.buildInspector()
-}
-
 // ponytail: package-level timer — Fyne is single-threaded for UI events.
 const labelDebounce = 200 * time.Millisecond
 
@@ -70,8 +65,6 @@ func (e *Editor) labelField(b config.Button) fyne.CanvasObject {
 		}
 		labelDebounceTimer = time.AfterFunc(labelDebounce, func() {
 			fyne.Do(func() {
-				e.refreshGrid()
-				e.refreshProblems()
 				e.updateButtonsTab()
 			})
 		})

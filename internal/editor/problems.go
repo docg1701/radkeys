@@ -29,11 +29,6 @@ func (e *Editor) buildProblems() fyne.CanvasObject {
 	return container.NewVBox(items...)
 }
 
-// refreshProblems rebuilds the validation strip.
-func (e *Editor) refreshProblems() {
-	e.problemsBox = e.buildProblems()
-}
-
 // hasBlockingIssues reports whether any issue blocks saving.
 func (e *Editor) hasBlockingIssues() bool {
 	return len(e.cfg.Issues()) > 0

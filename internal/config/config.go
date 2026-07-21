@@ -291,8 +291,8 @@ func (c *Config) Issues() []Issue {
 }
 
 func (c *Config) validate() error {
-	for _, issue := range c.Issues() {
-		return issue.Error(c.App.Layout.Rows, c.App.Layout.Columns)
+	if issues := c.Issues(); len(issues) > 0 {
+		return issues[0].Error(c.App.Layout.Rows, c.App.Layout.Columns)
 	}
 	return nil
 }

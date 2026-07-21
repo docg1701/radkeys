@@ -101,15 +101,10 @@ func (e *Editor) buildButtonsTab() fyne.CanvasObject {
 	return container.NewBorder(e.layerBar, nil, nil, nil, split)
 }
 
-// refresh updates all mutable UI surfaces and the window title, then
-// performs a single rebuild of the Buttons tab. This is the only path
-// that should call updateButtonsTab() for a full mutation cycle.
+// refresh updates the window title and rebuilds the Buttons tab (which
+// rebuilds the layer bar, grid, inspector, and problems strip in one pass).
 func (e *Editor) refresh() {
 	e.refreshTitle()
-	e.refreshGrid()
-	e.refreshInspector()
-	e.refreshLayerBar()
-	e.refreshProblems()
 	e.updateButtonsTab()
 }
 
@@ -229,9 +224,6 @@ func (e *Editor) setButtonAction(action string) {
 		b.Target = ""
 	}
 	e.setDirty()
-	e.refreshInspector()
-	e.refreshGrid()
-	e.refreshProblems()
 	e.updateButtonsTab()
 }
 
@@ -243,7 +235,6 @@ func (e *Editor) setButtonContent(content string) {
 	}
 	e.cfg.Screens[e.current].Buttons[idx].Content = content
 	e.setDirty()
-	e.refreshProblems()
 	e.updateButtonsTab()
 }
 
@@ -255,8 +246,6 @@ func (e *Editor) setButtonTarget(target string) {
 	}
 	e.cfg.Screens[e.current].Buttons[idx].Target = target
 	e.setDirty()
-	e.refreshGrid()
-	e.refreshProblems()
 	e.updateButtonsTab()
 }
 
@@ -273,8 +262,6 @@ func (e *Editor) resizeGrid(cols, rows int) {
 	e.cfg.App.Layout.Columns = cols
 	e.cfg.App.Layout.Rows = rows
 	e.setDirty()
-	e.refreshGrid()
-	e.refreshProblems()
 	e.updateButtonsTab()
 }
 

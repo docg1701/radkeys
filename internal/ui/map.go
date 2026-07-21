@@ -164,16 +164,6 @@ func layoutLayered(g mapGraph, w, h float64) mapGraph {
 	return g
 }
 
-func clamp(v, lo, hi float64) float64 {
-	if v < lo {
-		return lo
-	}
-	if v > hi {
-		return hi
-	}
-	return v
-}
-
 // ---------------------------------------------------------------------------
 // Custom Fyne widget
 // ---------------------------------------------------------------------------
@@ -289,8 +279,8 @@ func (r *mapRenderer) Layout(size fyne.Size) {
 				break
 			}
 		}
-		p.X = mapPad + float32(clamp(float64(p.X), 0, w))
-		p.Y = mapPad + float32(clamp(float64(p.Y), 0, h))
+		p.X = mapPad + float32(min(max(float64(p.X), 0), w))
+		p.Y = mapPad + float32(min(max(float64(p.Y), 0), h))
 		c.Resize(fyne.NewSize(mapNodeW, mapNodeH))
 		c.Move(p)
 	}

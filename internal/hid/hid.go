@@ -87,16 +87,8 @@ type Device interface {
 //	FirmwareOutdated(1, 0, true)  // false — v1.0 meets the minimum
 //	FirmwareOutdated(0, 0, false) // true — version unknown
 func FirmwareOutdated(major, minor byte, known bool) bool {
-	if !known {
-		return true
-	}
-	if major < MinFirmwareMajor {
-		return true
-	}
-	if major == MinFirmwareMajor && minor < MinFirmwareMinor {
-		return true
-	}
-	return false
+	return !known || major < MinFirmwareMajor ||
+		(major == MinFirmwareMajor && minor < MinFirmwareMinor)
 }
 
 // MockDevice is an in-process Device for development without hardware.
