@@ -83,7 +83,6 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 
 		rowsEnt := widget.NewEntry()
 		rowsEnt.SetText(strconv.Itoa(e.cfg.App.Layout.Blocks[idx].Rows))
-		rowsEnt.SetPlaceHolder(i18n.T("settings.rows"))
 		rowsEnt.OnChanged = func(s string) {
 			v, err := strconv.Atoi(s)
 			if err != nil || v < 1 {
@@ -96,7 +95,6 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 
 		colsEnt := widget.NewEntry()
 		colsEnt.SetText(strconv.Itoa(e.cfg.App.Layout.Blocks[idx].Cols))
-		colsEnt.SetPlaceHolder(i18n.T("settings.columns"))
 		colsEnt.OnChanged = func(s string) {
 			v, err := strconv.Atoi(s)
 			if err != nil || v < 1 {
@@ -112,8 +110,8 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 
 		rows = append(rows, container.NewGridWithColumns(4,
 			container.NewVBox(capt, nameEnt),
-			rowsEnt,
-			colsEnt,
+			widgetutil.Labeled(i18n.T("settings.rows"), rowsEnt),
+			widgetutil.Labeled(i18n.T("settings.columns"), colsEnt),
 			container.NewBorder(nil, del, nil, nil, widget.NewLabel("")),
 		))
 	}
