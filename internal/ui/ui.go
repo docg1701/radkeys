@@ -77,6 +77,7 @@ func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version 
 	u.status.Hide()
 
 	u.rebuildTabs()
+	u.refillGrids() // explicit first paint — the OS-theme listener skips custom themes
 
 	if u.mock {
 		u.setStatus(i18n.T("status.mock_mode"))
@@ -99,7 +100,7 @@ func (u *appUI) osThemeSettledListener(s fyne.Settings) {
 	if u.navMap != nil {
 		u.navMap.SetTheme(th, v)
 	}
-	u.renderGrid()
+	u.refillGrids()
 }
 
 // checkFirmware warns the user once if the firmware is outdated or unknown.
@@ -152,7 +153,7 @@ type appUI struct {
 	flashTimer      *time.Timer
 	tabs            *container.AppTabs
 	keypad          *fyne.Container
-	blockGrids      []*fyne.Container // one grid per layout block, refilled by renderGrid
+	blockGrids      []*fyne.Container // one grid per layout block, refilled by refillGrids
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
 	mapVisible      bool            // true when panel is shown
@@ -192,7 +193,7 @@ func (u *appUI) currentScreen() config.Screen {
 // HID_FOCUS_INVARIANT: the fromUI=false path must NEVER raise, activate, or
 // focus the RadKeys window — the only permitted focus grab is the initial
 // w.ShowAndRun() at startup. ActionText/Copy/Navigate are silent (preview,
-// clipboard, internal state + renderGrid); the device-keyboard actions
+// clipboard, internal state + refillGrids); the device-keyboard actions
 // (paste, select_all, select_line, line_start, line_end, backspace, delete)
 // delegate the keystroke to the device via fireDeviceCommand so the already-
 // focused window (the RIS) receives it without RadKeys taking focus. Do not
@@ -232,7 +233,7 @@ func (u *appUI) press(block, row, col int, fromUI bool) {
 			}
 		}
 	}
-	u.renderGrid()
+	u.refillGrids()
 }
 
 // deviceCommand describes a keystroke command sent to the device's HID
@@ -286,23 +287,53 @@ func runExec(command string) error {
 	return cmd.Start()
 }
 
-// rebuildKeypad creates one framed grid per layout block. renderGrid then
-// refills the cell objects of each grid without rebuilding the frames.
+// rebuildKeypad creates one framed grid per layout block, pre-filled with
+// the current screen's buttons. Every child has positive MinSize from the
+// start so the HBox allocates non-zero width. On screen transitions and
+// theme changes, refillGrids replaces the cell objects in place without
+// rebuilding frames or tabs.
 func (u *appUI) rebuildKeypad() {
 	th := u.a.Settings().Theme()
 	v := variantFor(th, u.a.Settings().ThemeVariant())
 	blocks := u.cfg.App.Layout.Blocks
+	s := u.currentScreen()
 	u.blockGrids = make([]*fyne.Container, len(blocks))
 	frames := make([]fyne.CanvasObject, len(blocks))
-	for i, b := range blocks {
-		grid := container.NewGridWithColumns(b.Cols)
+	for i, blk := range blocks {
+		grid := container.NewGridWithColumns(blk.Cols)
+		fillGrid(grid, &s, u.cfg.App.Layout, i, blk, th, v, u.press)
 		u.blockGrids[i] = grid
 		frames[i] = gridframe.Frame(grid, gridframe.Caption(u.cfg.App.Layout, i), th, v)
 	}
 	u.keypad = container.NewHBox(frames...)
 }
 
-func (u *appUI) renderGrid() {
+// fillGrid populates a block grid with the screen's buttons (or placeholders).
+func fillGrid(
+	grid *fyne.Container, s *config.Screen, l config.Layout,
+	blockIdx int, blk config.Block, th fyne.Theme, v fyne.ThemeVariant,
+	pressFn func(block, row, col int, fromUI bool),
+) {
+	for r := 0; r < blk.Rows; r++ {
+		for c := 0; c < blk.Cols; c++ {
+			if b, ok := s.ButtonAt(blockIdx, r, c); ok {
+				slot := l.SlotOf(blockIdx, r, c)
+				grid.Objects = append(grid.Objects, widget.NewButton(
+					fmt.Sprintf("n%d · %s", slot, b.Label),
+					func() { pressFn(blockIdx, r, c, true) },
+				))
+			} else {
+				grid.Objects = append(grid.Objects,
+					canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v)))
+			}
+		}
+	}
+}
+
+// refillGrids replaces every block grid's cell objects for the current
+// screen. Frames and tab structure are untouched — only cell content
+// changes, so it is cheap and safe to call on every navigation.
+func (u *appUI) refillGrids() {
 	if u.navMap != nil {
 		u.navMap.SetCurrentScreen(u.current)
 	}
@@ -312,21 +343,10 @@ func (u *appUI) renderGrid() {
 	s := u.currentScreen()
 	th := u.a.Settings().Theme()
 	v := variantFor(th, u.a.Settings().ThemeVariant())
-
 	for i, blk := range u.cfg.App.Layout.Blocks {
 		grid := u.blockGrids[i]
 		grid.Objects = grid.Objects[:0]
-		for r := 0; r < blk.Rows; r++ {
-			for c := 0; c < blk.Cols; c++ {
-				block, row, col := i, r, c
-				if b, ok := s.ButtonAt(block, row, col); ok {
-					slot := u.cfg.App.Layout.SlotOf(block, row, col)
-					grid.Objects = append(grid.Objects, widget.NewButton(fmt.Sprintf("n%d · %s", slot, b.Label), func() { u.press(block, row, col, true) }))
-				} else {
-					grid.Objects = append(grid.Objects, canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v)))
-				}
-			}
-		}
+		fillGrid(grid, &s, u.cfg.App.Layout, i, blk, th, v, u.press)
 		grid.Refresh()
 	}
 }
@@ -593,7 +613,7 @@ func (u *appUI) applySettings(cfg *config.Config) {
 	u.rebuildKeypad()
 	u.current = cfg.Screens[0].ID
 	u.stack = u.stack[:0]
-	u.renderGrid()
+	u.refillGrids()
 }
 
 // rebuildTabs creates a fresh AppTabs container and replaces the window
