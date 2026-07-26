@@ -13,10 +13,16 @@ import (
 
 // buildProblems creates the validation strip below the inspector.
 func (e *Editor) buildProblems() fyne.CanvasObject {
-	if e.selected == nil || e.selected.screen != e.current {
-		return container.NewVBox()
+	var issues []config.Issue
+	if e.selected != nil && e.selected.screen == e.current {
+		issues = e.issuesAt(e.current, e.selected.block, e.selected.row, e.selected.col)
 	}
-	issues := e.issuesAt(e.current, e.selected.block, e.selected.row, e.selected.col)
+	// also surface layout-level issues (no screen) that affect every screen
+	for _, issue := range e.cfg.Issues() {
+		if issue.ScreenID == "" {
+			issues = append(issues, issue)
+		}
+	}
 	if len(issues) == 0 {
 		return container.NewVBox()
 	}

@@ -12,6 +12,15 @@ import (
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
+// wrapFrames returns a single container for the block frames: Stack for
+// one block (stretches to fill), GridWithColumns otherwise.
+func wrapFrames(frames []fyne.CanvasObject) fyne.CanvasObject {
+	if len(frames) == 1 {
+		return container.NewStack(frames[0])
+	}
+	return container.NewGridWithColumns(len(frames), frames...)
+}
+
 // buildGrid renders one framed grid per layout block plus an out-of-grid strip.
 func (e *Editor) buildGrid() fyne.CanvasObject {
 	s := e.currentScreen()
@@ -31,7 +40,7 @@ func (e *Editor) buildGrid() fyne.CanvasObject {
 		}
 		frames[i] = gridframe.Frame(grid, gridframe.Caption(e.cfg.App.Layout, i), th, v)
 	}
-	return container.NewVBox(container.NewHBox(frames...), e.buildOutOfGridStrip(s))
+	return container.NewVBox(wrapFrames(frames), e.buildOutOfGridStrip(s))
 }
 
 // buildGridCell creates one grid cell button or empty-cell placeholder.

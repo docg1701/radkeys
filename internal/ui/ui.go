@@ -289,7 +289,7 @@ func runExec(command string) error {
 
 // rebuildKeypad creates one framed grid per layout block, pre-filled with
 // the current screen's buttons. Every child has positive MinSize from the
-// start so the HBox allocates non-zero width. On screen transitions and
+// start so each frame gets non-zero width. On screen transitions and
 // theme changes, refillGrids replaces the cell objects in place without
 // rebuilding frames or tabs.
 func (u *appUI) rebuildKeypad() {
@@ -305,7 +305,11 @@ func (u *appUI) rebuildKeypad() {
 		u.blockGrids[i] = grid
 		frames[i] = gridframe.Frame(grid, gridframe.Caption(u.cfg.App.Layout, i), th, v)
 	}
-	u.keypad = container.NewHBox(frames...)
+	if len(frames) == 1 {
+		u.keypad = container.NewStack(frames[0])
+	} else {
+		u.keypad = container.NewHBox(frames...)
+	}
 }
 
 // fillGrid populates a block grid with the screen's buttons (or placeholders).
