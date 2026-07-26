@@ -3,6 +3,7 @@ package editor
 import (
 	"log"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -165,7 +166,14 @@ func (e *Editor) saveConfigAs() {
 
 // showSaveBlocked explains why saving is blocked.
 func (e *Editor) showSaveBlocked() {
-	body := widget.NewLabel(i18n.T("editor.save_blocked_message"))
+	msgs := make([]string, 0, len(e.cfg.Issues()))
+	for _, issue := range e.cfg.Issues() {
+		msgs = append(msgs, "• "+e.issueMessage(issue))
+	}
+	if len(msgs) == 0 {
+		msgs = append(msgs, i18n.T("editor.save_blocked_message"))
+	}
+	body := widget.NewLabel(strings.Join(msgs, "\n"))
 	body.Wrapping = fyne.TextWrapWord
 	d := dialog.NewCustom(i18n.T("editor.save_blocked_title"), i18n.T("editor.cancel"), body, e.win)
 	d.Resize(fyne.NewSize(500, 200))

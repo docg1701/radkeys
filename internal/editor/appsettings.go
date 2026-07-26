@@ -86,7 +86,8 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 		rowsEnt.OnChanged = func(s string) {
 			v, err := strconv.Atoi(s)
 			if err != nil || v < 1 {
-				rowsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+				rowsEnt.SetText("1")
+				e.resizeBlock(idx, 1, e.cfg.App.Layout.Blocks[idx].Cols)
 				return
 			}
 			rowsEnt.SetValidationError(nil)
@@ -98,7 +99,8 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 		colsEnt.OnChanged = func(s string) {
 			v, err := strconv.Atoi(s)
 			if err != nil || v < 1 {
-				colsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+				colsEnt.SetText("1")
+				e.resizeBlock(idx, e.cfg.App.Layout.Blocks[idx].Rows, 1)
 				return
 			}
 			colsEnt.SetValidationError(nil)
