@@ -10,12 +10,15 @@ the clipboard without stealing focus from the RIS/PACS.
 ## What it is
 
 RadKeys is a companion app for radiologists. You connect a custom keypad
-(6×6 = 36 buttons) via USB, and each button inserts a pre-written report
-template. No keyboard shortcuts to memorize and no focus stealing from
-your RIS/PACS — the radiologist just presses a keypad button.
+(up to 36 buttons, wired in a 6×6 matrix) via USB, and each button inserts
+a pre-written report template. No keyboard shortcuts to memorize and no
+focus stealing from your RIS/PACS — the radiologist just presses a keypad
+button.
 
 You write your report templates once in a config file. The app shows them
-in a grid that mirrors your physical keypad. Press a physical button → the
+in configurable blocks that mirror your physical keypad — split the deck
+into a function pad and a content pad, or any arrangement of sub-grids.
+Press a physical button → the
 phrase appears on screen → press Copy → paste into the RIS. That's it.
 
 Works on Linux, Windows, and macOS. One executable, one config file, zero install.
@@ -23,12 +26,12 @@ Everything else (icon, translations, themes) is embedded in the binary.
 
 ## Features
 
-- 36 configurable buttons (6×6) organized in navigable screens
+- Up to 36 buttons (6×6 matrix) organized in navigable screens and user-defined blocks (sub-grids)
 - 13 actions: text templates, clipboard, navigation, editing keystrokes, and bash command execution
 - Paste via the device's USB keyboard — no focus stealing, no host-side software
 - 7 languages, 13 color themes, custom icon
 - Single binary per OS (Linux + Windows; macOS builds from source)
-- Mock mode — run without hardware, the UI works via mouse clicks
+- Split-deck layouts: define multiple blocks (e.g. 2×4 function pad + 4×7 content pad)
 - One-shot firmware version check on connect (warns if outdated)
 
 ## How it works
