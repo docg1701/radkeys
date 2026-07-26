@@ -85,6 +85,12 @@ func (e *Editor) issueKeyArgs(issue config.Issue) (string, []any) {
 		return "editor.invalid_action", []any{issue.Detail}
 	case config.IssueUnknownBlock:
 		return "editor.unknown_block", []any{issue.Block}
+	case config.IssueNoBlocks:
+		return "editor.no_blocks", nil
+	case config.IssueTooManySlots:
+		return "editor.too_many_slots", []any{issue.Detail}
+	case config.IssueBlockDimOutOfRange:
+		return "editor.block_dim", []any{issue.Block}
 	}
 	return "", nil
 }
