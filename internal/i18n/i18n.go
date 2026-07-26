@@ -17,7 +17,7 @@ var messages = map[string]map[string]string{
 	"theme.system": {
 		"en": "System default", "pt-BR": "Padrão do sistema", "pt-PT": "Padrão do sistema",
 		"es": "Predeterminado del sistema", "fr": "Défaut système", "de": "Systemstandard",
-		"it": "Predefinito di sistema",
+		"it": "Default di sistema",
 	},
 	"theme.dracula": {
 		"en": "Dracula", "pt-BR": "Dracula", "pt-PT": "Dracula",
@@ -805,7 +805,7 @@ var messages = map[string]map[string]string{
 		"en": "At least one block must be defined.", "pt-BR": "Pelo menos um bloco deve ser definido.",
 		"pt-PT": "Pelo menos um bloco deve ser definido.", "es": "Debe definirse al menos un bloque.",
 		"fr": "Au moins un bloc doit être défini.", "de": "Mindestens ein Block muss definiert sein.",
-		"it": "Deve essere definito almeno un blocco.",
+		"it": "Specificare almeno un blocco.",
 	},
 	"editor.too_many_slots": {
 		"en":    "Total exceeds 36 slots (got %s). Remove or resize blocks.",
