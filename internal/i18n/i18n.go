@@ -313,6 +313,10 @@ var messages = map[string]map[string]string{
 		"de":    "Taste n%d ist keinem Block zugeordnet.",
 		"it":    "Il tasto n%d non è assegnato ad alcun blocco.",
 	},
+	"block.default_name": {
+		"en": "Block %d", "pt-BR": "Bloco %d", "pt-PT": "Bloco %d", "es": "Bloque %d",
+		"fr": "Bloc %d", "de": "Block %d", "it": "Blocco %d",
+	},
 	"block.caption": {
 		"en": "Block %d · n%d–n%d", "pt-BR": "Bloco %d · n%d–n%d", "pt-PT": "Bloco %d · n%d–n%d",
 		"es": "Bloque %d · n%d–n%d", "fr": "Bloc %d · n%d–n%d", "de": "Block %d · n%d–n%d",
@@ -748,6 +752,10 @@ var messages = map[string]map[string]string{
 		"pt-PT": "Selecione o destino…", "es": "Seleccione destino…",
 		"fr": "Sélectionnez la cible…", "de": "Ziel auswählen…",
 		"it": "Seleziona destinazione…",
+	},
+	"editor.block_name_placeholder": {
+		"en": "Block name", "pt-BR": "Nome do bloco", "pt-PT": "Nome do bloco",
+		"es": "Nombre del bloque", "fr": "Nom du bloc", "de": "Blockname", "it": "Nome del blocco",
 	},
 	"editor.blocks": {
 		"en": "Blocks", "pt-BR": "Blocos", "pt-PT": "Blocos", "es": "Bloques",

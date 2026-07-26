@@ -16,7 +16,7 @@ import (
 // one block (stretches to fill), GridWithColumns otherwise.
 func wrapFrames(frames []fyne.CanvasObject) fyne.CanvasObject {
 	if len(frames) == 1 {
-		return container.NewStack(frames[0])
+		return frames[0]
 	}
 	return container.NewGridWithColumns(len(frames), frames...)
 }

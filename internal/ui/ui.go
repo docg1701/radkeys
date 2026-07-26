@@ -152,7 +152,7 @@ type appUI struct {
 	status          *widget.Label
 	flashTimer      *time.Timer
 	tabs            *container.AppTabs
-	keypad          *fyne.Container
+	keypad          fyne.CanvasObject
 	blockGrids      []*fyne.Container // one grid per layout block, refilled by refillGrids
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
@@ -306,9 +306,9 @@ func (u *appUI) rebuildKeypad() {
 		frames[i] = gridframe.Frame(grid, gridframe.Caption(u.cfg.App.Layout, i), th, v)
 	}
 	if len(frames) == 1 {
-		u.keypad = container.NewStack(frames[0])
+		u.keypad = frames[0]
 	} else {
-		u.keypad = container.NewHBox(frames...)
+		u.keypad = container.NewGridWithColumns(len(frames), frames...)
 	}
 }
 

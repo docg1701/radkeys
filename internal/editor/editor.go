@@ -56,8 +56,7 @@ func NewEditor(a fyne.App, w fyne.Window, cfg *config.Config, path string) *Edit
 
 // Run shows the editor window and starts the Fyne event loop.
 func (e *Editor) Run() {
-	e.win.SetMainMenu(e.buildMenu())
-	e.win.SetContent(e.tabs)
+	e.win.SetContent(container.NewBorder(e.buildMenuBar(), nil, nil, nil, e.tabs))
 	e.win.SetCloseIntercept(e.onCloseIntercept)
 	e.win.ShowAndRun()
 }
@@ -73,8 +72,7 @@ func (e *Editor) rebuildTabs() {
 		container.NewTabItem(i18n.T("editor.tab_buttons"), e.buildButtonsTab()),
 	)
 	e.tabs.SelectIndex(idx)
-	e.win.SetContent(e.tabs)
-	e.win.SetMainMenu(e.buildMenu())
+	e.win.SetContent(container.NewBorder(e.buildMenuBar(), nil, nil, nil, e.tabs))
 }
 
 // buildUI constructs the tab container and initial child widgets.

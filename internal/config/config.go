@@ -132,10 +132,11 @@ type Layout struct {
 	Blocks []Block `toml:"blocks"`
 }
 
-// Block is one sub-grid of the keypad.
+// Block is one named sub-grid of the keypad.
 type Block struct {
-	Rows int `toml:"rows"`
-	Cols int `toml:"cols"`
+	Name string `toml:"name,omitempty"`
+	Rows int    `toml:"rows"`
+	Cols int    `toml:"cols"`
 }
 
 // SlotCount returns the total number of cells across all blocks.

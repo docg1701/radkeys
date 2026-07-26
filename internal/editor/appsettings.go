@@ -58,42 +58,74 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	)
 }
 
-// buildBlocksGroup edits the ordered block list: dimensions per block,
-// plus add/remove. Slot ranges in the captions update live via refresh.
+// buildBlocksGroup edits the ordered block list with user-defined names,
+// per-block dimensions, and add/remove. Two rows per block:
+//
+//	Row 0: [caption]         [rows entry]  [cols entry]  [name entry]
+//	Row 1: [empty]           [empty]       [empty]       [Remove button]
+//
+// The add-button is centered below the last block.
 func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 	rows := make([]fyne.CanvasObject, 0, len(e.cfg.App.Layout.Blocks)+1)
-	for i, b := range e.cfg.App.Layout.Blocks {
+	captionLabels := make([]*widget.Label, len(e.cfg.App.Layout.Blocks))
+
+	for i := 0; i < len(e.cfg.App.Layout.Blocks); i++ {
 		idx := i
+
+		capt := widget.NewLabel(gridframe.Caption(e.cfg.App.Layout, idx))
+		captionLabels[idx] = capt
+
+		nameEnt := widget.NewEntry()
+		nameEnt.SetText(e.cfg.App.Layout.Blocks[idx].Name)
+		nameEnt.SetPlaceHolder(i18n.T("editor.block_name_placeholder"))
+		nameEnt.OnChanged = func(s string) {
+			e.cfg.App.Layout.Blocks[idx].Name = s
+			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
+			e.setDirty()
+			e.updateButtonsTab()
+		}
+
 		rowsEnt := widget.NewEntry()
-		rowsEnt.SetText(strconv.Itoa(b.Rows))
+		rowsEnt.SetText(strconv.Itoa(e.cfg.App.Layout.Blocks[idx].Rows))
 		rowsEnt.OnChanged = func(s string) {
-			if v, err := strconv.Atoi(s); err == nil && v >= 1 {
-				rowsEnt.SetValidationError(nil)
-				e.resizeBlock(idx, v, e.cfg.App.Layout.Blocks[idx].Cols)
-			} else {
+			v, err := strconv.Atoi(s)
+			if err != nil || v < 1 {
 				rowsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+				return
 			}
+			rowsEnt.SetValidationError(nil)
+			e.resizeBlock(idx, v, e.cfg.App.Layout.Blocks[idx].Cols)
+			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
 		}
+
 		colsEnt := widget.NewEntry()
-		colsEnt.SetText(strconv.Itoa(b.Cols))
+		colsEnt.SetText(strconv.Itoa(e.cfg.App.Layout.Blocks[idx].Cols))
 		colsEnt.OnChanged = func(s string) {
-			if v, err := strconv.Atoi(s); err == nil && v >= 1 {
-				colsEnt.SetValidationError(nil)
-				e.resizeBlock(idx, e.cfg.App.Layout.Blocks[idx].Rows, v)
-			} else {
+			v, err := strconv.Atoi(s)
+			if err != nil || v < 1 {
 				colsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+				return
 			}
+			colsEnt.SetValidationError(nil)
+			e.resizeBlock(idx, e.cfg.App.Layout.Blocks[idx].Rows, v)
+			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
 		}
+
 		del := widget.NewButton(i18n.T("editor.remove"), func() { e.removeBlock(idx) })
 		del.Importance = widget.DangerImportance
+
 		rows = append(rows, container.NewGridWithColumns(4,
-			widget.NewLabel(gridframe.Caption(e.cfg.App.Layout, idx)),
+			capt,
 			widgetutil.Labeled(i18n.T("settings.rows"), rowsEnt),
 			widgetutil.Labeled(i18n.T("settings.columns"), colsEnt),
+			nameEnt,
+			widget.NewLabel(""), widget.NewLabel(""), widget.NewLabel(""),
 			del,
 		))
 	}
-	rows = append(rows, widget.NewButton(i18n.T("editor.add_block"), e.addBlock))
+
+	add := widget.NewButton(i18n.T("editor.add_block"), e.addBlock)
+	rows = append(rows, container.NewCenter(add))
 	return widgetutil.Section(i18n.T("editor.blocks"), rows...)
 }
 
