@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
@@ -14,49 +13,18 @@ import (
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
-// buildMenuBar returns a custom menu bar using PopUpMenu (not native
-// SetMainMenu) so the drop-down width can be controlled.
-func (e *Editor) buildMenuBar() fyne.CanvasObject {
-	labels := []struct {
-		label  string
-		action func()
-	}{
-		{i18n.T("editor.new"), e.newConfig},
-		{i18n.T("editor.open"), e.openConfig},
-		{i18n.T("editor.save"), e.saveConfig},
-		{i18n.T("editor.save_as"), e.saveConfigAs},
-		{"", nil}, // separator placeholder
-		{i18n.T("editor.close_file"), e.closeFile},
-		{i18n.T("editor.quit"), e.onCloseIntercept},
-	}
-	maxW := float32(0)
-	for _, it := range labels {
-		if it.label == "" {
-			continue
-		}
-		w := fyne.MeasureText(it.label, 0, fyne.TextStyle{}).Width
-		if w > maxW {
-			maxW = w
-		}
-	}
-	popW := maxW * 2 // at least 2× longest label
-
-	var fileBtn *widget.Button
-	fileBtn = widget.NewButton(i18n.T("editor.file_menu"), func() {
-		items := make([]*fyne.MenuItem, 0, len(labels))
-		for _, it := range labels {
-			if it.label == "" {
-				items = append(items, fyne.NewMenuItemSeparator())
-			} else {
-				items = append(items, fyne.NewMenuItem(it.label, it.action))
-			}
-		}
-		menu := fyne.NewMenu("", items...)
-		pop := widget.NewPopUpMenu(menu, e.win.Canvas())
-		pop.Resize(fyne.NewSize(popW, pop.MinSize().Height))
-		pop.ShowAtPosition(fyne.NewPos(0, fileBtn.Position().Y+fileBtn.Size().Height))
-	})
-	return container.NewHBox(fileBtn)
+// buildMenu creates the File menu.
+func (e *Editor) buildMenu() *fyne.MainMenu {
+	file := fyne.NewMenu(i18n.T("editor.file_menu"),
+		fyne.NewMenuItem(i18n.T("editor.new"), e.newConfig),
+		fyne.NewMenuItem(i18n.T("editor.open"), e.openConfig),
+		fyne.NewMenuItem(i18n.T("editor.save"), e.saveConfig),
+		fyne.NewMenuItem(i18n.T("editor.save_as"), e.saveConfigAs),
+		fyne.NewMenuItemSeparator(),
+		fyne.NewMenuItem(i18n.T("editor.close_file"), e.closeFile),
+		fyne.NewMenuItem(i18n.T("editor.quit"), e.onCloseIntercept),
+	)
+	return fyne.NewMainMenu(file)
 }
 
 // closeFile resets to a blank default config without closing the window.

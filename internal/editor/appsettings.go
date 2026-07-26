@@ -10,7 +10,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
-	"github.com/docg1701/radkeys/internal/gridframe"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
 	"github.com/docg1701/radkeys/internal/widgetutil"
@@ -59,28 +58,25 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 }
 
 // buildBlocksGroup edits the ordered block list with user-defined names,
-// per-block dimensions, and add/remove. Two rows per block:
+// per-block dimensions, and add/remove. Layout per block:
 //
-//	Row 0: [caption]         [rows entry]  [cols entry]  [name entry]
-//	Row 1: [empty]           [empty]       [empty]       [Remove button]
+//	[Label "Block 0"]  [rows entry]  [cols entry]  [empty]
+//	[name entry]          [empty]       [empty]       [Remove]
 //
-// The add-button is centered below the last block.
+// The add-button is a full-width button in a 3-column grid (col 1).
 func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 	rows := make([]fyne.CanvasObject, 0, len(e.cfg.App.Layout.Blocks)+1)
-	captionLabels := make([]*widget.Label, len(e.cfg.App.Layout.Blocks))
 
 	for i := 0; i < len(e.cfg.App.Layout.Blocks); i++ {
 		idx := i
 
-		capt := widget.NewLabel(gridframe.Caption(e.cfg.App.Layout, idx))
-		captionLabels[idx] = capt
+		capt := widget.NewLabel(fmt.Sprintf(i18n.T("block.default_name"), idx))
 
 		nameEnt := widget.NewEntry()
 		nameEnt.SetText(e.cfg.App.Layout.Blocks[idx].Name)
 		nameEnt.SetPlaceHolder(i18n.T("editor.block_name_placeholder"))
 		nameEnt.OnChanged = func(s string) {
 			e.cfg.App.Layout.Blocks[idx].Name = s
-			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
 			e.setDirty()
 			e.updateButtonsTab()
 		}
@@ -95,7 +91,6 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 			}
 			rowsEnt.SetValidationError(nil)
 			e.resizeBlock(idx, v, e.cfg.App.Layout.Blocks[idx].Cols)
-			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
 		}
 
 		colsEnt := widget.NewEntry()
@@ -108,7 +103,6 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 			}
 			colsEnt.SetValidationError(nil)
 			e.resizeBlock(idx, e.cfg.App.Layout.Blocks[idx].Rows, v)
-			captionLabels[idx].SetText(gridframe.Caption(e.cfg.App.Layout, idx))
 		}
 
 		del := widget.NewButton(i18n.T("editor.remove"), func() { e.removeBlock(idx) })
@@ -118,14 +112,17 @@ func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
 			capt,
 			widgetutil.Labeled(i18n.T("settings.rows"), rowsEnt),
 			widgetutil.Labeled(i18n.T("settings.columns"), colsEnt),
+			widget.NewLabel(""),
 			nameEnt,
-			widget.NewLabel(""), widget.NewLabel(""), widget.NewLabel(""),
+			widget.NewLabel(""), widget.NewLabel(""),
 			del,
 		))
 	}
 
 	add := widget.NewButton(i18n.T("editor.add_block"), e.addBlock)
-	rows = append(rows, container.NewCenter(add))
+	rows = append(rows, container.NewGridWithColumns(3,
+		widget.NewLabel(""), add, widget.NewLabel(""),
+	))
 	return widgetutil.Section(i18n.T("editor.blocks"), rows...)
 }
 
