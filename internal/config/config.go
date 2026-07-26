@@ -45,8 +45,10 @@ const (
 	IssueInvalidProtocol        IssueKind = "invalid_protocol"
 	IssueUnsupportedLanguage    IssueKind = "unsupported_language"
 	IssueUnknownTheme           IssueKind = "unknown_theme"
-	IssueColumnsOutOfRange      IssueKind = "columns_out_of_range"
-	IssueRowsOutOfRange         IssueKind = "rows_out_of_range"
+	IssueNoBlocks               IssueKind = "no_blocks"
+	IssueBlockDimOutOfRange     IssueKind = "block_dim_out_of_range"
+	IssueTooManySlots           IssueKind = "too_many_slots"
+	IssueUnknownBlock           IssueKind = "unknown_block"
 	IssueEmptyScreenID          IssueKind = "empty_screen_id"
 	IssueDuplicateScreenID      IssueKind = "duplicate_screen_id"
 	IssueEmptyScreenName        IssueKind = "empty_screen_name"
@@ -63,10 +65,12 @@ const (
 	IssueNavigateUnknownTarget  IssueKind = "navigate_unknown_target"
 )
 
-// Issue describes one validation problem in a Config.
+// Issue describes one validation problem in a Config. Block is the block
+// index for position-related kinds; Row/Col are block-local.
 type Issue struct {
 	Kind     IssueKind
 	ScreenID string
+	Block    int
 	Row      int
 	Col      int
 	Label    string
@@ -121,11 +125,54 @@ type App struct {
 	Theme       Theme  `toml:"theme"`
 }
 
-// Layout describes the physical keypad dimensions.
+// Layout is the ordered list of keypad blocks. Blocks consume firmware
+// slots contiguously in declaration order, row-major inside each block;
+// slot n = matrix row*6+col (0–35). Total area must not exceed 36.
 type Layout struct {
-	Columns int `toml:"columns"` // grid columns (1–6)
-	Rows    int `toml:"rows"`    // grid rows (1–6)
+	Blocks []Block `toml:"blocks"`
 }
+
+// Block is one sub-grid of the keypad.
+type Block struct {
+	Rows int `toml:"rows"`
+	Cols int `toml:"cols"`
+}
+
+// SlotCount returns the total number of cells across all blocks.
+func (l Layout) SlotCount() int {
+	n := 0
+	for _, b := range l.Blocks {
+		n += b.Rows * b.Cols
+	}
+	return n
+}
+
+// SlotOf returns the firmware slot of a block-local cell.
+func (l Layout) SlotOf(block, row, col int) int {
+	n := 0
+	for i := 0; i < block; i++ {
+		n += l.Blocks[i].Rows * l.Blocks[i].Cols
+	}
+	return n + row*l.Blocks[block].Cols + col
+}
+
+// LocateSlot maps a firmware slot back to its block-local cell.
+func (l Layout) LocateSlot(n int) (block, row, col int, ok bool) {
+	if n < 0 {
+		return 0, 0, 0, false
+	}
+	for i, b := range l.Blocks {
+		area := b.Rows * b.Cols
+		if n < area {
+			return i, n / b.Cols, n % b.Cols, true
+		}
+		n -= area
+	}
+	return 0, 0, 0, false
+}
+
+// MatrixSlot converts a firmware matrix position to a slot number.
+func MatrixSlot(row, col int) int { return row*6 + col }
 
 // Theme holds the selected preset and optional custom icon path.
 type Theme struct {
@@ -147,10 +194,11 @@ type Screen struct {
 	Buttons []Button `toml:"buttons"`
 }
 
-// Button maps a physical (row, col) to an action.
+// Button maps a block-local cell to an action.
 type Button struct {
-	Row     int    `toml:"row"`               // 0-based
-	Col     int    `toml:"col"`               // 0-based
+	Block   int    `toml:"block"`             // index into app.layout.blocks
+	Row     int    `toml:"row"`               // 0-based, inside the block
+	Col     int    `toml:"col"`               // 0-based, inside the block
 	Label   string `toml:"label"`             // displayed on the button
 	Action  string `toml:"action"`            // text | copy | paste | prev | home | navigate
 	Target  string `toml:"target,omitempty"`  // screen id (only when action = "navigate")
@@ -184,12 +232,6 @@ func (c *Config) applyDefaults() {
 	if c.App.Theme.Preset == "" {
 		c.App.Theme.Preset = "system"
 	}
-	if c.App.Layout.Columns == 0 {
-		c.App.Layout.Columns = 6
-	}
-	if c.App.Layout.Rows == 0 {
-		c.App.Layout.Rows = 6
-	}
 }
 
 // Issues returns every validation problem in the config.
@@ -205,19 +247,22 @@ func (c *Config) Issues() []Issue {
 	if _, ok := theme.FindPreset(c.App.Theme.Preset); !ok {
 		issues = append(issues, Issue{Kind: IssueUnknownTheme, Detail: c.App.Theme.Preset})
 	}
-	if c.App.Layout.Columns < 1 || c.App.Layout.Columns > 6 {
-		issues = append(issues, Issue{Kind: IssueColumnsOutOfRange, Detail: fmt.Sprintf("%d", c.App.Layout.Columns)})
+	blocks := c.App.Layout.Blocks
+	if len(blocks) == 0 {
+		issues = append(issues, Issue{Kind: IssueNoBlocks})
 	}
-	if c.App.Layout.Rows < 1 || c.App.Layout.Rows > 6 {
-		issues = append(issues, Issue{Kind: IssueRowsOutOfRange, Detail: fmt.Sprintf("%d", c.App.Layout.Rows)})
+	for i, b := range blocks {
+		if b.Rows < 1 || b.Cols < 1 {
+			issues = append(issues, Issue{Kind: IssueBlockDimOutOfRange, Block: i, Row: b.Rows, Col: b.Cols})
+		}
+	}
+	if total := c.App.Layout.SlotCount(); total > 36 {
+		issues = append(issues, Issue{Kind: IssueTooManySlots, Detail: fmt.Sprintf("%d", total)})
 	}
 	if len(c.Screens) == 0 {
 		issues = append(issues, Issue{Kind: IssueNoScreens})
 		return issues
 	}
-
-	rows := c.App.Layout.Rows
-	cols := c.App.Layout.Columns
 
 	ids := map[string]struct{}{}
 	for _, s := range c.Screens {
@@ -233,48 +278,53 @@ func (c *Config) Issues() []Issue {
 		if s.Name == "" {
 			issues = append(issues, Issue{Kind: IssueEmptyScreenName, ScreenID: s.ID})
 		}
-		occupied := map[[2]int]string{}
+		occupied := map[[3]int]string{}
 		for _, b := range s.Buttons {
 			if b.Label == "" {
-				issues = append(issues, Issue{Kind: IssueEmptyLabel, ScreenID: s.ID, Row: b.Row, Col: b.Col})
+				issues = append(issues, Issue{Kind: IssueEmptyLabel, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col})
 			}
+			if b.Block < 0 || b.Block >= len(blocks) {
+				issues = append(issues, Issue{Kind: IssueUnknownBlock, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label})
+				continue
+			}
+			blk := blocks[b.Block]
 			out := false
-			if b.Row < 0 || b.Row >= rows {
-				issues = append(issues, Issue{Kind: IssueOutOfGridRow, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+			if b.Row < 0 || b.Row >= blk.Rows {
+				issues = append(issues, Issue{Kind: IssueOutOfGridRow, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label})
 				out = true
 			}
-			if b.Col < 0 || b.Col >= cols {
-				issues = append(issues, Issue{Kind: IssueOutOfGridCol, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+			if b.Col < 0 || b.Col >= blk.Cols {
+				issues = append(issues, Issue{Kind: IssueOutOfGridCol, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label})
 				out = true
 			}
 			if out {
 				continue
 			}
-			pos := [2]int{b.Row, b.Col}
+			pos := [3]int{b.Block, b.Row, b.Col}
 			if other, dup := occupied[pos]; dup {
-				issues = append(issues, Issue{Kind: IssueDuplicatePosition, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: other})
+				issues = append(issues, Issue{Kind: IssueDuplicatePosition, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label, Detail: other})
 				continue
 			}
 			occupied[pos] = b.Label
 			if !slices.Contains(ActionList, b.Action) {
-				issues = append(issues, Issue{Kind: IssueInvalidAction, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
+				issues = append(issues, Issue{Kind: IssueInvalidAction, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 				continue
 			}
 			if b.Action == ActionNavigate && b.Target == "" {
-				issues = append(issues, Issue{Kind: IssueNavigateRequiresTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+				issues = append(issues, Issue{Kind: IssueNavigateRequiresTarget, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label})
 			}
 			if b.Action != ActionNavigate && b.Target != "" {
-				issues = append(issues, Issue{Kind: IssueActionRejectsTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
+				issues = append(issues, Issue{Kind: IssueActionRejectsTarget, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
 			if (b.Action == ActionText || b.Action == ActionExec) && b.Content == "" {
 				kind := IssueTextRequiresContent
 				if b.Action == ActionExec {
 					kind = IssueExecRequiresContent
 				}
-				issues = append(issues, Issue{Kind: kind, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label})
+				issues = append(issues, Issue{Kind: kind, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label})
 			}
 			if b.Action != ActionText && b.Action != ActionExec && b.Content != "" {
-				issues = append(issues, Issue{Kind: IssueActionRejectsContent, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
+				issues = append(issues, Issue{Kind: IssueActionRejectsContent, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Action})
 			}
 		}
 	}
@@ -282,7 +332,7 @@ func (c *Config) Issues() []Issue {
 		for _, b := range s.Buttons {
 			if b.Action == ActionNavigate {
 				if _, ok := ids[b.Target]; !ok {
-					issues = append(issues, Issue{Kind: IssueNavigateUnknownTarget, ScreenID: s.ID, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Target})
+					issues = append(issues, Issue{Kind: IssueNavigateUnknownTarget, ScreenID: s.ID, Block: b.Block, Row: b.Row, Col: b.Col, Label: b.Label, Detail: b.Target})
 				}
 			}
 		}
@@ -292,24 +342,24 @@ func (c *Config) Issues() []Issue {
 
 func (c *Config) validate() error {
 	if issues := c.Issues(); len(issues) > 0 {
-		return issues[0].Error(c.App.Layout.Rows, c.App.Layout.Columns)
+		return issues[0].Error(c.App.Layout)
 	}
 	return nil
 }
 
 // Error formats an Issue as a human-readable error by looking up its
 // formatter in the issueFormatters table.
-func (issue Issue) Error(rows, cols int) error {
+func (issue Issue) Error(layout Layout) error {
 	formatter, ok := issueFormatters[issue.Kind]
 	if !ok {
 		return fmt.Errorf("%v", issue)
 	}
-	return formatter(issue, rows, cols)
+	return formatter(issue, layout)
 }
 
-// issueFormatter formats an Issue into an error, receiving the grid dimensions
-// needed for position-related messages.
-type issueFormatter func(issue Issue, rows, cols int) error
+// issueFormatter formats an Issue into an error, receiving the layout for
+// block dimensions in position-related messages.
+type issueFormatter func(issue Issue, layout Layout) error
 
 // issueFormatters maps every IssueKind to its formatter. A single table
 // replaces the former nested appError/layoutError/screenError/buttonError
@@ -318,8 +368,10 @@ var issueFormatters = map[IssueKind]issueFormatter{
 	IssueInvalidProtocol:        formatInvalidProtocol,
 	IssueUnsupportedLanguage:    formatUnsupportedLanguage,
 	IssueUnknownTheme:           formatUnknownTheme,
-	IssueColumnsOutOfRange:      formatColumnsOutOfRange,
-	IssueRowsOutOfRange:         formatRowsOutOfRange,
+	IssueNoBlocks:               formatNoBlocks,
+	IssueBlockDimOutOfRange:     formatBlockDimOutOfRange,
+	IssueTooManySlots:           formatTooManySlots,
+	IssueUnknownBlock:           formatUnknownBlock,
 	IssueNoScreens:              formatNoScreens,
 	IssueEmptyScreenID:          formatEmptyScreenID,
 	IssueDuplicateScreenID:      formatDuplicateScreenID,
@@ -337,15 +389,15 @@ var issueFormatters = map[IssueKind]issueFormatter{
 	IssueNavigateUnknownTarget:  formatNavigateUnknownTarget,
 }
 
-func formatInvalidProtocol(issue Issue, _, _ int) error {
+func formatInvalidProtocol(issue Issue, _ Layout) error {
 	return fmt.Errorf("[app.device] protocol must be %q, got %q", ProtocolDIY, issue.Detail)
 }
 
-func formatUnsupportedLanguage(issue Issue, _, _ int) error {
+func formatUnsupportedLanguage(issue Issue, _ Layout) error {
 	return fmt.Errorf("[app] language %q is not supported (use one of: %s)", issue.Detail, strings.Join(i18n.Supported, ", "))
 }
 
-func formatUnknownTheme(issue Issue, _, _ int) error {
+func formatUnknownTheme(issue Issue, _ Layout) error {
 	ids := make([]string, len(theme.Presets))
 	for i, p := range theme.Presets {
 		ids[i] = p.ID()
@@ -353,71 +405,79 @@ func formatUnknownTheme(issue Issue, _, _ int) error {
 	return fmt.Errorf("[app.theme] preset %q is unknown (use one of: %s)", issue.Detail, strings.Join(ids, ", "))
 }
 
-func formatColumnsOutOfRange(issue Issue, _, _ int) error {
-	return fmt.Errorf("[app.layout] columns=%s out of range [1,6]", issue.Detail)
+func formatNoBlocks(_ Issue, _ Layout) error {
+	return errors.New("[app.layout] blocks must declare at least one block")
 }
 
-func formatRowsOutOfRange(issue Issue, _, _ int) error {
-	return fmt.Errorf("[app.layout] rows=%s out of range [1,6]", issue.Detail)
+func formatBlockDimOutOfRange(issue Issue, _ Layout) error {
+	return fmt.Errorf("[app.layout] block %d: invalid dimensions rows=%d, cols=%d (both must be >= 1)", issue.Block, issue.Row, issue.Col)
 }
 
-func formatNoScreens(_ Issue, _, _ int) error {
+func formatTooManySlots(issue Issue, _ Layout) error {
+	return fmt.Errorf("[app.layout] blocks total %s slots, exceeds 36", issue.Detail)
+}
+
+func formatUnknownBlock(issue Issue, layout Layout) error {
+	return fmt.Errorf("screen %q, button %q: block %d does not exist (%d blocks)", issue.ScreenID, issue.Label, issue.Block, len(layout.Blocks))
+}
+
+func formatNoScreens(_ Issue, _ Layout) error {
 	return errors.New("no screens defined — add at least one [[screens]]")
 }
 
-func formatEmptyScreenID(issue Issue, _, _ int) error {
+func formatEmptyScreenID(issue Issue, _ Layout) error {
 	return errors.New("screen has empty id")
 }
 
-func formatDuplicateScreenID(issue Issue, _, _ int) error {
+func formatDuplicateScreenID(issue Issue, _ Layout) error {
 	return fmt.Errorf("duplicate screen id %q", issue.ScreenID)
 }
 
-func formatEmptyScreenName(issue Issue, _, _ int) error {
+func formatEmptyScreenName(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q has empty name", issue.ScreenID)
 }
 
-func formatEmptyLabel(issue Issue, _, _ int) error {
-	return fmt.Errorf("screen %q, button at (row=%d, col=%d): label is required", issue.ScreenID, issue.Row, issue.Col)
+func formatEmptyLabel(issue Issue, _ Layout) error {
+	return fmt.Errorf("screen %q, button at (block=%d, row=%d, col=%d): label is required", issue.ScreenID, issue.Block, issue.Row, issue.Col)
 }
 
-func formatOutOfGridRow(issue Issue, rows, _ int) error {
-	return fmt.Errorf("screen %q, button %q: row=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Row, rows)
+func formatOutOfGridRow(issue Issue, layout Layout) error {
+	return fmt.Errorf("screen %q, button %q: row=%d out of range [0,%d) in block %d", issue.ScreenID, issue.Label, issue.Row, layout.Blocks[issue.Block].Rows, issue.Block)
 }
 
-func formatOutOfGridCol(issue Issue, _, cols int) error {
-	return fmt.Errorf("screen %q, button %q: col=%d out of range [0,%d)", issue.ScreenID, issue.Label, issue.Col, cols)
+func formatOutOfGridCol(issue Issue, layout Layout) error {
+	return fmt.Errorf("screen %q, button %q: col=%d out of range [0,%d) in block %d", issue.ScreenID, issue.Label, issue.Col, layout.Blocks[issue.Block].Cols, issue.Block)
 }
 
-func formatDuplicatePosition(issue Issue, _, _ int) error {
-	return fmt.Errorf("screen %q: buttons %q and %q both occupy (row=%d, col=%d)", issue.ScreenID, issue.Detail, issue.Label, issue.Row, issue.Col)
+func formatDuplicatePosition(issue Issue, _ Layout) error {
+	return fmt.Errorf("screen %q: buttons %q and %q both occupy (block=%d, row=%d, col=%d)", issue.ScreenID, issue.Detail, issue.Label, issue.Block, issue.Row, issue.Col)
 }
 
-func formatInvalidAction(issue Issue, _, _ int) error {
+func formatInvalidAction(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: invalid action %q (use: text, copy, paste, prev, home, navigate, select_all, select_line, line_start, line_end, backspace, delete, exec)", issue.ScreenID, issue.Label, issue.Detail)
 }
 
-func formatNavigateRequiresTarget(issue Issue, _, _ int) error {
+func formatNavigateRequiresTarget(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: navigate requires target", issue.ScreenID, issue.Label)
 }
 
-func formatActionRejectsTarget(issue Issue, _, _ int) error {
+func formatActionRejectsTarget(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: action %q does not accept target", issue.ScreenID, issue.Label, issue.Detail)
 }
 
-func formatTextRequiresContent(issue Issue, _, _ int) error {
+func formatTextRequiresContent(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: text requires content", issue.ScreenID, issue.Label)
 }
 
-func formatExecRequiresContent(issue Issue, _, _ int) error {
+func formatExecRequiresContent(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: exec requires content", issue.ScreenID, issue.Label)
 }
 
-func formatActionRejectsContent(issue Issue, _, _ int) error {
+func formatActionRejectsContent(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: action %q does not accept content", issue.ScreenID, issue.Label, issue.Detail)
 }
 
-func formatNavigateUnknownTarget(issue Issue, _, _ int) error {
+func formatNavigateUnknownTarget(issue Issue, _ Layout) error {
 	return fmt.Errorf("screen %q, button %q: target %q does not exist", issue.ScreenID, issue.Label, issue.Detail)
 }
 
@@ -455,21 +515,21 @@ func (c *Config) Save(path string) error {
 	return nil
 }
 
-// ButtonAt returns the button at (row, col) for the screen, or (Button{}, false).
-func (s Screen) ButtonAt(row, col int) (Button, bool) {
+// ButtonAt returns the button at (block, row, col) for the screen, or (Button{}, false).
+func (s Screen) ButtonAt(block, row, col int) (Button, bool) {
 	for _, b := range s.Buttons {
-		if b.Row == row && b.Col == col {
+		if b.Block == block && b.Row == row && b.Col == col {
 			return b, true
 		}
 	}
 	return Button{}, false
 }
 
-// ButtonIndex returns the index of the button at (row, col), or (-1, false).
+// ButtonIndex returns the index of the button at (block, row, col), or (-1, false).
 // Mirrors ButtonAt but returns the slice position so callers can mutate.
-func (s Screen) ButtonIndex(row, col int) (int, bool) {
+func (s Screen) ButtonIndex(block, row, col int) (int, bool) {
 	for i, b := range s.Buttons {
-		if b.Row == row && b.Col == col {
+		if b.Block == block && b.Row == row && b.Col == col {
 			return i, true
 		}
 	}
@@ -517,7 +577,7 @@ func DefaultConfig() *Config {
 			Name:     "RadKeys",
 			Language: "en",
 			Device:   Device{VendorID: 0x1234, ProductID: 0xABCD, Protocol: ProtocolDIY},
-			Layout:   Layout{Columns: 6, Rows: 6},
+			Layout:   Layout{Blocks: []Block{{Rows: 6, Cols: 6}}},
 			Theme:    Theme{Preset: "system"},
 		},
 		Screens: []Screen{{ID: "root", Name: "Home"}},

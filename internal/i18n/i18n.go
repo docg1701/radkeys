@@ -304,14 +304,19 @@ var messages = map[string]map[string]string{
 		"de":    "Gerätebefehl fehlgeschlagen: %s",
 		"it":    "Comando dispositivo non riuscito: %s",
 	},
-	"status.out_of_grid": {
-		"en":    "Device event out of grid bounds (row=%d, col=%d) for %dx%d.",
-		"pt-BR": "Evento do dispositivo fora dos limites da grade (linha=%d, coluna=%d) para %dx%d.",
-		"pt-PT": "Evento do dispositivo fora dos limites da grelha (linha=%d, coluna=%d) para %dx%d.",
-		"es":    "Evento del dispositivo fuera de los límites de la cuadrícula (fila=%d, columna=%d) para %dx%d.",
-		"fr":    "Événement périphérique hors limites de la grille (ligne=%d, colonne=%d) pour %dx%d.",
-		"de":    "Geräteereignis außerhalb des Rasters (Zeile=%d, Spalte=%d) für %dx%d.",
-		"it":    "Evento dispositivo fuori dalla griglia (riga=%d, colonna=%d) per %dx%d.",
+	"status.slot_unassigned": {
+		"en":    "Key n%d is not assigned to any block.",
+		"pt-BR": "A tecla n%d não está atribuída a nenhum bloco.",
+		"pt-PT": "A tecla n%d não está atribuída a nenhum bloco.",
+		"es":    "La tecla n%d no está asignada a ningún bloque.",
+		"fr":    "La touche n%d n'est assignée à aucun bloc.",
+		"de":    "Taste n%d ist keinem Block zugeordnet.",
+		"it":    "Il tasto n%d non è assegnato ad alcun blocco.",
+	},
+	"block.caption": {
+		"en": "Block %d · n%d–n%d", "pt-BR": "Bloco %d · n%d–n%d", "pt-PT": "Bloco %d · n%d–n%d",
+		"es": "Bloque %d · n%d–n%d", "fr": "Bloc %d · n%d–n%d", "de": "Block %d · n%d–n%d",
+		"it": "Blocco %d · n%d–n%d",
 	},
 	"status.hid_read_failed": {
 		"en":    "HID read failed. Hardware may be disconnected.",
@@ -744,10 +749,49 @@ var messages = map[string]map[string]string{
 		"fr": "Sélectionnez la cible…", "de": "Ziel auswählen…",
 		"it": "Seleziona destinazione…",
 	},
-	"editor.grid_size": {
-		"en": "Grid size", "pt-BR": "Tamanho da grade", "pt-PT": "Tamanho da grelha",
-		"es": "Tamaño de la cuadrícula", "fr": "Taille de la grille",
-		"de": "Rastergröße", "it": "Dimensione griglia",
+	"editor.blocks": {
+		"en": "Blocks", "pt-BR": "Blocos", "pt-PT": "Blocos", "es": "Bloques",
+		"fr": "Blocs", "de": "Blöcke", "it": "Blocchi",
+	},
+	"editor.block": {
+		"en": "Block", "pt-BR": "Bloco", "pt-PT": "Bloco", "es": "Bloque",
+		"fr": "Bloc", "de": "Block", "it": "Blocco",
+	},
+	"editor.block_n": {
+		"en": "Block %d", "pt-BR": "Bloco %d", "pt-PT": "Bloco %d", "es": "Bloque %d",
+		"fr": "Bloc %d", "de": "Block %d", "it": "Blocco %d",
+	},
+	"editor.add_block": {
+		"en": "Add block", "pt-BR": "Adicionar bloco", "pt-PT": "Adicionar bloco",
+		"es": "Añadir bloque", "fr": "Ajouter un bloc", "de": "Block hinzufügen",
+		"it": "Aggiungi blocco",
+	},
+	"editor.remove_block": {
+		"en": "Remove block", "pt-BR": "Remover bloco", "pt-PT": "Remover bloco",
+		"es": "Eliminar bloque", "fr": "Supprimer le bloc", "de": "Block entfernen",
+		"it": "Rimuovi blocco",
+	},
+	"editor.remove_block_confirm": {
+		"en": "Delete block %d and its %d button(s)?", "pt-BR": "Excluir o bloco %d e seus %d botão(ões)?",
+		"pt-PT": "Eliminar o bloco %d e os seus %d botões?", "es": "¿Eliminar el bloque %d y sus %d botones?",
+		"fr": "Supprimer le bloc %d et ses %d boutons ?", "de": "Block %d und seine %d Tasten löschen?",
+		"it": "Eliminare il blocco %d e i suoi %d pulsanti?",
+	},
+	"editor.no_free_cell_title": {
+		"en": "No free cell", "pt-BR": "Sem célula livre", "pt-PT": "Sem célula livre",
+		"es": "Sin celda libre", "fr": "Aucune cellule libre", "de": "Keine freie Zelle",
+		"it": "Nessuna cella libera",
+	},
+	"editor.no_free_cell": {
+		"en": "Block %d has no free cell.", "pt-BR": "O bloco %d não tem célula livre.",
+		"pt-PT": "O bloco %d não tem célula livre.", "es": "El bloque %d no tiene celda libre.",
+		"fr": "Le bloc %d n'a aucune cellule libre.", "de": "Block %d hat keine freie Zelle.",
+		"it": "Il blocco %d non ha celle libere.",
+	},
+	"editor.unknown_block": {
+		"en": "block %d does not exist", "pt-BR": "o bloco %d não existe", "pt-PT": "o bloco %d não existe",
+		"es": "el bloque %d no existe", "fr": "le bloc %d n'existe pas", "de": "Block %d existiert nicht",
+		"it": "il blocco %d non esiste",
 	},
 	"editor.app_name": {
 		"en": "App name", "pt-BR": "Nome do app", "pt-PT": "Nome da aplicação",

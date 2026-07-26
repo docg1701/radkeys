@@ -8,89 +8,99 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
+	"github.com/docg1701/radkeys/internal/gridframe"
 	"github.com/docg1701/radkeys/internal/i18n"
 )
 
-// buildGrid renders the current screen grid plus an out-of-grid strip.
+// buildGrid renders one framed grid per layout block plus an out-of-grid strip.
 func (e *Editor) buildGrid() fyne.CanvasObject {
 	s := e.currentScreen()
 	if s == nil {
 		return widget.NewLabel(i18n.T("editor.no_problems"))
 	}
-	cols := e.cfg.App.Layout.Columns
-	rows := e.cfg.App.Layout.Rows
-	grid := container.NewGridWithColumns(cols)
-	for r := 0; r < rows; r++ {
-		for c := 0; c < cols; c++ {
-			grid.Objects = append(grid.Objects, e.buildGridCell(r, c))
+	th := e.app.Settings().Theme()
+	v := e.app.Settings().ThemeVariant()
+	blocks := e.cfg.App.Layout.Blocks
+	frames := make([]fyne.CanvasObject, len(blocks))
+	for i, b := range blocks {
+		grid := container.NewGridWithColumns(b.Cols)
+		for r := 0; r < b.Rows; r++ {
+			for c := 0; c < b.Cols; c++ {
+				grid.Objects = append(grid.Objects, e.buildGridCell(i, r, c))
+			}
 		}
+		frames[i] = gridframe.Frame(grid, gridframe.Caption(e.cfg.App.Layout, i), th, v)
 	}
-	return container.NewVBox(grid, e.buildOutOfGridStrip(s))
+	return container.NewVBox(container.NewHBox(frames...), e.buildOutOfGridStrip(s))
 }
 
 // buildGridCell creates one grid cell button or empty-cell placeholder.
-func (e *Editor) buildGridCell(row, col int) fyne.CanvasObject {
+func (e *Editor) buildGridCell(block, row, col int) fyne.CanvasObject {
 	s := e.currentScreen()
-	b, ok := s.ButtonAt(row, col)
+	b, ok := s.ButtonAt(block, row, col)
 	if !ok {
-		return e.emptyCell(row, col)
+		return e.emptyCell(block, row, col)
 	}
-	return e.filledCell(b, row, col)
+	return e.filledCell(b, block, row, col)
 }
 
-// emptyCell renders a clickable "+" placeholder.
-func (e *Editor) emptyCell(row, col int) fyne.CanvasObject {
-	btn := widget.NewButton(i18n.T("editor.empty_cell"), func() {
-		e.onEmptyCellClicked(row, col)
+// emptyCell renders a clickable "+" placeholder showing the cell's slot.
+func (e *Editor) emptyCell(block, row, col int) fyne.CanvasObject {
+	slot := e.cfg.App.Layout.SlotOf(block, row, col)
+	btn := widget.NewButton(fmt.Sprintf("n%d %s", slot, i18n.T("editor.empty_cell")), func() {
+		e.onEmptyCellClicked(block, row, col)
 	})
 	btn.Importance = widget.LowImportance
 	return btn
 }
 
-// onEmptyCellClicked adds or moves a button to (row, col).
-func (e *Editor) onEmptyCellClicked(row, col int) {
+// onEmptyCellClicked adds or moves a button to (block, row, col).
+func (e *Editor) onEmptyCellClicked(block, row, col int) {
 	e.clearSelection()
-	e.addButton(row, col)
+	e.addButton(block, row, col)
 }
 
 // filledCell renders a button that already exists on the grid.
-func (e *Editor) filledCell(b config.Button, row, col int) fyne.CanvasObject {
-	label := e.cellLabel(b)
-	btn := widget.NewButton(label, func() { e.selectCell(e.current, row, col) })
-	if e.isSelected(row, col) {
+func (e *Editor) filledCell(b config.Button, block, row, col int) fyne.CanvasObject {
+	label := e.cellLabel(b, e.cfg.App.Layout.SlotOf(block, row, col))
+	btn := widget.NewButton(label, func() { e.selectCell(e.current, block, row, col) })
+	if e.isSelected(block, row, col) {
 		btn.Importance = widget.HighImportance
 	}
-	if len(e.issuesAt(e.current, row, col)) > 0 {
+	if len(e.issuesAt(e.current, block, row, col)) > 0 {
 		btn.Importance = widget.DangerImportance
 	}
 	return btn
 }
 
-// cellLabel returns the display text for a grid button: the label plus the
-// translated action name as a compact indicator, so each cell shows what its
-// button does at a glance (the PLAN's "label + an action indicator"). Empty
-// labels fall back to a "label required" hint.
-func (e *Editor) cellLabel(b config.Button) string {
-	if b.Label == "" {
-		return i18n.T("editor.label_required")
+// cellLabel returns the display text for a grid button: slot, label, and the
+// translated action name, so each cell shows where it lives and what it does.
+// Empty labels fall back to a "label required" hint.
+func (e *Editor) cellLabel(b config.Button, slot int) string {
+	prefix := ""
+	if slot >= 0 {
+		prefix = fmt.Sprintf("n%d · ", slot)
 	}
-	return fmt.Sprintf("%s · %s", b.Label, config.ActionLabel(b.Action))
+	if b.Label == "" {
+		return prefix + i18n.T("editor.label_required")
+	}
+	return fmt.Sprintf("%s%s · %s", prefix, b.Label, config.ActionLabel(b.Action))
 }
 
-// isSelected reports whether (row, col) on the current screen is selected.
-func (e *Editor) isSelected(row, col int) bool {
-	return e.selected != nil && e.selected.screen == e.current && e.selected.row == row && e.selected.col == col
+// isSelected reports whether (block, row, col) on the current screen is selected.
+func (e *Editor) isSelected(block, row, col int) bool {
+	return e.selected != nil && e.selected.screen == e.current &&
+		e.selected.block == block && e.selected.row == row && e.selected.col == col
 }
 
-// buildOutOfGridStrip lists buttons on the current screen outside the layout.
+// buildOutOfGridStrip lists buttons on the current screen with no valid cell.
 func (e *Editor) buildOutOfGridStrip(s *config.Screen) fyne.CanvasObject {
-	cols := e.cfg.App.Layout.Columns
-	rows := e.cfg.App.Layout.Rows
-	var buttons []fyne.CanvasObject
+	buttons := make([]fyne.CanvasObject, 0, len(s.Buttons))
 	for _, b := range s.Buttons {
-		if b.Row >= rows || b.Col >= cols || b.Row < 0 || b.Col < 0 {
-			buttons = append(buttons, e.outOfGridButton(b))
+		if e.cellExists(b) {
+			continue
 		}
+		buttons = append(buttons, e.outOfGridButton(b))
 	}
 	if len(buttons) == 0 {
 		return container.NewVBox()
@@ -100,11 +110,20 @@ func (e *Editor) buildOutOfGridStrip(s *config.Screen) fyne.CanvasObject {
 	return container.NewVBox(title, container.NewHBox(buttons...))
 }
 
+// cellExists reports whether the button's (block, row, col) is a real cell.
+func (e *Editor) cellExists(b config.Button) bool {
+	if b.Block < 0 || b.Block >= len(e.cfg.App.Layout.Blocks) {
+		return false
+	}
+	blk := e.cfg.App.Layout.Blocks[b.Block]
+	return b.Row >= 0 && b.Row < blk.Rows && b.Col >= 0 && b.Col < blk.Cols
+}
+
 // outOfGridButton renders one out-of-grid button with its problem message.
 func (e *Editor) outOfGridButton(b config.Button) fyne.CanvasObject {
 	msg := fmt.Sprintf(i18n.T("editor.out_of_grid"), b.Label)
-	btn := widget.NewButton(e.cellLabel(b), func() {
-		e.selectCell(e.current, b.Row, b.Col)
+	btn := widget.NewButton(e.cellLabel(b, -1), func() {
+		e.selectCell(e.current, b.Block, b.Row, b.Col)
 	})
 	btn.Importance = widget.DangerImportance
 	lbl := widget.NewLabel(msg)

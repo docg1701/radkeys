@@ -1,14 +1,15 @@
 ---
 name: radkeys-config
-description: Creates valid radkeys.config.toml files for the RadKeys radiology shortcut deck. Use when writing, editing, or validating TOML configs for RadKeys — including screens, buttons, actions, navigation, report text content, and exec commands. Covers all 13 actions, grid layout (1-6 rows/cols), themes, languages, and validation rules.
+description: Creates valid radkeys.config.toml files for the RadKeys radiology shortcut deck. Use when writing, editing, or validating TOML configs for RadKeys — including screens, buttons, actions, navigation, report text content, and exec commands. Covers all 13 actions, block-based keypad layout (slots 0–35), themes, languages, and validation rules.
 ---
 
 # RadKeys Config
 
-RadKeys is a radiology shortcut deck: a 6×6 (36-button) USB keypad that copies pre-written
-report phrases to the clipboard and pastes them into the RIS/PACS without stealing focus.
-The config file (`radkeys.config.toml`) defines the radiologist name, language, theme, USB
-device, and the screen hierarchy with shortcut buttons.
+RadKeys is a radiology shortcut deck: a USB keypad of up to 36 buttons (6×6 matrix)
+that copies pre-written report phrases to the clipboard and pastes them into the RIS/PACS
+without stealing focus. The config file (`radkeys.config.toml`) defines the radiologist
+name, language, theme, USB device, the keypad layout as an ordered list of blocks, and
+the screen hierarchy with shortcut buttons.
 
 ## How Configs Are Used
 
@@ -35,8 +36,12 @@ product_id = 0xABCD
 protocol = "radkeys-diy"
 
 [app.layout]
-columns = 6   # 1–6
-rows = 6      # 1–6
+# Ordered list of keypad blocks (sub-grids). Blocks consume firmware slots
+# contiguously in declaration order, row-major inside each block;
+# slot n = matrix row*6+col (0–35). Total area must not exceed 36.
+[[app.layout.blocks]]
+rows = 6
+cols = 6
 
 [app.theme]
 preset = "dracula"
@@ -47,12 +52,20 @@ id = "root"
 name = "Home"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Chest"
   action = "navigate"
   target = "chest_menu"
 ```
+
+### Slot numbering
+
+Every physical key has a stable slot **n = matrix row×6 + col** (0–35), shown in the
+apps as `n0`–`n35`. Blocks are slices of that sequence: block 0 takes the first
+`rows×cols` slots, block 1 the next, and so on. Reordering blocks shifts slot
+ownership, so treat the block order as part of the hardware wiring.
 
 ## [app] Fields
 
@@ -63,8 +76,7 @@ name = "Home"
 | `language` | No | `"en"` | One of: `en`, `pt-BR`, `pt-PT`, `es`, `fr`, `de`, `it`. |
 | `theme.preset` | No | `"system"` | One of 13 presets (see below). |
 | `theme.icon` | No | — | Optional path to a custom icon file. |
-| `layout.columns` | No | `6` | Grid columns, range 1–6. |
-| `layout.rows` | No | `6` | Grid rows, range 1–6. |
+| `layout.blocks` | **Yes** | — | Ordered list of `[[app.layout.blocks]]` tables (≥ 1). Each has `rows` and `cols` (both ≥ 1). Total area ≤ 36. |
 | `device.vendor_id` | Yes | — | USB vendor ID (hex, e.g. `0x1234`). |
 | `device.product_id` | Yes | — | USB product ID (hex, e.g. `0xABCD`). |
 | `device.protocol` | Yes | — | Must be `"radkeys-diy"` (only supported protocol). |
@@ -91,12 +103,14 @@ Each `[[screens]]` section defines one page. The first screen in the file is the
 
 ## [[screens.buttons]] Array
 
-Each button occupies a physical `(row, col)` on the keypad grid.
+Each button occupies a cell `(block, row, col)`: `block` is the index into
+`app.layout.blocks`, and `row`/`col` are inside that block.
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `row` | **Yes** | 0-based row index (0 to rows-1). |
-| `col` | **Yes** | 0-based column index (0 to cols-1). |
+| `block` | **Yes** | 0-based block index (`0` to `len(blocks)-1`). |
+| `row` | **Yes** | 0-based row index inside the block (0 to block rows-1). |
+| `col` | **Yes** | 0-based column index inside the block (0 to block cols-1). |
 | `label` | **Yes** | Display text on the button. Must be non-empty. |
 | `action` | **Yes** | One of 13 actions (see below). |
 | `target` | Conditional | **Required** when `action = "navigate"`. **Forbidden** otherwise. Must be an existing screen `id`. |
@@ -104,9 +118,10 @@ Each button occupies a physical `(row, col)` on the keypad grid.
 
 ### Position Rules
 
-- Row must be `0 ≤ row < rows` (default grid is 6×6, so rows 0–5, cols 0–5).
-- Column must be `0 ≤ col < columns`.
-- No two buttons on the same screen may share the same `(row, col)`.
+- `block` must point at an existing block (`0 ≤ block < number of blocks`).
+- Row must be `0 ≤ row < block.rows`; column must be `0 ≤ col < block.cols`.
+- No two buttons on the same screen may share the same `(block, row, col)`.
+- The sum of all block areas (`rows×cols`) must not exceed 36.
 
 ## All 13 Actions
 
@@ -158,16 +173,18 @@ These are checked at load time. If any fail, the config is rejected with a speci
 | `protocol` is not `"radkeys-diy"` | `[app.device] protocol must be "radkeys-diy", got "<value>"` |
 | Unknown language | `[app] language "<value>" is not supported (use one of: en, pt-BR, pt-PT, es, fr, de, it)` |
 | Unknown theme preset | `[app.theme] preset "<value>" is unknown` |
-| `columns` < 1 or > 6 | `[app.layout] columns=<N> out of range [1,6]` |
-| `rows` < 1 or > 6 | `[app.layout] rows=<N> out of range [1,6]` |
+| No blocks declared | `[app.layout] blocks must declare at least one block` |
+| Block `rows` or `cols` < 1 | `[app.layout] block <i>: invalid dimensions rows=<R>, cols=<C> (both must be >= 1)` |
+| Total block area > 36 | `[app.layout] blocks total <N> slots, exceeds 36` |
+| Button `block` out of range | `screen "<id>", button "<label>": block <i> does not exist (<n> blocks)` |
 | Zero screens | `no screens defined — add at least one [[screens]]` |
 | Empty screen `id` | `screen has empty id` |
 | Duplicate screen `id` | `duplicate screen id "<id>"` |
 | Empty screen `name` | `screen "<id>" has empty name` |
-| Empty button `label` | `screen "<id>", button at (row=N, col=N): label is required` |
-| `row` out of grid bounds | `screen "<id>", button "<label>": row=N out of range [0,rows)` |
-| `col` out of grid bounds | `screen "<id>", button "<label>": col=N out of range [0,cols)` |
-| Two buttons same `(row,col)` | `screen "<id>": buttons "<A>" and "<B>" both occupy (row=N, col=N)` |
+| Empty button `label` | `screen "<id>", button at (block=B, row=N, col=N): label is required` |
+| `row` out of block bounds | `screen "<id>", button "<label>": row=N out of range [0,rows) in block B` |
+| `col` out of block bounds | `screen "<id>", button "<label>": col=N out of range [0,cols) in block B` |
+| Two buttons same cell | `screen "<id>": buttons "<A>" and "<B>" both occupy (block=B, row=N, col=N)` |
 | Unknown action string | `screen "<id>", button "<label>": invalid action "<action>"` |
 | `navigate` without `target` | `screen "<id>", button "<label>": navigate requires target` |
 | Non-navigate action with `target` | `screen "<id>", button "<label>": action "<action>" does not accept target` |
@@ -183,14 +200,14 @@ When the following fields are omitted, defaults are applied **before** validatio
 |-------|---------|
 | `app.language` | `"en"` |
 | `app.theme.preset` | `"system"` |
-| `app.layout.columns` | `6` |
-| `app.layout.rows` | `6` |
+
+`app.layout.blocks` has **no default** — a config without at least one block is invalid.
 
 ## Best Practices for Radiology Config Design
 
 1. **Home screen first.** The first `[[screens]]` in the file IS the home screen. Always make it a modality selector (X-Ray, CT, MRI, US, etc.).
 
-2. **Row 4 + Row 5 on EVERY screen.** Row 4 (cols 0–3): SLine (`select_line`), LStart (`line_start`), LEnd (`line_end`), Del (`delete`). Row 5 (all 6 cols): Back (`prev`), Home (`home`), SelAll (`select_all`), Copy (`copy`), Paste (`paste`), Bksp (`backspace`). This gives the radiologist full editing control from any screen. exec buttons appear ONLY on the root-level utilities screen.
+2. **Row 4 + Row 5 of the main block on EVERY screen.** On a single-block 6×6 deck, row 4 (cols 0–3): SLine (`select_line`), LStart (`line_start`), LEnd (`line_end`), Del (`delete`). Row 5 (all 6 cols): Back (`prev`), Home (`home`), SelAll (`select_all`), Copy (`copy`), Paste (`paste`), Bksp (`backspace`). This gives the radiologist full editing control from any screen. On multi-block decks, reserve one block for these function keys instead (e.g. a 2×4 block with home, copy, paste, delete, line_start, line_end, select_line, select_all). exec buttons appear ONLY on the root-level utilities screen.
 
 3. **Content buttons occupy the main grid.** Use rows 0–4 for report text content. Group related findings together.
 
@@ -206,7 +223,7 @@ When the following fields are omitted, defaults are applied **before** validatio
    - Row 5: Back | Home | SelAll | Copy | Paste | Bksp (all 6 positions)
    On menu/navigation screens, rows 0–3 contain `navigate` buttons. On report screens, rows 0–3 contain `text` buttons grouped by finding category.
 
-8. **All 13 actions must be represented.** The config as a whole should exercise every action at least once. The `utilities` screen should demonstrate a full 6×6 grid with all 36 positions filled and all 13 actions present. See `references/example.toml` for the canonical layout.
+8. **All 13 actions must be represented.** The config as a whole should exercise every action at least once. The `utilities` screen should demonstrate a full single-block 6×6 grid with all 36 positions filled and all 13 actions present. See `references/example.toml` for the canonical layout.
 
 9. **Placeholder screens are OK.** When building out the config, placeholder menus (with just Home/Back buttons) are valid. The user fills them in later.
 

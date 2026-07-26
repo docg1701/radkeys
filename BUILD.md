@@ -46,6 +46,15 @@ Row 5 (GP5)  B30    B31    B32    B33    B34    B35
 
 > GPIOs GP12–GP22 are free for LED, buzzer, or future expansion.
 
+### Slot Numbering (B-numbers)
+
+Each button's B-number is its firmware slot: **slot n = row×6 + col**
+(B0–B35). These numbers never change. In the app, the keypad layout is an
+ordered list of **blocks** (sub-grids) that consume slots contiguously in
+declaration order, and every key shows its slot (`n0`–`n35`) — wire your
+physical blocks so each key's B-number matches the slot the app displays.
+Fewer than 36 keys is fine: unassigned slots simply render nothing.
+
 ---
 
 ## 3. Point-to-Point + Dupont Assembly

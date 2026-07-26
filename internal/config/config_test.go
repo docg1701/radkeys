@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -20,14 +21,19 @@ product_id = 0xABCD
 protocol   = "radkeys-diy"
 
 [app.layout]
-columns = 4
-rows    = 3
+[[app.layout.blocks]]
+rows = 2
+cols = 4
+[[app.layout.blocks]]
+rows = 3
+cols = 4
 
 [[screens]]
 id = "root"
 name = "Início"
 
 [[screens.buttons]]
+block = 1
 row = 0
 col = 0
 label = "RX"
@@ -35,19 +41,22 @@ action = "navigate"
 target = "rx_torax"
 
 [[screens.buttons]]
+block = 1
 row = 1
 col = 0
 label = "Voltar"
 action = "prev"
 
 [[screens.buttons]]
-row = 2
+block = 0
+row = 0
 col = 0
 label = "Home"
 action = "home"
 
 [[screens.buttons]]
-row = 2
+block = 0
+row = 1
 col = 3
 label = "Copy"
 action = "copy"
@@ -57,6 +66,7 @@ id = "rx_torax"
 name = "RX Tórax"
 
 [[screens.buttons]]
+block = 1
 row = 0
 col = 0
 label = "Normal"
@@ -64,10 +74,25 @@ action = "text"
 content = "Radiografia de tórax normal."
 
 [[screens.buttons]]
+block = 1
 row = 1
 col = 0
 label = "Voltar"
 action = "prev"
+`
+
+// base is a minimal valid header (device + one 6×6 block) for fixtures that
+// only exercise screen/button rules.
+const base = `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 6
+cols = 6
 `
 
 func writeFile(t *testing.T, name, body string) string {
@@ -97,9 +122,9 @@ func TestLoadOK(t *testing.T) {
 	if root.Name != "Início" {
 		t.Fatalf("root name = %q, want Início", root.Name)
 	}
-	b, ok := root.ButtonAt(0, 0)
+	b, ok := root.ButtonAt(1, 0, 0)
 	if !ok {
-		t.Fatal("ButtonAt(0,0) not found")
+		t.Fatal("ButtonAt(1,0,0) not found")
 	}
 	if b.Action != ActionNavigate || b.Target != "rx_torax" {
 		t.Fatalf("button = %+v", b)
@@ -107,7 +132,7 @@ func TestLoadOK(t *testing.T) {
 }
 
 func TestLoadInvalidProtocol(t *testing.T) {
-	body := `
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.device]
 vendor_id = 1
@@ -116,20 +141,14 @@ protocol = "bogus"
 [[screens]]
 id = "root"
 name = "x"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for invalid protocol")
 	}
 }
 
 func TestLoadTextRequiresContent(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -139,20 +158,14 @@ col = 0
 label = "X"
 action = "text"
 content = ""
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for text without content")
 	}
 }
 
 func TestLoadActionMustNotHaveContent(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -162,20 +175,14 @@ col = 0
 label = "X"
 action = "copy"
 content = "nope"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for non-text action with content")
 	}
 }
 
 func TestLoadInvalidAction(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -184,65 +191,64 @@ row = 0
 col = 0
 label = "X"
 action = "next"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for invalid action")
 	}
 }
 
 func TestLoadRowOutOfRange(t *testing.T) {
-	body := `
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.device]
 vendor_id = 1
 product_id = 2
 protocol = "radkeys-diy"
 [app.layout]
-columns = 4
+[[app.layout.blocks]]
 rows = 3
+cols = 4
 [[screens]]
 id = "root"
 name = "x"
 [[screens.buttons]]
-row = 5
+row = 3
 col = 0
 label = "X"
 action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for row out of range")
 	}
 }
 
 func TestLoadColOutOfRange(t *testing.T) {
-	body := `
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.device]
 vendor_id = 1
 product_id = 2
 protocol = "radkeys-diy"
 [app.layout]
-columns = 4
+[[app.layout.blocks]]
 rows = 3
+cols = 4
 [[screens]]
 id = "root"
 name = "x"
 [[screens.buttons]]
 row = 0
-col = 7
+col = 4
 label = "X"
 action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for col out of range")
 	}
 }
 
-func TestLoadAppliesDefaultsOmittedLayoutIsSixBySix(t *testing.T) {
-	body := `
+func TestLoadNoBlocks(t *testing.T) {
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.device]
 vendor_id = 1
@@ -251,31 +257,74 @@ protocol = "radkeys-diy"
 [[screens]]
 id = "root"
 name = "x"
-[[screens.buttons]]
-row = 5
-col = 5
-label = "X"
-action = "prev"
-`
-	cfg, err := Load(writeFile(t, "c.toml", body))
-	if err != nil {
-		t.Fatalf("Load: %v", err)
-	}
-	if cfg.App.Layout.Columns != 6 {
-		t.Fatalf("columns = %d, want 6", cfg.App.Layout.Columns)
-	}
-	if cfg.App.Layout.Rows != 6 {
-		t.Fatalf("rows = %d, want 6", cfg.App.Layout.Rows)
+`))
+	if err == nil {
+		t.Fatal("expected error for layout without blocks")
 	}
 }
 
-func TestLoadAppliesDefaultsOmittedLanguageAndTheme(t *testing.T) {
-	body := `
+func TestLoadBlockDimOutOfRange(t *testing.T) {
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.device]
 vendor_id = 1
 product_id = 2
 protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 0
+cols = 6
+[[screens]]
+id = "root"
+name = "x"
+`))
+	if err == nil {
+		t.Fatal("expected error for block with rows=0")
+	}
+}
+
+func TestLoadTooManySlots(t *testing.T) {
+	_, err := Load(writeFile(t, "c.toml", `
+[app]
+[app.device]
+vendor_id = 1
+product_id = 2
+protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 6
+cols = 6
+[[app.layout.blocks]]
+rows = 1
+cols = 1
+[[screens]]
+id = "root"
+name = "x"
+`))
+	if err == nil {
+		t.Fatal("expected error for blocks totaling more than 36 slots")
+	}
+}
+
+func TestLoadUnknownBlock(t *testing.T) {
+	_, err := Load(writeFile(t, "c.toml", base+`
+[[screens]]
+id = "root"
+name = "x"
+[[screens.buttons]]
+block = 1
+row = 0
+col = 0
+label = "X"
+action = "prev"
+`))
+	if err == nil {
+		t.Fatal("expected error for button pointing at a block that does not exist")
+	}
+}
+
+func TestLoadAppliesDefaultsOmittedLanguageAndTheme(t *testing.T) {
+	cfg, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -284,8 +333,7 @@ row = 0
 col = 0
 label = "X"
 action = "prev"
-`
-	cfg, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -302,7 +350,7 @@ func TestValidateDoesNotMutatePopulatedConfig(t *testing.T) {
 		App: App{
 			Language: "pt-BR",
 			Theme:    Theme{Preset: "dracula"},
-			Layout:   Layout{Columns: 5, Rows: 4},
+			Layout:   Layout{Blocks: []Block{{Rows: 4, Cols: 5}}},
 			Device:   Device{Protocol: ProtocolDIY},
 		},
 		Screens: []Screen{{ID: "root", Name: "x"}},
@@ -313,71 +361,31 @@ func TestValidateDoesNotMutatePopulatedConfig(t *testing.T) {
 	}
 	if cfg.App.Language != want.App.Language ||
 		cfg.App.Theme.Preset != want.App.Theme.Preset ||
-		cfg.App.Layout.Columns != want.App.Layout.Columns ||
-		cfg.App.Layout.Rows != want.App.Layout.Rows {
+		!reflect.DeepEqual(cfg.App.Layout, want.App.Layout) {
 		t.Fatalf("validate mutated config: got %+v, want %+v", cfg, want)
 	}
 }
 
-func TestLoadOmittedLayoutDoesNotBreakSixBySixButtons(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
-[[screens]]
-id = "root"
-name = "x"
-[[screens.buttons]]
-row = 5
-col = 5
-label = "X"
-action = "prev"
-`
-	if _, err := Load(writeFile(t, "c.toml", body)); err != nil {
-		t.Fatalf("Load: %v", err)
-	}
-}
-
 func TestLoadNoScreens(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+	_, err := Load(writeFile(t, "c.toml", base))
 	if err == nil {
 		t.Fatal("expected error for zero screens")
 	}
 }
 
 func TestLoadEmptyScreenID(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = ""
 name = "x"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for empty screen id")
 	}
 }
 
 func TestLoadNavigateRequiresTarget(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -386,20 +394,14 @@ row = 0
 col = 0
 label = "X"
 action = "navigate"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for navigate without target")
 	}
 }
 
 func TestLoadNavigateUnknownTarget(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -409,28 +411,21 @@ col = 0
 label = "X"
 action = "navigate"
 target = "missing"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for navigate to unknown target")
 	}
 }
 
 func TestLoadDuplicateScreenID(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
 [[screens]]
 id = "root"
 name = "y"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for duplicate screen id")
 	}
@@ -459,14 +454,54 @@ func TestRoundtrip(t *testing.T) {
 
 func TestButtonAt(t *testing.T) {
 	s := Screen{ID: "test", Name: "test", Buttons: []Button{
-		{Row: 0, Col: 0, Label: "A", Action: ActionText, Content: "hello"},
-		{Row: 2, Col: 3, Label: "B", Action: ActionCopy},
+		{Block: 0, Row: 0, Col: 0, Label: "A", Action: ActionText, Content: "hello"},
+		{Block: 1, Row: 2, Col: 3, Label: "B", Action: ActionCopy},
 	}}
-	if b, ok := s.ButtonAt(0, 0); !ok || b.Content != "hello" {
-		t.Fatalf("ButtonAt(0,0) = %v, %v", b, ok)
+	if b, ok := s.ButtonAt(0, 0, 0); !ok || b.Content != "hello" {
+		t.Fatalf("ButtonAt(0,0,0) = %v, %v", b, ok)
 	}
-	if _, ok := s.ButtonAt(1, 1); ok {
-		t.Fatal("ButtonAt(1,1) should not exist")
+	if b, ok := s.ButtonAt(1, 2, 3); !ok || b.Label != "B" {
+		t.Fatalf("ButtonAt(1,2,3) = %v, %v", b, ok)
+	}
+	if _, ok := s.ButtonAt(0, 2, 3); ok {
+		t.Fatal("ButtonAt(0,2,3) should not exist — block differs")
+	}
+}
+
+func TestSlotMath(t *testing.T) {
+	l := Layout{Blocks: []Block{{Rows: 2, Cols: 4}, {Rows: 4, Cols: 6}}}
+	if got := l.SlotCount(); got != 32 {
+		t.Fatalf("SlotCount = %d, want 32", got)
+	}
+	cases := []struct {
+		block, row, col, slot int
+	}{
+		{0, 0, 0, 0},
+		{0, 1, 3, 7},
+		{1, 0, 0, 8},
+		{1, 3, 5, 31},
+	}
+	for _, tc := range cases {
+		if got := l.SlotOf(tc.block, tc.row, tc.col); got != tc.slot {
+			t.Errorf("SlotOf(%d,%d,%d) = %d, want %d", tc.block, tc.row, tc.col, got, tc.slot)
+		}
+		b, r, c, ok := l.LocateSlot(tc.slot)
+		if !ok || b != tc.block || r != tc.row || c != tc.col {
+			t.Errorf("LocateSlot(%d) = (%d,%d,%d,%v), want (%d,%d,%d,true)",
+				tc.slot, b, r, c, ok, tc.block, tc.row, tc.col)
+		}
+	}
+	if _, _, _, ok := l.LocateSlot(32); ok {
+		t.Error("LocateSlot(32) should be unassigned")
+	}
+	if _, _, _, ok := l.LocateSlot(-1); ok {
+		t.Error("LocateSlot(-1) should be unassigned")
+	}
+	if got := MatrixSlot(0, 0); got != 0 {
+		t.Errorf("MatrixSlot(0,0) = %d, want 0", got)
+	}
+	if got := MatrixSlot(5, 5); got != 35 {
+		t.Errorf("MatrixSlot(5,5) = %d, want 35", got)
 	}
 }
 
@@ -502,13 +537,17 @@ func TestConfigSaveWritesFileAndBackup(t *testing.T) {
 }
 
 func TestLoadUnsupportedLanguage(t *testing.T) {
-	body := `
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 language = "xx"
 [app.device]
 vendor_id = 1
 product_id = 2
 protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 6
+cols = 6
 [[screens]]
 id = "root"
 name = "x"
@@ -517,15 +556,14 @@ row = 0
 col = 0
 label = "X"
 action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for unsupported language")
 	}
 }
 
 func TestLoadUnknownThemePreset(t *testing.T) {
-	body := `
+	_, err := Load(writeFile(t, "c.toml", `
 [app]
 [app.theme]
 preset = "nonexistent"
@@ -533,6 +571,10 @@ preset = "nonexistent"
 vendor_id = 1
 product_id = 2
 protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 6
+cols = 6
 [[screens]]
 id = "root"
 name = "x"
@@ -541,48 +583,14 @@ row = 0
 col = 0
 label = "X"
 action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for unknown theme preset")
 	}
 }
 
-func TestLoadLayoutOutOfRange(t *testing.T) {
-	body := `
-[app]
-[app.layout]
-columns = 20
-rows = 3
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
-[[screens]]
-id = "root"
-name = "x"
-[[screens.buttons]]
-row = 0
-col = 0
-label = "X"
-action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
-	if err == nil {
-		t.Fatal("expected error for out-of-range layout columns")
-	}
-}
-
 func TestLoadDuplicateButtonPosition(t *testing.T) {
-	body := `
-[app]
-[app.layout]
-columns = 4
-rows = 3
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -596,8 +604,7 @@ row = 1
 col = 2
 label = "B"
 action = "prev"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for duplicate button position")
 	}
@@ -609,15 +616,7 @@ func TestLoadNewActionsAccepted(t *testing.T) {
 		ActionLineEnd, ActionBackspace, ActionDelete,
 	}
 	for _, a := range actions {
-		body := fmt.Sprintf(`
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
-[app.layout]
-columns = 6
-rows = 6
+		body := fmt.Sprintf(base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -634,12 +633,7 @@ action = %q
 }
 
 func TestLoadNewActionRejectsContent(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -649,20 +643,14 @@ col = 0
 label = "X"
 action = "backspace"
 content = "nope"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for backspace with content")
 	}
 }
 
 func TestLoadNewActionRejectsTarget(t *testing.T) {
-	body := `
-[app]
-[app.device]
-vendor_id = 1
-product_id = 2
-protocol = "radkeys-diy"
+	_, err := Load(writeFile(t, "c.toml", base+`
 [[screens]]
 id = "root"
 name = "x"
@@ -672,20 +660,22 @@ col = 0
 label = "X"
 action = "delete"
 target = "root"
-`
-	_, err := Load(writeFile(t, "c.toml", body))
+`))
 	if err == nil {
 		t.Fatal("expected error for delete with target")
 	}
 }
 
 func TestIssueErrorPerKind(t *testing.T) {
+	layout := Layout{Blocks: []Block{{Rows: 6, Cols: 6}}}
 	kinds := []IssueKind{
 		IssueInvalidProtocol,
 		IssueUnsupportedLanguage,
 		IssueUnknownTheme,
-		IssueColumnsOutOfRange,
-		IssueRowsOutOfRange,
+		IssueNoBlocks,
+		IssueBlockDimOutOfRange,
+		IssueTooManySlots,
+		IssueUnknownBlock,
 		IssueNoScreens,
 		IssueEmptyScreenID,
 		IssueDuplicateScreenID,
@@ -703,8 +693,8 @@ func TestIssueErrorPerKind(t *testing.T) {
 		IssueNavigateUnknownTarget,
 	}
 	for _, kind := range kinds {
-		issue := Issue{Kind: kind, ScreenID: "root", Row: 1, Col: 2, Label: "X", Detail: "detail"}
-		err := issue.Error(6, 6)
+		issue := Issue{Kind: kind, ScreenID: "root", Block: 0, Row: 1, Col: 2, Label: "X", Detail: "detail"}
+		err := issue.Error(layout)
 		if err == nil {
 			t.Errorf("Issue.Error(%q) = nil, want error", kind)
 			continue
@@ -716,7 +706,7 @@ func TestIssueErrorPerKind(t *testing.T) {
 
 	// Unknown kind falls back to a non-empty default message.
 	unknown := Issue{Kind: "totally_unknown", ScreenID: "root", Row: 0, Col: 0}
-	if got := unknown.Error(6, 6).Error(); got == "" {
+	if got := unknown.Error(layout).Error(); got == "" {
 		t.Fatal("unknown kind should still produce a message")
 	}
 }
@@ -728,6 +718,9 @@ func TestDefaultConfigHasOneScreen(t *testing.T) {
 	}
 	if cfg.Screens[0].ID != "root" {
 		t.Fatalf("first screen id = %q, want root", cfg.Screens[0].ID)
+	}
+	if err := cfg.validate(); err != nil {
+		t.Fatalf("default config should be valid: %v", err)
 	}
 }
 
@@ -765,6 +758,10 @@ func TestLoadStartupReadsExistingFile(t *testing.T) {
 vendor_id = 0x1234
 product_id = 0xABCD
 protocol = "radkeys-diy"
+[app.layout]
+[[app.layout.blocks]]
+rows = 6
+cols = 6
 [[screens]]
 id = "root"
 name = "Home"

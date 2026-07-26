@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"fmt"
 	"slices"
 	"time"
 
@@ -37,16 +38,33 @@ func (e *Editor) buildInspector() fyne.CanvasObject {
 		if e.selected == nil {
 			return
 		}
-		e.removeButton(e.selected.row, e.selected.col)
+		e.removeButton(e.selected.block, e.selected.row, e.selected.col)
 	})
 	removeBtn.Importance = widget.DangerImportance
 
 	return container.NewVBox(
+		e.blockField(b),
 		e.labelField(b),
 		e.actionField(b),
 		specific,
 		container.NewHBox(removeBtn),
 	)
+}
+
+// blockField chooses which block the button lives in. Moving places the
+// button in the first free cell of the target block.
+func (e *Editor) blockField(b config.Button) fyne.CanvasObject {
+	opts := make([]string, len(e.cfg.App.Layout.Blocks))
+	for i := range opts {
+		opts[i] = fmt.Sprintf(i18n.T("editor.block_n"), i)
+	}
+	sel := widget.NewSelect(opts, func(choice string) {
+		e.moveButtonToBlock(slices.Index(opts, choice))
+	})
+	if b.Block >= 0 && b.Block < len(opts) {
+		sel.SetSelected(opts[b.Block])
+	}
+	return widgetutil.Labeled(i18n.T("editor.block"), sel)
 }
 
 // ponytail: package-level timer — Fyne is single-threaded for UI events.

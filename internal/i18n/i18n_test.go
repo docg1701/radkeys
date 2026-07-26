@@ -32,7 +32,7 @@ func TestCommonKeysPresent(t *testing.T) {
 		"button.line_end", "button.backspace", "button.delete",
 		"device_action.via_keypad_hint",
 		"preview.placeholder",
-		"status.mock_mode", "status.device_command_failed", "status.out_of_grid", "status.hid_read_failed",
+		"status.mock_mode", "status.device_command_failed", "status.slot_unassigned", "status.hid_read_failed",
 		"error.config_title", "error.config_message", "error.config_fix", "error.open_file",
 		"button.close",
 		"editor.title", "editor.tab_app_settings", "editor.tab_buttons",

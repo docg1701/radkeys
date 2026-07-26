@@ -168,12 +168,15 @@ The file is heavily commented so a human or LLM can understand and edit
 everything:
 - Radiologist name, language (7 options), color theme (13 presets)
 - Device VID/PID and protocol 
-- Keypad layout (columns × rows)
+- Keypad layout: an ordered list of blocks (sub-grids) whose cells consume
+  firmware slots 0–35 (`n = row×6 + col`) — split the deck into physical
+  groups like a 2×4 function pad plus a 4×6 content pad
 - Screens and buttons (phrases organized in a hierarchy)
 
 Use the `radkeys-config` binary (included in each release) to edit the config
-visually — never touch TOML syntax. The editor shows the 6×6 grid, lets you
-add/remove layers and buttons, and validates everything before saving.
+visually — never touch TOML syntax. The editor shows every block with its
+slot numbers on the keys, lets you add/remove blocks, layers and buttons,
+and validates everything before saving.
 
 You can also edit the TOML file directly with any text editor.
 

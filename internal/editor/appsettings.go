@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/docg1701/radkeys/internal/config"
+	"github.com/docg1701/radkeys/internal/gridframe"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
 	"github.com/docg1701/radkeys/internal/widgetutil"
@@ -19,7 +20,7 @@ import (
 func (e *Editor) buildAppSettings() fyne.CanvasObject {
 	e.appSettings = container.NewVBox(
 		e.buildAppearanceGroup(),
-		e.buildGridGroup(),
+		e.buildBlocksGroup(),
 		e.buildDeviceGroup(),
 	)
 	return container.NewVScroll(container.NewPadded(e.appSettings))
@@ -57,30 +58,43 @@ func (e *Editor) buildAppearanceGroup() fyne.CanvasObject {
 	)
 }
 
-// themeOptions is shared: theme.Options().
-func (e *Editor) buildGridGroup() fyne.CanvasObject {
-	cols := widget.NewSelect(gridSizes, nil)
-	cols.SetSelected(strconv.Itoa(e.cfg.App.Layout.Columns))
-	cols.OnChanged = func(choice string) {
-		if v, err := strconv.Atoi(choice); err == nil {
-			e.resizeGrid(v, e.cfg.App.Layout.Rows)
+// buildBlocksGroup edits the ordered block list: dimensions per block,
+// plus add/remove. Slot ranges in the captions update live via refresh.
+func (e *Editor) buildBlocksGroup() fyne.CanvasObject {
+	rows := make([]fyne.CanvasObject, 0, len(e.cfg.App.Layout.Blocks)+1)
+	for i, b := range e.cfg.App.Layout.Blocks {
+		idx := i
+		rowsEnt := widget.NewEntry()
+		rowsEnt.SetText(strconv.Itoa(b.Rows))
+		rowsEnt.OnChanged = func(s string) {
+			if v, err := strconv.Atoi(s); err == nil && v >= 1 {
+				rowsEnt.SetValidationError(nil)
+				e.resizeBlock(idx, v, e.cfg.App.Layout.Blocks[idx].Cols)
+			} else {
+				rowsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+			}
 		}
-	}
-
-	rows := widget.NewSelect(gridSizes, nil)
-	rows.SetSelected(strconv.Itoa(e.cfg.App.Layout.Rows))
-	rows.OnChanged = func(choice string) {
-		if v, err := strconv.Atoi(choice); err == nil {
-			e.resizeGrid(e.cfg.App.Layout.Columns, v)
+		colsEnt := widget.NewEntry()
+		colsEnt.SetText(strconv.Itoa(b.Cols))
+		colsEnt.OnChanged = func(s string) {
+			if v, err := strconv.Atoi(s); err == nil && v >= 1 {
+				colsEnt.SetValidationError(nil)
+				e.resizeBlock(idx, e.cfg.App.Layout.Blocks[idx].Rows, v)
+			} else {
+				colsEnt.SetValidationError(fmt.Errorf("≥ 1"))
+			}
 		}
+		del := widget.NewButton(i18n.T("editor.remove"), func() { e.removeBlock(idx) })
+		del.Importance = widget.DangerImportance
+		rows = append(rows, container.NewGridWithColumns(4,
+			widget.NewLabel(gridframe.Caption(e.cfg.App.Layout, idx)),
+			widgetutil.Labeled(i18n.T("settings.rows"), rowsEnt),
+			widgetutil.Labeled(i18n.T("settings.columns"), colsEnt),
+			del,
+		))
 	}
-
-	return widgetutil.Section(i18n.T("editor.grid_size"),
-		container.NewGridWithColumns(2,
-			widgetutil.Labeled(i18n.T("settings.columns"), cols),
-			widgetutil.Labeled(i18n.T("settings.rows"), rows),
-		),
-	)
+	rows = append(rows, widget.NewButton(i18n.T("editor.add_block"), e.addBlock))
+	return widgetutil.Section(i18n.T("editor.blocks"), rows...)
 }
 
 // buildDeviceGroup groups VID, PID, and protocol.
@@ -107,6 +121,3 @@ func (e *Editor) buildDeviceGroup() fyne.CanvasObject {
 		),
 	)
 }
-
-// gridSizes is the allowed 1–6 values as strings.
-var gridSizes = []string{"1", "2", "3", "4", "5", "6"}

@@ -64,7 +64,7 @@ func invalidButtonsConfig() *config.Config {
 			Language: "en",
 			Theme:    config.Theme{Preset: "system"},
 			Device:   config.Device{VendorID: 0x1234, ProductID: 0xABCD, Protocol: config.ProtocolDIY},
-			Layout:   config.Layout{Columns: 4, Rows: 4},
+			Layout:   config.Layout{Blocks: []config.Block{{Rows: 4, Cols: 4}}},
 		},
 		Screens: []config.Screen{
 			{
@@ -102,7 +102,7 @@ func TestResizeIsNonDestructive(t *testing.T) {
 			Language: "en",
 			Theme:    config.Theme{Preset: "system"},
 			Device:   config.Device{VendorID: 0x1234, ProductID: 0xABCD, Protocol: config.ProtocolDIY},
-			Layout:   config.Layout{Columns: 6, Rows: 6},
+			Layout:   config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}},
 		},
 		Screens: []config.Screen{
 			{
@@ -115,8 +115,8 @@ func TestResizeIsNonDestructive(t *testing.T) {
 	if len(cfg.Issues()) != 0 {
 		t.Fatalf("initial config invalid: %v", cfg.Issues())
 	}
-	cfg.App.Layout.Columns = 4
-	cfg.App.Layout.Rows = 4
+	cfg.App.Layout.Blocks[0].Rows = 4
+	cfg.App.Layout.Blocks[0].Cols = 4
 	issues := cfg.Issues()
 	if len(issues) == 0 {
 		t.Fatal("expected out-of-grid issue after shrink")
@@ -133,8 +133,8 @@ func TestResizeIsNonDestructive(t *testing.T) {
 	if len(cfg.Screens[0].Buttons) != 1 {
 		t.Fatalf("button was removed by resize")
 	}
-	cfg.App.Layout.Columns = 6
-	cfg.App.Layout.Rows = 6
+	cfg.App.Layout.Blocks[0].Rows = 6
+	cfg.App.Layout.Blocks[0].Cols = 6
 	if len(cfg.Issues()) != 0 {
 		t.Fatalf("config should be valid after restore: %v", cfg.Issues())
 	}

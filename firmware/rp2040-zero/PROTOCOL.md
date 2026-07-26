@@ -43,6 +43,13 @@ Sent on key press via the interrupt IN endpoint. 2 bytes, no report ID.
 - Scan rate: ~200 Hz.
 - Sent via `usb_vendor.sendReport(0, report, 2)`.
 
+#### Slot numbering
+
+The host flattens `[row, col]` to a single slot number **n = row×6 + col**
+(0–35). Slots are the stable physical identity of a key: the config groups
+them into ordered blocks (sub-grids) that consume slots contiguously in
+declaration order, and the apps display `n0`–`n35` on each key.
+
 ### OUT report — `[cmd, arg]`
 
 Written by the host to the OUT endpoint. 2 bytes, no report ID.

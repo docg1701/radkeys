@@ -4,9 +4,13 @@
 
 ## Project
 
-RadKeys is a radiology shortcut deck: a 6×6 (36-button) USB keypad copies
-pre-written report phrases to the clipboard and pastes them into the RIS/PACS
-without stealing focus. The RP2040-Zero runs a **composite USB firmware**
+RadKeys is a radiology shortcut deck: a USB keypad of up to 36 buttons
+(6×6 matrix) copies pre-written report phrases to the clipboard and pastes
+them into the RIS/PACS without stealing focus. In the config, the keypad is
+an ordered list of **blocks** (sub-grids): blocks consume firmware slots
+contiguously in declaration order, row-major inside each block;
+**slot n = matrix row×6 + col** (0–35), and buttons address a cell as
+`(block, row, col)` with row/col inside that block. The RP2040-Zero runs a **composite USB firmware**
 (vendor HID for `[row,col]` button events + HID keyboard that sends Ctrl/Cmd+V
 and 6 editing keystrokes on host command — see `firmware/rp2040-zero/` +
 `PROTOCOL.md`). The Go+Fyne host is a **configurator**: single binary per OS,
@@ -126,6 +130,7 @@ radkeys/
 │   ├── config/              # TOML parser + validation + types
 │   ├── hid/                 # HID device: reader + writer (go-hid + mock)
 │   ├── ui/                  # Fyne UI: preview + grid + settings + about
+│   ├── gridframe/           # shared framed-block grid renderer (host + editor)
 │   ├── i18n/                # single Go map (7 languages)
 │   ├── theme/               # theme.go — 13 presets
 │   ├── assets/              # embedded icons

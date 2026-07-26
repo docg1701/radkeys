@@ -9,7 +9,7 @@ import (
 
 func TestMapGraphCapturesAllNavigateEdges(t *testing.T) {
 	cfg := &config.Config{
-		App: config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App: config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{
 			{ID: "a", Name: "A", Buttons: []config.Button{
 				{Row: 0, Col: 0, Label: "go b", Action: config.ActionNavigate, Target: "b"},
@@ -33,7 +33,7 @@ func TestMapGraphCapturesAllNavigateEdges(t *testing.T) {
 
 func TestMapGraphSkipsUnknownTargets(t *testing.T) {
 	cfg := &config.Config{
-		App: config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App: config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{{ID: "a", Name: "A", Buttons: []config.Button{
 			{Row: 0, Col: 0, Label: "ghost", Action: config.ActionNavigate, Target: "nope"},
 		}}},
@@ -46,7 +46,7 @@ func TestMapGraphSkipsUnknownTargets(t *testing.T) {
 
 func TestLayoutDeterministic(t *testing.T) {
 	cfg := &config.Config{
-		App:     config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App:     config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: makeLinearScreens(10),
 	}
 	g1 := layoutLayered(buildMapGraph(cfg), 400, 300)
@@ -61,7 +61,7 @@ func TestLayoutDeterministic(t *testing.T) {
 
 func TestLayoutLayeredRootAtTop(t *testing.T) {
 	cfg := &config.Config{
-		App: config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App: config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{
 			{ID: "home", Name: "Home", Buttons: []config.Button{
 				{Row: 0, Col: 0, Label: "go a", Action: config.ActionNavigate, Target: "a"},
@@ -84,7 +84,7 @@ func TestLayoutLayeredRootAtTop(t *testing.T) {
 
 func TestBreadcrumb(t *testing.T) {
 	cfg := &config.Config{
-		App: config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App: config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{
 			{ID: "home", Name: "Home"},
 			{ID: "rm", Name: "RM"},
@@ -102,7 +102,7 @@ func TestBreadcrumb(t *testing.T) {
 
 func TestBreadcrumbEmptyStack(t *testing.T) {
 	cfg := &config.Config{
-		App:     config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App:     config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{{ID: "home", Name: "Home"}},
 	}
 	u := &appUI{cfg: cfg, current: "home", stack: nil}
@@ -113,7 +113,7 @@ func TestBreadcrumbEmptyStack(t *testing.T) {
 
 func TestBreadcrumbUnknownIDFallsBackToRaw(t *testing.T) {
 	cfg := &config.Config{
-		App:     config.App{Layout: config.Layout{Columns: 6, Rows: 6}},
+		App:     config.App{Layout: config.Layout{Blocks: []config.Block{{Rows: 6, Cols: 6}}}},
 		Screens: []config.Screen{{ID: "home", Name: "Home"}},
 	}
 	u := &appUI{cfg: cfg, current: "ghost", stack: []string{"home"}}

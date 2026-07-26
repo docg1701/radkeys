@@ -11,8 +11,13 @@
 # and the screen hierarchy with shortcut buttons.
 #
 # Structure:
+#   - [app.layout] holds an ordered list of [[app.layout.blocks]] — the
+#     physical sub-grids of the keypad. Blocks consume firmware slots
+#     contiguously in declaration order, row-major inside each block;
+#     slot n = matrix row*6+col (0-35). Total area must not exceed 36.
 #   - Each [[screens]] is a page with an id (unique) and a name.
-#   - Each [[screens.buttons]] is a button at position (row, col) on the grid.
+#   - Each [[screens.buttons]] is a button at (block, row, col): block is
+#     the index into app.layout.blocks, row/col are inside that block.
 #   - Screens are connected via navigate actions with target screen ids.
 #   - The first screen is the home screen.
 #
@@ -46,8 +51,9 @@ product_id = 0xABCD
 protocol = "radkeys-diy"
 
 [app.layout]
-columns = 6
+[[app.layout.blocks]]
 rows = 6
+cols = 6
 
 [app.theme]
 preset = "dracula"
@@ -62,6 +68,7 @@ id = "root"
 name = "Modalities"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "X-Ray"
@@ -69,6 +76,7 @@ name = "Modalities"
   target = "xray_menu"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 1
   label = "CT"
@@ -76,6 +84,7 @@ name = "Modalities"
   target = "ct_menu"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 2
   label = "MRI"
@@ -88,6 +97,7 @@ id = "xray_menu"
 name = "X-Ray"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Chest"
@@ -95,6 +105,7 @@ name = "X-Ray"
   target = "xray_chest"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 1
   label = "Abdomen"
@@ -102,6 +113,7 @@ name = "X-Ray"
   target = "xray_abdomen"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 2
   label = "Bone Age"
@@ -109,6 +121,7 @@ name = "X-Ray"
   target = "xray_bone_age"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 3
   label = "Scoliosis"
@@ -116,24 +129,28 @@ name = "X-Ray"
   target = "xray_scoliosis"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
@@ -145,6 +162,7 @@ id = "xray_chest"
 name = "Chest X-Ray"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Normal"
@@ -156,6 +174,7 @@ name = "Chest X-Ray"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 1
   label = "Effusion R"
@@ -166,6 +185,7 @@ name = "Chest X-Ray"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 2
   label = "Effusion L"
@@ -176,6 +196,7 @@ name = "Chest X-Ray"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 3
   label = "Pneumothorax"
@@ -186,31 +207,37 @@ name = "Chest X-Ray"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 2
   label = "Select All"
   action = "select_all"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
   action = "paste"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 5
   label = "Backspace"
@@ -222,6 +249,7 @@ id = "xray_abdomen"
 name = "Abdomen X-Ray"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Normal"
@@ -233,21 +261,25 @@ name = "Abdomen X-Ray"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
@@ -259,6 +291,7 @@ id = "xray_bone_age"
 name = "Bone Age"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Normal"
@@ -270,21 +303,25 @@ name = "Bone Age"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
@@ -296,6 +333,7 @@ id = "xray_scoliosis"
 name = "Scoliosis"
 
   [[screens.buttons]]
+  block = 0
   row = 0
   col = 0
   label = "Normal"
@@ -306,21 +344,25 @@ name = "Scoliosis"
   """
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
@@ -332,21 +374,25 @@ id = "ct_menu"
 name = "CT"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"
@@ -358,21 +404,25 @@ id = "mri_menu"
 name = "MRI"
 
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 0
   label = "Back"
   action = "prev"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 1
   label = "Home"
   action = "home"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 3
   label = "Copy"
   action = "copy"
   [[screens.buttons]]
+  block = 0
   row = 5
   col = 4
   label = "Paste"

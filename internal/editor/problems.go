@@ -16,7 +16,7 @@ func (e *Editor) buildProblems() fyne.CanvasObject {
 	if e.selected == nil || e.selected.screen != e.current {
 		return container.NewVBox()
 	}
-	issues := e.issuesAt(e.current, e.selected.row, e.selected.col)
+	issues := e.issuesAt(e.current, e.selected.block, e.selected.row, e.selected.col)
 	if len(issues) == 0 {
 		return container.NewVBox()
 	}
@@ -34,13 +34,13 @@ func (e *Editor) hasBlockingIssues() bool {
 	return len(e.cfg.Issues()) > 0
 }
 
-// issuesAt returns every config.Issue that points at (row, col) on the given
-// screen index, or nil if none.
-func (e *Editor) issuesAt(screenIdx, row, col int) []config.Issue {
+// issuesAt returns every config.Issue that points at (block, row, col) on the
+// given screen index, or nil if none.
+func (e *Editor) issuesAt(screenIdx, block, row, col int) []config.Issue {
 	sid := e.cfg.Screens[screenIdx].ID
 	var out []config.Issue
 	for _, issue := range e.cfg.Issues() {
-		if issue.ScreenID == sid && issue.Row == row && issue.Col == col {
+		if issue.ScreenID == sid && issue.Block == block && issue.Row == row && issue.Col == col {
 			out = append(out, issue)
 		}
 	}
@@ -53,7 +53,7 @@ func (e *Editor) issueMessage(issue config.Issue) string {
 	if key != "" {
 		return fmt.Sprintf(i18n.T(key), args...)
 	}
-	return issue.Error(e.cfg.App.Layout.Rows, e.cfg.App.Layout.Columns).Error()
+	return issue.Error(e.cfg.App.Layout).Error()
 }
 
 // issueKeyArgs maps an IssueKind to an i18n key and format arguments.
@@ -77,6 +77,8 @@ func (e *Editor) issueKeyArgs(issue config.Issue) (string, []any) {
 		return "editor.action_rejects_content", []any{issue.Detail}
 	case config.IssueInvalidAction:
 		return "editor.invalid_action", []any{issue.Detail}
+	case config.IssueUnknownBlock:
+		return "editor.unknown_block", []any{issue.Block}
 	}
 	return "", nil
 }

@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"runtime"
 	"slices"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/docg1701/radkeys/internal/assets"
 	"github.com/docg1701/radkeys/internal/config"
+	"github.com/docg1701/radkeys/internal/gridframe"
 	"github.com/docg1701/radkeys/internal/hid"
 	"github.com/docg1701/radkeys/internal/i18n"
 	themes "github.com/docg1701/radkeys/internal/theme"
@@ -65,8 +65,6 @@ func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version 
 		a:          a,
 		win:        w,
 		titleBase:  appName(cfg),
-		cols:       cfg.App.Layout.Columns,
-		rows:       cfg.App.Layout.Rows,
 		version:    version,
 		mock:       mock,
 		preview:    widget.NewLabel(i18n.T("preview.placeholder")),
@@ -74,7 +72,7 @@ func buildMainUI(cfg *config.Config, configPath string, dev hid.Device, version 
 	}
 	u.preview.Wrapping = fyne.TextWrapWord
 	u.preview.TextStyle = fyne.TextStyle{Monospace: true}
-	u.keypad = container.NewGridWithColumns(u.cols)
+	u.rebuildKeypad()
 	u.status = widget.NewLabel("")
 	u.status.Hide()
 
@@ -153,9 +151,8 @@ type appUI struct {
 	status          *widget.Label
 	flashTimer      *time.Timer
 	tabs            *container.AppTabs
-	cols            int
-	rows            int
 	keypad          *fyne.Container
+	blockGrids      []*fyne.Container // one grid per layout block, refilled by renderGrid
 	previewBg       *canvas.Rectangle // created once in buildMainUI, mutated only in applySettings
 	navMap          *mapWidget
 	mapVisible      bool            // true when panel is shown
@@ -202,13 +199,9 @@ func (u *appUI) currentScreen() config.Screen {
 // call u.win.Show/ShowAndRun/SetContent/RequestFocus here. The fromUI dialog
 // is the exception (the user clicked RadKeys). Enforced statically by
 // TestHIDPathDoesNotActivateWindow.
-func (u *appUI) press(row, col int, fromUI bool) {
-	b, ok := u.currentScreen().ButtonAt(row, col)
+func (u *appUI) press(block, row, col int, fromUI bool) {
+	b, ok := u.currentScreen().ButtonAt(block, row, col)
 	if !ok {
-		if row < 0 || row >= u.rows || col < 0 || col >= u.cols {
-			u.flashStatus(fmt.Sprintf(i18n.T("status.out_of_grid"), row, col, u.rows, u.cols))
-			log.Printf("radkeys: device event out of grid bounds (row=%d, col=%d) for %dx%d", row, col, u.rows, u.cols)
-		}
 		return
 	}
 	if def, ok := deviceCommands[b.Action]; ok {
@@ -293,6 +286,22 @@ func runExec(command string) error {
 	return cmd.Start()
 }
 
+// rebuildKeypad creates one framed grid per layout block. renderGrid then
+// refills the cell objects of each grid without rebuilding the frames.
+func (u *appUI) rebuildKeypad() {
+	th := u.a.Settings().Theme()
+	v := variantFor(th, u.a.Settings().ThemeVariant())
+	blocks := u.cfg.App.Layout.Blocks
+	u.blockGrids = make([]*fyne.Container, len(blocks))
+	frames := make([]fyne.CanvasObject, len(blocks))
+	for i, b := range blocks {
+		grid := container.NewGridWithColumns(b.Cols)
+		u.blockGrids[i] = grid
+		frames[i] = gridframe.Frame(grid, gridframe.Caption(u.cfg.App.Layout, i), th, v)
+	}
+	u.keypad = container.NewHBox(frames...)
+}
+
 func (u *appUI) renderGrid() {
 	if u.navMap != nil {
 		u.navMap.SetCurrentScreen(u.current)
@@ -301,25 +310,25 @@ func (u *appUI) renderGrid() {
 		u.breadcrumbLabel.SetText(u.breadcrumb())
 	}
 	s := u.currentScreen()
-	totalSlots := u.cols * u.rows
-	u.keypad.Objects = u.keypad.Objects[:0]
 	th := u.a.Settings().Theme()
 	v := variantFor(th, u.a.Settings().ThemeVariant())
 
-	for i := 0; i < totalSlots; i++ {
-		r := i / u.cols
-		c := i % u.cols
-		if b, ok := s.ButtonAt(r, c); ok {
-			row := r
-			col := c
-			btn := widget.NewButton(b.Label, func() { u.press(row, col, true) })
-			u.keypad.Objects = append(u.keypad.Objects, btn)
-		} else {
-			rect := canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v))
-			u.keypad.Objects = append(u.keypad.Objects, rect)
+	for i, blk := range u.cfg.App.Layout.Blocks {
+		grid := u.blockGrids[i]
+		grid.Objects = grid.Objects[:0]
+		for r := 0; r < blk.Rows; r++ {
+			for c := 0; c < blk.Cols; c++ {
+				block, row, col := i, r, c
+				if b, ok := s.ButtonAt(block, row, col); ok {
+					slot := u.cfg.App.Layout.SlotOf(block, row, col)
+					grid.Objects = append(grid.Objects, widget.NewButton(fmt.Sprintf("n%d · %s", slot, b.Label), func() { u.press(block, row, col, true) }))
+				} else {
+					grid.Objects = append(grid.Objects, canvas.NewRectangle(th.Color(fyneTheme.ColorNameButton, v)))
+				}
+			}
 		}
+		grid.Refresh()
 	}
-	u.keypad.Refresh()
 }
 
 func appIconData(cfg *config.Config) []byte {
@@ -348,8 +357,14 @@ func (u *appUI) pollHID() {
 		if !ev.Pressed {
 			continue
 		}
-		row, col := ev.Row, ev.Col
-		fyne.Do(func() { u.press(row, col, false) })
+		n := config.MatrixSlot(ev.Row, ev.Col)
+		block, row, col, ok := u.cfg.App.Layout.LocateSlot(n)
+		if !ok {
+			u.flashStatus(fmt.Sprintf(i18n.T("status.slot_unassigned"), n))
+			log.Printf("radkeys: device event slot %d (row=%d, col=%d) belongs to no block", n, ev.Row, ev.Col)
+			continue
+		}
+		fyne.Do(func() { u.press(block, row, col, false) })
 	}
 	if !u.closing.Load() {
 		u.flashStatus(i18n.T("status.hid_read_failed"))
@@ -399,8 +414,6 @@ type settingsWidgets struct {
 	langSel        *widget.Select
 	themeSel       *widget.Select
 	themeIDs       []string
-	colsEnt        *widget.Entry
-	rowsEnt        *widget.Entry
 	configLbl      *widget.Label
 	chooseBtn      *widget.Button
 	vidEnt         *widget.Entry
@@ -430,11 +443,6 @@ func (u *appUI) buildSettingsWidgets() *settingsWidgets {
 	w.themeIDs = ids
 	w.themeSel = widget.NewSelect(names, nil)
 	w.themeSel.SetSelectedIndex(slices.Index(w.themeIDs, cfg.App.Theme.Preset))
-
-	w.colsEnt = widget.NewEntry()
-	w.colsEnt.SetText(strconv.Itoa(cfg.App.Layout.Columns))
-	w.rowsEnt = widget.NewEntry()
-	w.rowsEnt.SetText(strconv.Itoa(cfg.App.Layout.Rows))
 
 	w.configLbl = widget.NewLabel(u.configPath)
 	w.configLbl.Wrapping = fyne.TextWrapWord
@@ -511,11 +519,6 @@ func (u *appUI) buildSettingsSections(w *settingsWidgets) fyne.CanvasObject {
 		),
 		widgetutil.Section(i18n.T("settings.group_device"),
 			container.NewGridWithColumns(3,
-				widgetutil.Labeled(i18n.T("settings.columns"), w.colsEnt),
-				widgetutil.Labeled(i18n.T("settings.rows"), w.rowsEnt),
-				widget.NewLabel(""),
-			),
-			container.NewGridWithColumns(3,
 				widgetutil.Labeled(i18n.T("settings.vid"), w.vidEnt),
 				widgetutil.Labeled(i18n.T("settings.pid"), w.pidEnt),
 				widgetutil.Labeled(i18n.T("settings.protocol"), w.protoSel),
@@ -540,18 +543,6 @@ func (u *appUI) makeSaveHandler(w *settingsWidgets) func() {
 		cfg.App.Theme.Icon = *w.customIconPath
 		if selIdx := w.themeSel.SelectedIndex(); selIdx >= 0 && selIdx < len(w.themeIDs) {
 			cfg.App.Theme.Preset = w.themeIDs[selIdx]
-		}
-		if v, err := strconv.Atoi(w.colsEnt.Text); err == nil && v > 0 && v <= 6 {
-			cfg.App.Layout.Columns = v
-		} else {
-			cfg.App.Layout.Columns = 1
-			w.colsEnt.SetText("1")
-		}
-		if v, err := strconv.Atoi(w.rowsEnt.Text); err == nil && v > 0 && v <= 6 {
-			cfg.App.Layout.Rows = v
-		} else {
-			cfg.App.Layout.Rows = 1
-			w.rowsEnt.SetText("1")
 		}
 		if v, err := config.ParseHexUint16(w.vidEnt.Text); err == nil {
 			cfg.App.Device.VendorID = v
@@ -599,12 +590,7 @@ func (u *appUI) applySettings(cfg *config.Config) {
 		canvas.Refresh(u.previewBg)
 	}
 
-	if cfg.App.Layout.Columns != u.cols || cfg.App.Layout.Rows != u.rows {
-		u.cols = cfg.App.Layout.Columns
-		u.rows = cfg.App.Layout.Rows
-		u.keypad = container.NewGridWithColumns(u.cols)
-	}
-
+	u.rebuildKeypad()
 	u.current = cfg.Screens[0].ID
 	u.stack = u.stack[:0]
 	u.renderGrid()
